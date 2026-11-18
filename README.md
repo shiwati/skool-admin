@@ -7,6 +7,28 @@ A single Next.js App Router application with TypeScript, React Server Components
 - [Volta](https://volta.sh) selects the exact Node.js LTS and compatible npm versions in `package.json`.
 - Docker with Compose v2 for **local development infrastructure only**.
 
+## Optional repository-local Git credentials
+
+Git does not automatically load configuration from a cloned repository. To use
+the tracked [`.gitconfig`](./.gitconfig), place a `.git-credentials` file in the
+repository root, then run this once after cloning:
+
+```sh
+chmod 600 .git-credentials
+git config --local --add include.path "$(git rev-parse --show-toplevel)/.gitconfig"
+```
+
+Normal `git push`, `git pull`, and `git fetch` commands will then use this file
+instead of other credential helpers, including the macOS Keychain. This applies
+only to this checkout and also works from its subdirectories. Use an HTTPS
+remote; downloading a ZIP does not create a Git checkout.
+
+The credentials file is ignored by Git but stores tokens in plaintext. Never
+commit it or send it through an insecure channel. Prefer each collaborator's own
+token and grant their GitHub account repository access rather than sharing a
+personal token. Push access depends on the token owner's repository permissions
+and the token's scopes.
+
 ## Quick start
 
 ```sh
