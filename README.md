@@ -48,7 +48,7 @@ Open <http://localhost:3000>. PostgreSQL is available on localhost:5432. pgAdmin
 
 The application runs on the host, not in Docker. Compose binds published ports to loopback and keeps database/UI data in named volumes. `npm run services:down` stops the services without deleting data. No production Dockerfile or Compose deployment is supplied.
 
-Dependencies and the lockfile are pinned. npm 12's `allowScripts` policy explicitly approves the required dependency installers, including Prisma and native tooling. Review and update those approvals with `npm install-scripts` when upgrading dependencies rather than allowing all lifecycle scripts.
+Dependencies and the lockfile are pinned. npm 11.20.0 matches Vercel's bundled npm version. The `allowScripts` policy explicitly approves the required dependency installers, including Prisma and native tooling. Review and update those approvals with `npm install-scripts` when upgrading dependencies rather than allowing all lifecycle scripts.
 
 ## Structure
 
