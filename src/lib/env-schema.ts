@@ -10,7 +10,6 @@ export const envSchema = z.object({
 	LOG_LEVEL: z
 		.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
 		.default("info"),
-	PUPPETEER_EXECUTABLE_PATH: z.string().min(1).optional(),
 });
 
 export type Environment = z.infer<typeof envSchema>;

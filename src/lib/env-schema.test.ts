@@ -23,7 +23,6 @@ describe("environment validation", () => {
 		["NEXTAUTH_URL", "ftp://example.test"],
 		["NEXTAUTH_URL", "not a URL"],
 		["LOG_LEVEL", "verbose"],
-		["PUPPETEER_EXECUTABLE_PATH", ""],
 	])("rejects invalid %s without exposing its value", (key, value) => {
 		expect(() => parseEnv({ ...valid, [key]: value })).toThrow(key);
 		try {

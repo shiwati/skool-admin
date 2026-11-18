@@ -9,7 +9,6 @@ const nextConfig: NextConfig = {
 	serverExternalPackages: [
 		"pino",
 		"pino-pretty",
-		"puppeteer",
 		"@prisma/client",
 		"@prisma/adapter-pg",
 	],

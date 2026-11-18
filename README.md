@@ -6,7 +6,6 @@ A single Next.js App Router application with TypeScript, React Server Components
 
 - [Volta](https://volta.sh) selects the exact Node.js LTS and compatible npm versions in `package.json`.
 - Docker with Compose v2 for **local development infrastructure only**.
-- Chrome dependencies supported by Puppeteer on the host used to generate PDFs.
 
 ## Quick start
 
@@ -27,7 +26,7 @@ Open <http://localhost:3000>. PostgreSQL is available on localhost:5432. pgAdmin
 
 The application runs on the host, not in Docker. Compose binds published ports to loopback and keeps database/UI data in named volumes. `npm run services:down` stops the services without deleting data. No production Dockerfile or Compose deployment is supplied.
 
-Dependencies and the lockfile are pinned. npm 12's `allowScripts` policy explicitly approves the required dependency installers, including Prisma, Puppeteer, and native tooling. Review and update those approvals with `npm install-scripts` when upgrading dependencies rather than allowing all lifecycle scripts.
+Dependencies and the lockfile are pinned. npm 12's `allowScripts` policy explicitly approves the required dependency installers, including Prisma and native tooling. Review and update those approvals with `npm install-scripts` when upgrading dependencies rather than allowing all lifecycle scripts.
 
 ## Structure
 
@@ -53,7 +52,6 @@ src/
     env-schema.ts
     env.ts
     logger.ts
-    pdf.ts
     utils.ts
     validation.ts
   instrumentation.ts
@@ -73,14 +71,13 @@ Unit tests are colocated with the code they exercise. Add only necessary applica
 
 Copy `.env.example` to `.env` for local development. Next.js loads it automatically; Prisma CLI and seed commands load it through `dotenv`.
 
-| Variable                    | Requirement                                                       |
-| --------------------------- | ----------------------------------------------------------------- |
-| `DATABASE_URL`              | PostgreSQL connection URL                                         |
-| `NEXTAUTH_SECRET`           | Random secret, at least 32 characters                             |
-| `NEXTAUTH_URL`              | Canonical HTTP(S) application URL                                 |
-| `NODE_ENV`                  | `development`, `test`, or `production`; defaults to `development` |
-| `LOG_LEVEL`                 | Pino level; defaults to `info`                                    |
-| `PUPPETEER_EXECUTABLE_PATH` | Optional path to a compatible system Chrome                       |
+| Variable          | Requirement                                                       |
+| ----------------- | ----------------------------------------------------------------- |
+| `DATABASE_URL`    | PostgreSQL connection URL                                         |
+| `NEXTAUTH_SECRET` | Random secret, at least 32 characters                             |
+| `NEXTAUTH_URL`    | Canonical HTTP(S) application URL                                 |
+| `NODE_ENV`        | `development`, `test`, or `production`; defaults to `development` |
+| `LOG_LEVEL`       | Pino level; defaults to `info`                                    |
 
 Server startup validates environment values via `src/instrumentation.ts`; invalid configuration fails explicitly without printing secrets. Server modules also validate on import. Supply the required variables during builds too, because Next.js evaluates server modules when building route metadata. `npm ci` and Prisma client generation do not require secrets or a running database.
 
@@ -121,20 +118,6 @@ NextAuth.js v4 is intentionally used instead of the v5 beta. Plan and test a del
 
 No example forms, dashboards, charts with fake business data, or business entities are included.
 
-## PDF service
-
-`pdfService.renderHtml(html, options)` in `src/lib/pdf.ts` renders a `Uint8Array` through Puppeteer. It creates a browser per operation, uses bounded timeouts, logs and rethrows failures, and closes the browser in `finally`.
-
-Only pass **trusted, server-generated templates**, escaping any user values before interpolation. JavaScript is disabled and requests other than `data:`/`about:` are blocked, so assets must be embedded and PDF generation cannot fetch arbitrary network URLs or local files. The Chromium sandbox is not disabled. Add authorization and rate/concurrency limits before exposing this potentially expensive operation through an API. No public HTML-to-PDF endpoint is provided.
-
-The approved Puppeteer install script downloads Chrome. If installation skips browser downloads or a host cache is missing:
-
-```sh
-npx puppeteer browsers install chrome
-```
-
-On Linux, install the operating-system libraries required by [Puppeteer](https://pptr.dev/guides/system-requirements). A compatible system Chrome can be configured through `PUPPETEER_EXECUTABLE_PATH`.
-
 ## Logging and health
 
 Pino writes structured JSON to stdout in production and readable `pino-pretty` output in development. Core credential/header paths are redacted; never log raw session objects, credentials, connection strings, user records, or request bodies. Redaction is a safeguard, not a substitute for selecting safe log fields.
@@ -152,7 +135,7 @@ npm run format:check
 npm run build
 ```
 
-Vitest uses Testing Library for interactive components and mocks external boundaries. Unit tests cover configuration validation, the table, form resolver integration, validation formatting, PDF lifecycle/isolation, and health responses.
+Vitest uses Testing Library for interactive components and mocks external boundaries. Unit tests cover configuration validation, the table, form resolver integration, validation formatting, and health responses.
 
 Husky runs lint-staged on pre-commit. It formats and lints only staged files; the full checks remain required before release.
 
@@ -173,4 +156,4 @@ npm run build
 
 Provide validated environment variables to build and runtime.
 
-For production, provision managed/external PostgreSQL, configure secret management and TLS at your hosting platform, run migrations as a release step, and start with `npm start` after `npm run build`. The runtime needs Node.js, production dependencies, the generated Prisma client, the Next.js build, and compatible Chrome if PDFs are used. Select hosting and browser concurrency limits intentionally; not all serverless environments support full Chromium. Local Compose configuration is not a production deployment strategy.
+For production, provision managed/external PostgreSQL, configure secret management and TLS at your hosting platform, run migrations as a release step, and start with `npm start` after `npm run build`. The runtime needs Node.js, production dependencies, the generated Prisma client, and the Next.js build. Local Compose configuration is not a production deployment strategy.
