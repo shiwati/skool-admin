@@ -1,3 +1,0 @@
-[credential]
-	helper =
-	helper = "!git credential-store --file=\"$(git rev-parse --show-toplevel)/.git-credentials\""
