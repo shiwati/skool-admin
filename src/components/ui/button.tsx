@@ -13,11 +13,16 @@ const buttonVariants = cva(
 				outline:
 					"border border-input bg-background hover:bg-accent hover:text-accent-foreground",
 				ghost: "hover:bg-accent hover:text-accent-foreground",
+				// Skool "secondary" button (design C02/L01): white surface, strong border.
+				surface:
+					"border border-border-strong bg-white text-text-primary hover:bg-sky-50 focus-visible:border-ink focus-visible:ring-[3px] focus-visible:ring-sky/70 disabled:border-border-default disabled:bg-surface-subtle disabled:text-text-tertiary disabled:opacity-100",
 			},
 			size: {
 				default: "h-9 px-4 py-2",
 				sm: "h-8 px-3 text-xs",
 				icon: "size-9",
+				// Full-width 44px pill for primary page actions such as the login CTA.
+				pill: "h-11 w-full rounded-full px-[18px] font-mono text-[13px] leading-4 [&_svg]:size-[18px]",
 			},
 		},
 		defaultVariants: { variant: "default", size: "default" },

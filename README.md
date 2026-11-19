@@ -93,13 +93,16 @@ Unit tests are colocated with the code they exercise. Add only necessary applica
 
 Copy `.env.example` to `.env` for local development. Next.js loads it automatically; Prisma CLI and seed commands load it through `dotenv`.
 
-| Variable          | Requirement                                                       |
-| ----------------- | ----------------------------------------------------------------- |
-| `DATABASE_URL`    | PostgreSQL connection URL                                         |
-| `NEXTAUTH_SECRET` | Random secret, at least 32 characters                             |
-| `NEXTAUTH_URL`    | Canonical HTTP(S) application URL                                 |
-| `NODE_ENV`        | `development`, `test`, or `production`; defaults to `development` |
-| `LOG_LEVEL`       | Pino level; defaults to `info`                                    |
+| Variable               | Requirement                                                                 |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `DATABASE_URL`         | PostgreSQL connection URL                                                   |
+| `NEXTAUTH_SECRET`      | Random secret, at least 32 characters                                       |
+| `NEXTAUTH_URL`         | Canonical HTTP(S) application URL                                           |
+| `GOOGLE_CLIENT_ID`     | Google OAuth client ID (see [Authentication](#authentication))              |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret                                                  |
+| `AUTH_ALLOWED_DOMAIN`  | Google Workspace domain allowed to sign in, e.g. `skool.org.hu`; no default |
+| `NODE_ENV`             | `development`, `test`, or `production`; defaults to `development`           |
+| `LOG_LEVEL`            | Pino level; defaults to `info`                                              |
 
 Server startup validates environment values via `src/instrumentation.ts`; invalid configuration fails explicitly without printing secrets. Server modules also validate on import. Supply the required variables during builds too, because Next.js evaluates server modules when building route metadata. `npm ci` and Prisma client generation do not require secrets or a running database.
 
@@ -123,9 +126,26 @@ The client uses Prisma's PostgreSQL driver adapter with a bounded connection poo
 
 ## Authentication
 
-`src/lib/auth.ts` configures the Prisma adapter and database-backed sessions. The Route Handler exposes `/api/auth/*`. **No authentication provider is enabled**, so sign-in is deliberately unavailable.
+`src/lib/auth.ts` configures the Prisma adapter, database-backed sessions and **Google as the only sign-in method**. The Route Handler exposes `/api/auth/*`; the sign-in page is `/login`. There are no passwords, email links or public registration.
 
-When authentication requirements are defined, configure approved providers and their validated environment values. Use `getServerSession(authOptions)` in server-only code where needed. Authentication alone does not grant authorization: enforce authorization in every protected Route Handler, Server Action, and server-rendered resource. No business-specific callbacks, roles, credential flows, or public registration are implemented.
+### Google OAuth client
+
+1. In a Google Cloud project **owned by the Skool Workspace organisation**, create an OAuth client of type _Web application_.
+2. Set the OAuth consent screen user type to **Internal**. Google then blocks every account outside the organisation on its own page, before the app is reached.
+3. Add the authorised redirect URI `<NEXTAUTH_URL>/api/auth/callback/google` for each environment (locally `http://localhost:3000/api/auth/callback/google`).
+4. Put the client ID and secret in `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, and the Workspace domain in `AUTH_ALLOWED_DOMAIN`.
+
+### Who can sign in
+
+Every member of the Workspace organisation can sign in; access is managed in Google Workspace (add or suspend users there). There is **no app-side allowlist**. As a fail-closed safeguard, `src/lib/access-policy.ts` also checks on the server that Google reports a verified email and that both the Workspace hosted-domain (`hd`) claim and the email domain equal `AUTH_ALLOWED_DOMAIN`. A consumer Google account registered with a Workspace address has no `hd` claim and is denied. Denied attempts create no `User`, `Account` or `Session` rows.
+
+### Protecting pages and endpoints
+
+Pages under `src/app/(admin)/` are guarded by its layout (`requireAdmin`). Layouts do not protect Route Handlers or Server Actions: call `getAdminSession()` from `src/lib/session.ts` in each one and reject when it returns `null`.
+
+### Offboarding
+
+Suspending a user in Workspace blocks new sign-ins, but an existing session stays valid until it expires (30 days by default). To cut someone off immediately, delete their `Session` rows (for example in `npm run db:studio`).
 
 NextAuth.js v4 is intentionally used instead of the v5 beta. Plan and test a deliberate migration when the modern Auth.js integration becomes stable.
 

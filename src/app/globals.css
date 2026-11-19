@@ -3,7 +3,31 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Skool brand tokens (design board C01-Alapok). */
+@theme {
+	--color-sky: #a6c7e7;
+	--color-sky-50: #eef4fb;
+	--color-peach: #fbc999;
+	--color-lemon: #fbf3a3;
+	--color-pink: #f8c8dc;
+	--color-lavender: #c3b1e1;
+	--color-ink: #0f0f0f;
+	--color-canvas: #f6f8fb;
+	--color-text-primary: #121417;
+	--color-text-secondary: #565f6b;
+	--color-text-tertiary: #6b7480;
+	--color-border-default: #e2e7ee;
+	--color-border-strong: #c9d2dd;
+	--color-error-fg: #b42318;
+	--color-error-bg: #fbe4e4;
+	--color-surface-subtle: #f1f4f8;
+	--shadow-card: 0 1px 2px rgb(18 23 31 / 0.05);
+	--radius-pill: 999px;
+}
+
 @theme inline {
+	--font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+	--font-mono: var(--font-azeret-mono), ui-monospace, monospace;
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
@@ -35,14 +59,14 @@
 
 :root {
 	--radius: 0.625rem;
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.145 0 0);
+	--background: #f6f8fb; /* canvas */
+	--foreground: #121417; /* text primary */
 	--card: oklch(1 0 0);
 	--card-foreground: oklch(0.145 0 0);
 	--popover: oklch(1 0 0);
 	--popover-foreground: oklch(0.145 0 0);
-	--primary: oklch(0.205 0 0);
-	--primary-foreground: oklch(0.985 0 0);
+	--primary: #0f0f0f; /* ink */
+	--primary-foreground: #ffffff;
 	--secondary: oklch(0.97 0 0);
 	--secondary-foreground: oklch(0.205 0 0);
 	--muted: oklch(0.97 0 0);
