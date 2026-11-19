@@ -45,3 +45,40 @@ export type ApplicantsPage = {
 };
 
 export type EventOption = { id: string; name: string };
+
+/** A duplikáció-összehasonlító egy jelentkezője (API JSON alak). */
+export type DuplicateApplicant = {
+	id: string;
+	createdAt: string;
+	firstName: string;
+	lastName: string;
+	birthYear: number | null;
+	schoolName: string | null;
+	hometown: string | null;
+	phoneNumber: string | null;
+	email: string | null;
+	parentFirstName: string | null;
+	parentLastName: string | null;
+	parentMothersName: string | null;
+	parentAddress: string | null;
+	parentEmail: string | null;
+	parentPhone: string | null;
+	newsletter: boolean;
+	/** Legfrissebb elöl. */
+	applications: {
+		id: string;
+		receivedAt: string;
+		status: ApplicationStatus;
+		event: { id: string; name: string };
+	}[];
+};
+
+/** `GET /api/applicants/duplicates` válasza. */
+export type DuplicatesResponse = {
+	/** Eldöntetlen párok száma. */
+	total: number;
+	/** A visszaadott pár 0-alapú sorszáma. */
+	index: number;
+	/** Az A a korábban létrehozott jelentkező; `null`, ha nincs pár. */
+	pair: { a: DuplicateApplicant; b: DuplicateApplicant } | null;
+};

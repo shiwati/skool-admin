@@ -24,6 +24,9 @@ import { ApiError, apiFetch } from "@/lib/api/client";
 import {
 	eventFormSchema,
 	toCreateEventInput,
+	toEventFormValues,
+	toUpdateEventInput,
+	type EventFormSource,
 	type EventFormValues,
 } from "@/lib/events/schema";
 import { EVENT_TAGS } from "@/lib/events/tags";
@@ -121,9 +124,29 @@ const SORTED_TAGS = [...EVENT_TAGS].sort(
 
 const controlClass = cn("h-10", fieldControlClass);
 
-export function NewEventForm() {
+const EMPTY_VALUES: EventFormValues = {
+	name: "",
+	tags: [],
+	description: "",
+	from: "",
+	to: "",
+	companyName: "",
+	location: "",
+	capacity: "",
+	ageFrom: "",
+	ageTo: "",
+	sheetUrl: "",
+	instructor: "",
+	mentors: [],
+};
+
+type EventFormProps =
+	{ mode: "create" } | { mode: "edit"; event: EventFormSource };
+
+export function EventForm(props: EventFormProps) {
 	const router = useRouter();
 	const [saved, setSaved] = useState(false);
+	const editing = props.mode === "edit";
 	const {
 		register,
 		control,
@@ -132,21 +155,10 @@ export function NewEventForm() {
 		watch,
 		formState: { errors, isSubmitting, submitCount },
 	} = useZodForm<EventFormValues, EventFormValues>(eventFormSchema, {
-		defaultValues: {
-			name: "",
-			tags: [],
-			description: "",
-			from: "",
-			to: "",
-			companyName: "",
-			location: "",
-			capacity: "",
-			ageFrom: "",
-			ageTo: "",
-			sheetUrl: "",
-			instructor: "",
-			mentors: [],
-		},
+		defaultValues:
+			props.mode === "edit"
+				? toEventFormValues(props.event)
+				: EMPTY_VALUES,
 	});
 
 	const message = (name: FieldName) =>
@@ -164,16 +176,29 @@ export function NewEventForm() {
 
 	const onSubmit = handleSubmit(async (values) => {
 		try {
-			const event = await apiFetch<{ id: string }>("/api/events", {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify(toCreateEventInput(values)),
-			});
+			const event = await apiFetch<{ id: string }>(
+				props.mode === "edit"
+					? `/api/events/${props.event.id}`
+					: "/api/events",
+				{
+					method: props.mode === "edit" ? "PATCH" : "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify(
+						props.mode === "edit"
+							? toUpdateEventInput(values)
+							: toCreateEventInput(values),
+					),
+				},
+			);
 			setSaved(true);
 			toast.success("A program mentve.");
 			router.push(`/events/${event.id}`);
 		} catch (error) {
 			if (error instanceof ApiError && error.status === 401) return;
+			if (error instanceof ApiError && error.status === 404) {
+				toast.error("A program már nem létezik.");
+				return;
+			}
 			if (
 				error instanceof ApiError &&
 				error.status === 400 &&
@@ -188,13 +213,23 @@ export function NewEventForm() {
 	return (
 		<PageShell>
 			<Breadcrumb
-				items={[
-					{ label: "Programok", href: "/events" },
-					{ label: "Új program" },
-				]}
+				items={
+					props.mode === "edit"
+						? [
+								{ label: "Programok", href: "/events" },
+								{ label: props.event.name },
+								{ label: "Szerkesztés" },
+							]
+						: [
+								{ label: "Programok", href: "/events" },
+								{ label: "Új program" },
+							]
+				}
 			/>
 			<PageHeader
-				title="Új program felvétele"
+				title={
+					editing ? "Program szerkesztése" : "Új program felvétele"
+				}
 				description="A program adatlapja tárolja azt, hogy mi kerüljön a záró riportba."
 			/>
 			<FormErrorSummary
@@ -202,7 +237,11 @@ export function NewEventForm() {
 				items={summary}
 				onSelect={focusField}
 			/>
-			<form noValidate onSubmit={onSubmit} aria-label="Új program">
+			<form
+				noValidate
+				onSubmit={onSubmit}
+				aria-label={editing ? "Program szerkesztése" : "Új program"}
+			>
 				<div className="grid items-start gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
 					<nav
 						aria-label="Szakaszok"
@@ -489,24 +528,26 @@ export function NewEventForm() {
 								)}
 							</FormField>
 						</FormSection>
-					</div>
-				</div>
 
-				<div className="sticky bottom-6 mt-5 flex items-center justify-end gap-2 rounded-full border border-border-default bg-white px-4 py-2.5 shadow-overlay">
-					<Button
-						asChild
-						variant="ghost"
-						className="rounded-full font-mono text-[13px]"
-					>
-						<Link href="/events">Mégse</Link>
-					</Button>
-					<Button
-						type="submit"
-						disabled={isSubmitting || saved}
-						className="h-11 rounded-full px-6 font-mono text-[13px]"
-					>
-						Program mentése
-					</Button>
+						<Card className="mt-5 flex items-center justify-end gap-2 p-4">
+							<Button
+								asChild
+								variant="ghost"
+								className="h-11 rounded-full px-6 font-mono text-[13px]"
+							>
+								<Link href="/events">Mégse</Link>
+							</Button>
+							<Button
+								type="submit"
+								disabled={isSubmitting || saved}
+								className="h-11 rounded-full px-6 font-mono text-[13px]"
+							>
+								{editing
+									? "Változtatások mentése"
+									: "Program mentése"}
+							</Button>
+						</Card>
+					</div>
 				</div>
 			</form>
 		</PageShell>

@@ -30,7 +30,7 @@ export function FormErrorSummary({
 							<button
 								type="button"
 								onClick={() => onSelect(item.name)}
-								className="underline underline-offset-2"
+								className="underline underline-offset-2 hover:no-underline"
 							>
 								{item.label}
 							</button>

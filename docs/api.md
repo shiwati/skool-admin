@@ -1,6 +1,6 @@
 # API
 
-A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/[id]/edit`, `POST /api/applicants/merge`, `POST /api/events`, `POST /api/events/[id]/sync`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
+A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/[id]/edit`, `POST /api/applicants/merge`, `POST /api/applicants/duplicates/dismiss`, `POST /api/events`, `PATCH /api/events/[id]`, `POST /api/events/[id]/sync`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
 
 A jelentkező adatlapjának és szerkesztő űrlapjának (`/applicants/[id]`, `/applicants/[id]/edit`) nincs olvasó végpontja: az oldalak szerveroldalon közvetlenül az adatbázisból olvasnak (lásd [frontend.md](frontend.md)).
 
@@ -28,7 +28,7 @@ Egy tranzakcióban: csak a ténylegesen változott mezőket írja, mindegyikhez 
 
 ### `GET /api/events`
 
-Paraméterek: `page`, `pageSize`, `year`, `companyName`, `instructor`, `q` (név), `tags` (csak a [fix címkelistából](domain.md#címkék-eventtags), csak ismételt paraméterként, pl. `?tags=robotika&tags=kezdő`, vesszőnél nem vág; bármelyik címke egyezése elég; listán kívüli címke → `400`), `sort` (`from`|`name`|`companyName`|`capacity`, alap `from`), `order` (alap: `from` esetén desc, különben asc).
+Paraméterek: `page`, `pageSize`, `year`, `companyName`, `place` (helyszín vagy partnercég, részszöveg), `instructor`, `q` (név), `phase` (`active`: még nem ért véget és van jelentkezési sheet / `planned`: még nem ért véget, sheet nélkül / `closed`: véget ért; hiányzik = mind), `tags` (csak a [fix címkelistából](domain.md#címkék-eventtags), csak ismételt paraméterként, pl. `?tags=robotika&tags=kezdő`, vesszőnél nem vág; bármelyik címke egyezése elég; listán kívüli címke → `400`), `sort` (`from`|`name`|`companyName`|`capacity`, alap `from`), `order` (alap: `from` esetén desc, különben asc).
 Válasz: események + `applicationCounts` (státuszonként + `total`).
 
 ### `GET /api/events/tags`
@@ -37,8 +37,18 @@ Paraméter nincs. Válasz: `{ items: string[] }`, a **fix címkelista** (`EVENT_
 
 ### `POST /api/events` — új program
 
-Törzs (JSON, sémája `createEventSchema` az `api/events/route.ts`-ben): `name` (kötelező), `from`/`to` (dátum, `to >= from`); választható: `tags[]` (csak a fix címkelistából, alap üres), `description`, `companyName`, `location`, `sheetUrl`, `ageRange` (`"12-18"`), `instructor`, `mentors[]`, `capacity` (egész, ≥ 0, alap 0). Üres szöveg `null`-ra normalizálódik. Az űrlap legalább 1 fős létszámot kér, ezt a kliens ellenőrzi.
+Törzs (JSON, sémája `createEventSchema` a `src/lib/events/api-schema.ts`-ben): `name` (kötelező), `from`/`to` (dátum, `to >= from`); választható: `tags[]` (csak a fix címkelistából, alap üres), `description`, `companyName`, `location`, `sheetUrl`, `ageRange` (`"12-18"`), `instructor`, `mentors[]`, `capacity` (egész, ≥ 0, alap 0). Üres szöveg `null`-ra normalizálódik. Az űrlap legalább 1 fős létszámot kér, ezt a kliens ellenőrzi.
 Válasz: `201 { id }`; `400` `{error, details}` (mezőnkénti hibák); `401`.
+
+### `GET /api/events/[id]`
+
+Egy program összes mezője. `404`, ha nem létezik; `401`. A szerkesztő oldal (`/events/[id]/edit`) ugyanazt a `getEvent` függvényt (`src/lib/events/queries.ts`) hívja közvetlenül, nem HTTP-n.
+
+### `PATCH /api/events/[id]` — program módosítása
+
+Törzs: a `POST` mezői (`src/lib/events/api-schema.ts`, `updateEventSchema`), mind választható, de legalább egy kell. Csak a megadott mezők változnak; az opcionális szöveges mezők (`description`, `companyName`, `location`, `sheetUrl`, `ageRange`, `instructor`) `null`-lal törölhetők. A `to >= from` ellenőrzés a tárolt értékekkel egyesítve történik.
+A tranzakció a ténylegesen megváltozott mezőnként egy `History` sort ír (`tableName: "event"`, `fieldName` a Prisma mezőnév, `oldValue`/`newValue` szövegként; dátum ISO, lista JSON). Ha semmi sem változik, nem ír semmit.
+Válasz: `200 { id }`; `400` `{error, details}`; `401`; `404`.
 
 ### `GET /api/events/[id]/applicants`
 
@@ -66,9 +76,17 @@ Az esemény `sheetUrl`-jében megadott válasz-sheetet olvassa a **bejelentkezet
 
 - Oszlop ↔ mező párosítás fejléc-kulcsszavak alapján: `src/lib/sheet-import/mapping.ts` (kötelező: vezetéknév, utónév, e-mail). Ismeretlen oszlopok (pl. kézi „1. oszlop”) kimaradnak, a válasz `unmappedHeaders`-ben listázza őket.
 - Minden új válasz **új** `Applicant` + `Application`. Újraszinkronnál az `Application.sourceKey` (időbélyeg + e-mail, eseményen belül egyedi) miatt semmi nem jön létre kétszer, és semmi nem íródik felül.
-- Duplikátum: azonos `Applicant.duplicateKey` (normalizált név + e-mail) → minden érintett jelentkező `duplicateFlag = true`. A merge (elsődleges kiválasztása, jelentkezések átkötése) admin döntés, még nincs megvalósítva.
+- Duplikátum: azonos `Applicant.duplicateKey` (normalizált név + e-mail) → minden érintett jelentkező `duplicateFlag = true`. Az eldöntésük a duplikáció-ellenőrzés képernyőn történik (merge vagy „nem duplikáció”), lásd lent.
 - Válasz: `{ created, existing, duplicates, errors: [{ row, reason }], unmappedHeaders }`.
 
 ## `POST /api/applicants/merge` — duplikátumok összevonása
 
 Body: `{ "primaryId": "…", "mergeIds": ["…"] }` (1–50 egyedi id, a `primaryId` nem lehet köztük). Egy tranzakcióban: a `mergeIds` jelentkezők összes jelentkezése az elsődlegeshez kerül (a jelentkezési adatok változatlanok; ugyanarra az eseményre több is maradhat), a `History`-ba `merged_from` sor kerül, a merge-elt jelentkezők törlődnek. A `duplicateFlag` csak akkor marad igaz, ha még van másik jelentkező ugyanazzal a `duplicateKey`-jel. Válasz: `{ applicant (jelentkezésekkel), movedApplications }`; hibák: 400 (validáció), 401, 404 (ismeretlen id).
+
+## `GET /api/applicants/duplicates` — következő eldöntetlen duplikátumpár
+
+Query: `skip` (≥ 0, alapértelmezés 0; a „Kihagyás most” lépteti, a végén körbeér). A párok az azonos `duplicateKey`-ű, nem törölt, `duplicateFlag`-es jelentkezőkből képződnek (egy N tagú csoport minden párja), kivéve a „nem duplikáció”-nak jelölt párokat (`src/lib/applicants/duplicate-pairs.ts`). Válasz: `{ total, index, pair: { a, b } | null }`; az `a` a korábban rögzített jelentkező, mindkettő minden adatával és jelentkezéseivel (program, státusz, beküldés). A jelentkezőlista bannere ebből veszi a darabszámot.
+
+## `POST /api/applicants/duplicates/dismiss` — „nem duplikáció”
+
+Body: `{ "applicantIds": ["…", "…"] }` (két különböző id). A pár rendezve (`applicantAId < applicantBId`) a `DuplicateDismissal` táblába kerül, a `History`-ba `duplicate_dismissed` sor. A döntés **párra** szól: ha később egy harmadik, azonos kulcsú jelentkező érkezik, az bármelyikükkel új párt alkot és megjelenik. A `duplicateFlag` nem változik. Hibák: 400, 401, 404 (ismeretlen vagy törölt), 409 (eltérő `duplicateKey`).

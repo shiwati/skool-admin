@@ -37,6 +37,10 @@ describe("AdminSidebar", () => {
 		expect(
 			screen.getByRole("link", { name: "Jelentkezők" }),
 		).toHaveAttribute("href", "/applicants");
+		expect(screen.getByRole("link", { name: "Programok" })).toHaveAttribute(
+			"href",
+			"/events",
+		);
 	});
 
 	it("marks only the current section as the current page", () => {

@@ -12,6 +12,7 @@
 - `20261119171300_domain_models`: `applicant`, `application`, `event`, `history`, `application_status` enum.
 - `20261119172536_applicants_soft_delete`: `applicant.deleted_at` / `deleted_by` (GDPR-törlés, lásd lent).
 - `20261119184343_applicant_duplicates_and_source_key`: `applicant.duplicate_key` / `duplicate_flag` (sync-duplikátumok), `application.source_key`; az `application` egyedi kulcsa `(event_id, applicant_id)` helyett `(event_id, source_key)`.
+- `20261119205135_duplicate_dismissals`: `duplicate_dismissal` tábla („nem duplikáció” döntések jelentkezőpáronként, rendezett `applicant_a_id < applicant_b_id`, kaszkád törléssel).
 - A Prisma 7 a `migrate dev` után **nem** generál klienst automatikusan: futtasd az `npx prisma generate`-et (vagy az `npm run typecheck`-et).
 
 ## Lokális mintaadat (seed)
@@ -20,6 +21,7 @@ Cél: fejlesztéshez legyen alapadat a **lokális** adatbázisban, ami az éles 
 
 - Parancsok: `npm run db:seed` (upsert, újrafuttatható) · `npm run db:seed:reset` (törli az `application`/`applicant`/`event` sorokat, majd újratölti). A `dev:all` is futtatja a `db:seed`-et.
 - Forrás: `prisma/seed-data/local.json`, ha létezik (**gitignore**, ide jöhet valódi adat), különben a commitolt, kitalált `prisma/seed-data/sample.json`.
+- **Dashboard-demóadat** (`src/lib/seed-demo-data.ts`): kitalált, determinisztikus adat (~40 program, 260 jelentkező, ~1300 jelentkezés, `demo_…` id-kkel), hogy az Áttekintés minden kártyája tesztelhető legyen: előző év januárjától a futtatás utáni 3 hónapig havonta 1–2 program, 0,5×–3,2× túljelentkezés, ismétlődő jelentkezők, hiányzó születési év/település, eltérő írásmódú település. A dátumok a futtatás idejéhez igazodnak. A `sample.json` mellé mindig betöltődik; a `local.json` mellé csak `npm run db:seed:demo` (`--demo`) esetén. Eltávolítás: `npm run db:seed:reset` (local.json esetén utána demó nélkül tölt vissza).
 - Formátum: `events[]`, `applicants[]`, `applications[]`, explicit szöveges id-kkel, amikre egymásra hivatkoznak (pl. `seed_event_1`). Validáció és hivatkozás-ellenőrzés: `src/lib/seed-data-schema.ts` (Zod).
 - Védelem (`src/lib/seed-guard.ts`): a seed megtagad minden futást, ha `NODE_ENV=production`, vagy a `DATABASE_URL` hosztja nem `localhost` / `127.0.0.1` / `::1`, vagy az URL érvénytelen. Nem része a `db:deploy`-nak, a buildnek, a CI-nak.
 - A seed csak a `DATABASE_URL`-t igényli, nem az app teljes env-jét.

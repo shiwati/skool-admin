@@ -5,6 +5,8 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { logger } from "../src/lib/logger";
 import { dataFileSchema } from "../src/lib/seed-data-schema";
+import { dashboardDemoData } from "../src/lib/seed-demo-data";
+import { duplicateKey } from "../src/lib/sheet-import/mapping";
 import { assertLocalDatabase } from "../src/lib/seed-guard";
 import { formatValidationErrors } from "../src/lib/validation";
 
@@ -17,6 +19,10 @@ const dataFile = existsSync(localFile)
 	? localFile
 	: path.join(dataDir, "sample.json");
 
+// A dashboard-demóadat a mintafájl mellé mindig, a local.json mellé csak
+// `--demo` kapcsolóval töltődik be (valódi adat közé ne keveredjen).
+const withDemo = process.argv.includes("--demo") || dataFile !== localFile;
+
 const prisma = new PrismaClient({
 	adapter: new PrismaPg({ connectionString: databaseUrl }),
 });
@@ -24,8 +30,22 @@ const prisma = new PrismaClient({
 async function seed() {
 	assertLocalDatabase(databaseUrl, process.env.NODE_ENV);
 
+	const fileData = JSON.parse(readFileSync(dataFile, "utf8"));
+	const demo = withDemo ? dashboardDemoData() : null;
 	const parsed = dataFileSchema.safeParse(
-		JSON.parse(readFileSync(dataFile, "utf8")),
+		demo
+			? {
+					events: [...(fileData.events ?? []), ...demo.events],
+					applicants: [
+						...(fileData.applicants ?? []),
+						...demo.applicants,
+					],
+					applications: [
+						...(fileData.applications ?? []),
+						...demo.applications,
+					],
+				}
+			: fileData,
 	);
 	if (!parsed.success) {
 		logger.error(
@@ -40,39 +60,61 @@ async function seed() {
 	}
 	const { events, applicants, applications } = parsed.data;
 
-	await prisma.$transaction(async (tx) => {
-		if (reset) {
-			await tx.application.deleteMany();
-			await tx.applicant.deleteMany();
-			await tx.event.deleteMany();
-		}
-		for (const { id, ...data } of events) {
-			await tx.event.upsert({
-				where: { id },
-				create: { id, ...data },
-				update: data,
-			});
-		}
-		for (const { id, ...data } of applicants) {
-			await tx.applicant.upsert({
-				where: { id },
-				create: { id, ...data },
-				update: data,
-			});
-		}
-		for (const { id, ...data } of applications) {
-			await tx.application.upsert({
-				where: { id },
-				create: { id, ...data },
-				update: data,
-			});
-		}
-	});
+	await prisma.$transaction(
+		async (tx) => {
+			if (reset) {
+				await tx.application.deleteMany();
+				await tx.applicant.deleteMany();
+				await tx.event.deleteMany();
+			}
+			for (const { id, ...data } of events) {
+				await tx.event.upsert({
+					where: { id },
+					create: { id, ...data },
+					update: data,
+				});
+			}
+			// Same duplicate detection as the sheet import (name + e-mail), so
+			// sample duplicates show up in the duplicate review.
+			const keys = new Set<string>();
+			for (const { id, ...rest } of applicants) {
+				const key = rest.email
+					? duplicateKey(rest.lastName, rest.firstName, rest.email)
+					: null;
+				if (key) keys.add(key);
+				const data = { ...rest, duplicateKey: key };
+				await tx.applicant.upsert({
+					where: { id },
+					create: { id, ...data },
+					update: data,
+				});
+			}
+			for (const key of keys) {
+				const count = await tx.applicant.count({
+					where: { duplicateKey: key, deletedAt: null },
+				});
+				await tx.applicant.updateMany({
+					where: { duplicateKey: key },
+					data: { duplicateFlag: count > 1 },
+				});
+			}
+			for (const { id, ...data } of applications) {
+				await tx.application.upsert({
+					where: { id },
+					create: { id, ...data },
+					update: data,
+				});
+			}
+		},
+		// A demóadat több ezer sor: az alapértelmezett 5 s-os limit kevés.
+		{ timeout: 120_000 },
+	);
 
 	logger.info(
 		{
 			file: path.basename(dataFile),
 			reset,
+			demo: withDemo,
 			events: events.length,
 			applicants: applicants.length,
 			applications: applications.length,
