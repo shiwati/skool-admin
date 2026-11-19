@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-Single Next.js 16 App Router app (React 19, TypeScript, Tailwind v4, Prisma 7 + PostgreSQL, NextAuth.js v4). It is an application foundation with **no business functionality yet**: no business entities, example forms, dashboards, or fake data. Add features only as requirements arrive. The README is the authoritative setup doc.
+Single Next.js 16 App Router app (React 19, TypeScript, Tailwind v4, Prisma 7 + PostgreSQL, NextAuth.js v4). It is an admin app for Skool events and their applicants. The domain model (`Applicant`, `Application`, `Event`, `History`) and three list endpoints (`/api/applicants`, `/api/events`, `/api/events/[id]/applicants`) exist so far, all GET (write endpoints are expected); there is no real admin UI yet. Add features only as requirements arrive. The README is the authoritative setup doc. **Start with `docs/README.md`** (Hungarian knowledge base: domain, API, auth, known gaps such as the missing domain migration).
 
 ## Commands
 
