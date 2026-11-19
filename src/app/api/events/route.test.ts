@@ -1,20 +1,24 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { findMany, count, groupBy, getSession } = vi.hoisted(() => ({
-	findMany: vi.fn(),
-	count: vi.fn(),
-	groupBy: vi.fn(),
-	getSession: vi.fn(),
-}));
+const { findMany, count, groupBy, create, getSession, getAdminSession } =
+	vi.hoisted(() => ({
+		create: vi.fn(),
+		getAdminSession: vi.fn(),
+		findMany: vi.fn(),
+		count: vi.fn(),
+		groupBy: vi.fn(),
+		getSession: vi.fn(),
+	}));
 vi.mock("next-auth", () => ({ getServerSession: getSession }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
 vi.mock("@/lib/db", () => ({
-	db: { event: { findMany, count }, application: { groupBy } },
+	db: { event: { findMany, count, create }, application: { groupBy } },
 }));
-vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
+vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn(), info: vi.fn() } }));
+vi.mock("@/lib/session", () => ({ getAdminSession }));
 
-import { GET } from "./route";
+import { GET, POST } from "./route";
 
 const call = (qs = "") => GET(new Request(`http://x/api/events${qs}`));
 
@@ -59,5 +63,64 @@ describe("GET /api/events", () => {
 			total: 5,
 		});
 		expect(body.items[1].applicationCounts.total).toBe(0);
+	});
+});
+
+describe("POST /api/events", () => {
+	const post = (body: unknown) =>
+		POST(
+			new Request("http://x/api/events", {
+				method: "POST",
+				body: typeof body === "string" ? body : JSON.stringify(body),
+			}),
+		);
+
+	beforeEach(() => {
+		vi.resetAllMocks();
+		getAdminSession.mockResolvedValue({ user: { id: "u1" } });
+	});
+
+	it("rejects unauthenticated requests", async () => {
+		getAdminSession.mockResolvedValue(null);
+		const res = await post({});
+		expect(res.status).toBe(401);
+		expect(create).not.toHaveBeenCalled();
+	});
+
+	it("rejects invalid bodies", async () => {
+		expect((await post("{")).status).toBe(400);
+		const res = await post({
+			name: "",
+			from: "2026-05-02",
+			to: "2026-05-01",
+		});
+		expect(res.status).toBe(400);
+		const json = await res.json();
+		expect(json.details.fieldErrors).toHaveProperty("name");
+		expect(create).not.toHaveBeenCalled();
+	});
+
+	it("creates the event and returns its id", async () => {
+		create.mockResolvedValue({ id: "e1" });
+		const res = await post({
+			name: " Tábor ",
+			from: "2026-07-01T08:00:00Z",
+			to: "2026-07-05T16:00:00Z",
+			companyName: "",
+			capacity: 20,
+		});
+		expect(res.status).toBe(201);
+		expect(await res.json()).toEqual({ id: "e1" });
+		expect(create).toHaveBeenCalledWith({
+			data: {
+				name: "Tábor",
+				from: new Date("2026-07-01T08:00:00Z"),
+				to: new Date("2026-07-05T16:00:00Z"),
+				companyName: null,
+				mentors: [],
+				capacity: 20,
+			},
+			select: { id: true },
+		});
 	});
 });
