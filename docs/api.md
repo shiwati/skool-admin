@@ -1,6 +1,6 @@
 # API
 
-**Jelenleg** minden végpont `GET`, de ez az aktuális állapot, nem korlátozás: írási végpontok (POST/PATCH/DELETE) várhatók. A meglévők bejelentkezést igényelnek, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
+A végpontok többsége `GET`; az első írási végpont a `POST /api/applicants/delete`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
 
 ## Közös válaszformák
 
@@ -12,7 +12,11 @@
 ### `GET /api/applicants`
 
 Paraméterek: `page`, `pageSize` (alap 20, max 100), `eventIds` (CSV vagy ismételt), `ageFrom`, `ageTo` (`ageFrom ≤ ageTo`), `hometown`, `newsletter`, `attended` (bool), `q` (szavanként AND; keresés: keresztnév, vezetéknév, e-mail), `sort` (`lastName`|`birthYear`|`hometown`|`createdAt`, alap `lastName`), `order` (alap `asc`).
-Válasz: jelentkezők + `applications` (id, status, receivedAt, event{id,name,from}), `receivedAt desc`.
+Válasz: jelentkezők + `applications` (id, status, receivedAt, event{id,name,from}), `receivedAt desc`. A törölt (anonimizált, `deletedAt` nem null) jelentkezők soha nem szerepelnek benne.
+
+### `POST /api/applicants/delete`
+
+GDPR-törlés anonimizálással (részletek: [data-and-db.md](data-and-db.md#jelentkező-törlése-gdpr-anonimizálás)). Törzs: `{ "ids": string[] }` (1–100, egyedi, nem üres). Válasz: `200 { deleted }`, ahol a `deleted` a most törölt jelentkezők száma (a már törölteket kihagyja). Hibák: `401` · `400 {error:"Invalid request body", details}` · `404`, ha bármelyik id ismeretlen (ilyenkor semmi sem változik) · `500`. Egy tranzakcióban fut; a log csak `{ event: "applicants.anonymized", userId, count }`.
 
 ### `GET /api/events`
 

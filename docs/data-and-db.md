@@ -10,6 +10,8 @@
 - Alkalmazás (deploy/CI): `npm run db:deploy`. Prodban soha `db push` vagy `migrate dev`.
 - `20261028212000_auth_infrastructure`: NextAuth táblák.
 - `20261119171300_domain_models`: `applicant`, `application`, `event`, `history`, `application_status` enum.
+- `20261119172536_applicants_soft_delete`: `applicant.deleted_at` / `deleted_by` (GDPR-törlés, lásd lent).
+- A Prisma 7 a `migrate dev` után **nem** generál klienst automatikusan: futtasd az `npx prisma generate`-et (vagy az `npm run typecheck`-et).
 
 ## Lokális mintaadat (seed)
 
@@ -30,6 +32,17 @@ Az éles adatot az app tölti majd be Google Sheetből, bejelentkezett adminkén
 
 `npm run services:up` indítja a Postgrest (:5432) és a pgAdmint (:5050) Docker Compose-szal; a pgAdmin szerverlistája: `docker/pgadmin/servers.json`.
 
+## Jelentkező törlése (GDPR, anonimizálás)
+
+Jelentkezőt fizikailag nem törlünk. A törlés (`anonymizeApplicants`, `src/lib/applicants/anonymize.ts`) egy tranzakcióban fut:
+
+- A név „Törölt” / „jelentkező” lesz; az e-mail, a telefon, az iskola és minden szülői mező `null`, a hírlevél `false`. A születési év és a település megmarad (statisztikához).
+- A `deletedAt` / `deletedById` rögzíti, mikor és ki törölte. Visszaállítás nincs.
+- A jelentkezések (program, státusz, dátumok) megmaradnak, a szabad szöveges válaszaik törlődnek.
+- A `history` sorokból (`table_name` = `applicant` vagy `application`, `record_id` = az érintett id) kikerülnek a régi és új értékek, egy új sor (`field_name` = `deletedAt`) pedig rögzíti a törlést.
+
+Minden jelentkezőt olvasó lekérdezésnek `deletedAt: null`-ra kell szűrnie (a `GET /api/applicants` ezt teszi). Lokálisan: a `db:seed` upsertje egy törölt mintajelentkezőnek visszaírja a személyes adatait, de a `deletedAt`-et nem nullázza, így a jelentkező rejtve marad. Teljes visszaállításhoz használd a `db:seed:reset`-et.
+
 ## History (terv)
 
-A `History` tábla mezőszintű változásnaplónak készült (`tableName`, `fieldName`, `recordId`, régi/új érték, ki változtatta). Írási logika még nincs; ha lesz, érdemes egy központi helyen (pl. szerviz-réteg vagy Prisma extension) megoldani, hogy ne lehessen kihagyni. Az `updatedBy` mezők ugyanezt a célt szolgálják rekordszinten.
+A `History` tábla mezőszintű változásnaplónak készült (`tableName`, `fieldName`, `recordId`, régi/új érték, ki változtatta). Konvenció: a `tableName` az adatbázistábla neve (`@@map`, pl. `applicant`), a `fieldName` a Prisma-mezőnév. Jelenleg csak a GDPR-törlés ír bele. Általános írási logika még nincs; ha lesz, érdemes egy központi helyen (pl. szerviz-réteg vagy Prisma extension) megoldani, hogy ne lehessen kihagyni. Az `updatedBy` mezők ugyanezt a célt szolgálják rekordszinten.

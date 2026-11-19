@@ -40,9 +40,12 @@ const querySchema = z
 		{ message: "ageFrom must be <= ageTo", path: ["ageFrom"] },
 	);
 
+const NULLABLE_SORTS = new Set(["birthYear", "hometown"]);
+
 export async function GET(request: Request) {
 	return handleQuery(request, querySchema, async (query) => {
-		const and: Prisma.ApplicantWhereInput[] = [];
+		// Anonimizált (GDPR-törölt) jelentkezők soha nem jelennek meg a listában.
+		const and: Prisma.ApplicantWhereInput[] = [{ deletedAt: null }];
 
 		if (query.eventIds) {
 			and.push({
@@ -73,7 +76,11 @@ export async function GET(request: Request) {
 
 		const where: Prisma.ApplicantWhereInput = { AND: and };
 		const orderBy: Prisma.ApplicantOrderByWithRelationInput[] = [
-			{ [query.sort]: { sort: query.order, nulls: "last" } },
+			// Prisma accepts `nulls` only on nullable columns (birthYear,
+			// hometown); lastName and createdAt are required.
+			NULLABLE_SORTS.has(query.sort)
+				? { [query.sort]: { sort: query.order, nulls: "last" } }
+				: { [query.sort]: query.order },
 			...(query.sort === "lastName" ? [{ firstName: query.order }] : []),
 			{ id: "asc" },
 		];

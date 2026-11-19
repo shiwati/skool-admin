@@ -55,6 +55,12 @@ export const authOptions: NextAuthOptions = {
 			}
 			return baseUrl;
 		},
+		// Expose the internal user id so write endpoints can record who acted
+		// (e.g. `deletedById`, History). Never put tokens or emails here.
+		session({ session, user }) {
+			if (session.user) session.user.id = user.id;
+			return session;
+		},
 	},
 	events: {
 		signIn({ user }) {

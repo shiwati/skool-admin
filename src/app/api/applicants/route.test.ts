@@ -28,6 +28,25 @@ describe("GET /api/applicants", () => {
 		expect((await call()).status).toBe(401);
 	});
 
+	it("always excludes anonymized (deleted) applicants", async () => {
+		await call();
+		const { where } = findMany.mock.calls[0][0];
+		expect(where.AND).toEqual([{ deletedAt: null }]);
+		expect(count).toHaveBeenCalledWith({ where });
+	});
+
+	it.each([
+		["lastName", { lastName: "asc" }],
+		["createdAt", { createdAt: "asc" }],
+		["hometown", { hometown: { sort: "asc", nulls: "last" } }],
+	])(
+		"sorts by %s with nulls last only when nullable",
+		async (sort, first) => {
+			await call(`?sort=${sort}&order=asc`);
+			expect(findMany.mock.calls[0][0].orderBy[0]).toEqual(first);
+		},
+	);
+
 	it("validates query params", async () => {
 		expect((await call("?pageSize=500")).status).toBe(400);
 		expect((await call("?ageFrom=15&ageTo=10")).status).toBe(400);
@@ -53,6 +72,7 @@ describe("GET /api/applicants", () => {
 			birthYear: { sort: "desc", nulls: "last" },
 		});
 		expect(args.where.AND).toEqual([
+			{ deletedAt: null },
 			{ applications: { some: { eventId: { in: ["e1", "e2"] } } } },
 			{ hometown: { contains: "Pécs", mode: "insensitive" } },
 			{ newsletter: true },

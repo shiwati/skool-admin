@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Azeret_Mono, Poppins } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -31,6 +32,7 @@ export default function RootLayout({
 		>
 			<body className="min-h-screen bg-background font-sans text-foreground antialiased">
 				{children}
+				<Toaster position="bottom-right" />
 			</body>
 		</html>
 	);

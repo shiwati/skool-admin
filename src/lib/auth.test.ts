@@ -142,6 +142,21 @@ describe("authOptions", () => {
 		}
 	});
 
+	it("exposes only the internal user id on the session", async () => {
+		const session = await callbacks.session!({
+			session: {
+				user: { name: "Kovács Anna", email: "anna@skool.org.hu" },
+				expires: "2099-01-01T00:00:00.000Z",
+			},
+			user: { id: "u1", email: "anna@skool.org.hu", emailVerified: null },
+		} as unknown as Parameters<NonNullable<typeof callbacks.session>>[0]);
+		expect(session.user).toEqual({
+			id: "u1",
+			name: "Kovács Anna",
+			email: "anna@skool.org.hu",
+		});
+	});
+
 	it.each([
 		["https://evil.example/", baseUrl],
 		["//evil.example/path", `${baseUrl}//evil.example/path`],

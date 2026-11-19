@@ -19,7 +19,11 @@
 | Nyilvános     | `/login`, `/api/auth/*`, `/api/health` – maradjanak az `(admin)` kívül |
 
 `src/lib/session.ts`: `getAdminSession()` (request-szintű cache) és `requireAdmin()`.
-Az olvasó API végpontok a `handleQuery`-n keresztül védettek (lásd [api.md](api.md)).
+
+- **Visszatérési cím:** a layout nem látja az URL-t, ezért a `src/proxy.ts` (a Next 16-ban ez a korábbi middleware) minden oldalkérésnél átadja az útvonalat a query-vel együtt az `x-skool-return-to` fejlécben. A layout ezt (`returnToFromHeader`, `src/lib/return-to.ts`, azonos originre szűrve) adja a `requireAdmin`-nak, így például a `/applicants?page=2` bejelentkezés után ugyanoda tér vissza. A proxy semmilyen hozzáférési döntést nem hoz.
+- **`session.user.id`:** a `session` callback a belső `User.id`-t a sessionbe teszi, hogy az írási végpontok rögzíthessék, ki végezte a műveletet (pl. `deletedById`). Típus: `src/types/next-auth.d.ts`.
+
+Az olvasó API végpontok a `handleQuery`-n keresztül védettek (lásd [api.md](api.md)); a `POST /api/applicants/delete` maga hívja a `getAdminSession()`-t.
 
 ## Naplózás
 

@@ -13,8 +13,8 @@
 - **Sheet-import azonosítás:** hogyan ismerjük fel ugyanazt a jelentkezőt / eseményt újraimportáláskor (e-mail? név + születési év? külső azonosító mező, pl. `sheetRowId`)? A séma jelenleg nem ad természetes egyedi kulcsot; az `Applicant.email` csak indexelt, és a gyerekeknek lehet közös szülői e-mailje.
 - Az import saját, bejelentkezett admin funkció lesz (nem seed), a `dataFileSchema` közös validációval; az írási alap (body-validáció, session, History) előbb kell.
 - Az írási végpontok közös alapja (body-validáció, session, hibakezelés, History) még hiányzik, az első írási igénnyel együtt tervezendő.
-- Milyen írási műveletek kellenek (státuszváltás, szerkesztés, törlés), és kell-e hozzájuk History-naplózás?
-- Szerveroldali lapozású tábla kell-e (a `DataTable` jelenleg kliensoldali)?
+- Milyen további írási műveletek kellenek (státuszváltás, szerkesztés)? A törlés megvan (GDPR-anonimizálás, lásd [data-and-db.md](data-and-db.md)), a History-naplózás általános megoldása még nyitott.
+- ~~Szerveroldali lapozású tábla~~ Megoldva: `ApplicantsTable` (`src/components/applicants/`).
 - Szerepkörök: marad az "egy Workspace-tag = admin" modell?
 - Személyes adatok (gyerekek, szülők): adatkezelési/GDPR követelmények, megőrzés, törlés.
 
@@ -22,6 +22,9 @@
 
 | Dátum      | Döntés                                                                                                                                   | Indok                                                 |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| 2026-11-19 | Jelentkező törlése = GDPR-anonimizálás (soft delete `deletedAt`-tel), a jelentkezések és a History értékei nélkül megmaradnak            | Személyes adat eltűnik, a programstatisztika megmarad |
+| 2026-11-19 | A Jelentkezők lista oszlopbeállítása böngészőnként (`localStorage`) mentődik                                                             | Egyszerű, nincs sémaváltozás                          |
+| 2026-11-19 | A tömeges státuszmódosítás nem a Jelentkezők listán, hanem a program-jelentkezések képernyőn lesz                                        | A státusz jelentkezésenként (program × jelentkező) él |
 | 2026-11-19 | A tudásbázis a `docs/` alatt él, magyarul, commitolva                                                                                    | Közös, verziózott, kereshető                          |
 | 2026-11-19 | Lokális mintaadat seed-del (`sample.json` / gitignore-olt `local.json`), localhost-védelemmel; az éles import külön, későbbi app-funkció | Fejlesztői alapadat az éles DB veszélyeztetése nélkül |
 | (korábban) | Google az egyetlen belépési mód, nincs allowlist                                                                                         | Workspace-tagság = jogosultság                        |

@@ -19,6 +19,7 @@ model User {
   updatedApplicants   Applicant[]   @relation("ApplicantUpdatedBy")
   updatedApplications Application[] @relation("ApplicationUpdatedBy")
   historyEntries      History[]
+  deletedApplicants   Applicant[]   @relation("ApplicantDeletedBy")
 }
 
 model Account {
@@ -81,9 +82,14 @@ model Applicant {
   parentEmail       String?       @map("parent_email")
   parentPhone       String?       @map("parent_phone")
   newsletter        Boolean       @default(false)
+  /// GDPR törlés (anonimizálás) ideje; null = aktív jelentkező
+  deletedAt         DateTime?     @map("deleted_at")
+  deletedById       String?       @map("deleted_by")
+  deletedBy         User?         @relation("ApplicantDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
   applications      Application[]
 
   @@index([email])
+  @@index([deletedAt])
   @@map("applicant")
 }
 

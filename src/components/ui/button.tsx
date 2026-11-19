@@ -13,6 +13,8 @@ const buttonVariants = cva(
 				outline:
 					"border border-input bg-background hover:bg-accent hover:text-accent-foreground",
 				ghost: "hover:bg-accent hover:text-accent-foreground",
+				// Destructive confirmation (design S01 "btn-d").
+				destructive: "bg-error-fg text-white hover:bg-error-fg/90",
 				// Skool "secondary" button (design C02/L01): white surface, strong border.
 				surface:
 					"border border-border-strong bg-white text-text-primary hover:bg-sky-50 focus-visible:border-ink focus-visible:ring-[3px] focus-visible:ring-sky/70 disabled:border-border-default disabled:bg-surface-subtle disabled:text-text-tertiary disabled:opacity-100",
