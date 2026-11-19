@@ -1,0 +1,489 @@
+{
+	"events": [
+		{
+			"id": "seed_event_1",
+			"name": "Tavaszi robotika hétvége",
+			"from": "2026-03-14T08:00:00+01:00",
+			"to": "2026-03-15T16:00:00+01:00",
+			"companyName": "Minta Robotics Kft.",
+			"location": "Budapest, Minta utca 1.",
+			"description": "Kétnapos bevezető robotika workshop kezdőknek.",
+			"ageRange": "12-16",
+			"instructor": "Kovács Péter",
+			"mentors": ["Nagy Anna", "Szabó Gergő"],
+			"tags": ["robotika", "kezdő"],
+			"capacity": 3
+		},
+		{
+			"id": "seed_event_2",
+			"name": "Nyári programozó tábor",
+			"from": "2026-07-06T09:00:00+02:00",
+			"to": "2026-07-10T17:00:00+02:00",
+			"companyName": "Példa Szoftver Zrt.",
+			"location": "Debrecen, Példa tér 5.",
+			"description": "Egyhetes Python és webfejlesztés tábor.",
+			"ageRange": "13-17",
+			"instructor": "Tóth Réka",
+			"mentors": ["Kiss Dániel"],
+			"tags": ["programozás", "haladó"],
+			"capacity": 20
+		},
+		{
+			"id": "seed_event_3",
+			"name": "Őszi adatelemzés délután",
+			"from": "2026-10-10T14:00:00+02:00",
+			"to": "2026-10-10T18:00:00+02:00",
+			"companyName": null,
+			"location": "Online",
+			"description": null,
+			"ageRange": "15-18",
+			"instructor": "Varga Zsuzsa",
+			"mentors": [],
+			"tags": ["programozás", "kezdő"],
+			"capacity": 15
+		},
+		{
+			"id": "seed_event_4",
+			"name": "Python alapok – tél",
+			"from": "2026-12-05T09:00:00+01:00",
+			"to": "2026-12-19T13:00:00+01:00",
+			"companyName": "Minta Robotics Kft.",
+			"location": "Budapest, Minta utca 1.",
+			"description": "Három szombat délelőtt: változók, ciklusok, első játék.",
+			"sheetUrl": "https://docs.google.com/spreadsheets/d/seed-python-tel",
+			"ageRange": "12-16",
+			"instructor": "Kovács Péter",
+			"mentors": ["Nagy Anna", "Szabó Gergő", "Fehér Lilla"],
+			"tags": ["programozás", "kezdő"],
+			"capacity": 4
+		},
+		{
+			"id": "seed_event_5",
+			"name": "Mobilapp & AI workshop",
+			"from": "2026-12-12T10:00:00+01:00",
+			"to": "2026-12-12T16:00:00+01:00",
+			"companyName": "Példa Szoftver Zrt.",
+			"location": "Budapest, Példa körút 10.",
+			"description": "Egynapos workshop: saját mobilapp mesterséges intelligenciával.",
+			"sheetUrl": "https://docs.google.com/spreadsheets/d/seed-mobilapp-ai",
+			"ageRange": "14-18",
+			"instructor": "Tóth Réka",
+			"mentors": ["Kiss Dániel"],
+			"tags": ["programozás", "haladó"],
+			"capacity": 20
+		},
+		{
+			"id": "seed_event_6",
+			"name": "Téli robotika tábor",
+			"from": "2026-12-28T09:00:00+01:00",
+			"to": "2026-12-30T16:00:00+01:00",
+			"companyName": null,
+			"location": "Szeged, Minta tér 3.",
+			"description": "Háromnapos tábor LEGO robotokkal.",
+			"sheetUrl": "https://docs.google.com/spreadsheets/d/seed-teli-robotika",
+			"ageRange": "10-14",
+			"instructor": "Varga Zsuzsa",
+			"mentors": ["Szabó Gergő"],
+			"tags": ["robotika", "kezdő"],
+			"capacity": 2
+		},
+		{
+			"id": "seed_event_7",
+			"name": "eLearning: Webfejlesztés",
+			"from": "2026-10-01T00:00:00+02:00",
+			"to": "2026-12-15T23:59:00+01:00",
+			"companyName": null,
+			"location": "Online",
+			"description": "Önálló tempójú online kurzus HTML, CSS és JavaScript alapokkal.",
+			"sheetUrl": "https://docs.google.com/spreadsheets/d/seed-elearning-web",
+			"ageRange": "14-18",
+			"instructor": "Fehér Lilla",
+			"mentors": [],
+			"tags": ["programozás", "kezdő"],
+			"capacity": 30
+		},
+		{
+			"id": "seed_event_8",
+			"name": "Python haladó – tavasz",
+			"from": "2027-03-06T09:00:00+01:00",
+			"to": "2027-03-07T16:00:00+01:00",
+			"companyName": "Példa Szoftver Zrt.",
+			"location": "Debrecen, Példa tér 5.",
+			"description": "Kétnapos haladó Python hétvége, a jelentkezés még nem indult.",
+			"ageRange": "15-18",
+			"instructor": "Tóth Réka",
+			"mentors": ["Kiss Dániel", "Nagy Anna"],
+			"tags": ["programozás", "haladó"],
+			"capacity": 15
+		},
+		{
+			"id": "seed_event_9",
+			"name": "Programozó workshop lányoknak",
+			"from": "2027-02-13T10:00:00+01:00",
+			"to": "2027-02-13T15:00:00+01:00",
+			"companyName": "Minta Robotics Kft.",
+			"location": "Budapest, Minta utca 1.",
+			"description": null,
+			"ageRange": "12-16",
+			"instructor": null,
+			"mentors": [],
+			"tags": ["programozás"],
+			"capacity": 25
+		},
+		{
+			"id": "seed_event_10",
+			"name": "Rolling Office – Ózd",
+			"from": "2025-11-25T09:00:00+01:00",
+			"to": "2025-11-25T15:00:00+01:00",
+			"companyName": null,
+			"location": "Ózd, Minta Általános Iskola",
+			"description": "Egynapos iskolalátogatás.",
+			"ageRange": "10-14",
+			"instructor": "Kovács Péter",
+			"mentors": ["Szabó Gergő"],
+			"tags": ["robotika"],
+			"capacity": 40
+		}
+	],
+	"applicants": [
+		{
+			"id": "seed_applicant_1",
+			"firstName": "Bence",
+			"lastName": "Kovács",
+			"birthYear": 2011,
+			"schoolName": "Minta Általános Iskola",
+			"hometown": "Budapest",
+			"phoneNumber": "+36 20 555 0101",
+			"email": "bence.kovacs@example.com",
+			"parentFirstName": "Éva",
+			"parentLastName": "Kovács",
+			"parentMothersName": "Szabó Mária",
+			"parentAddress": "1011 Budapest, Minta utca 2.",
+			"parentEmail": "eva.kovacs@example.com",
+			"parentPhone": "+36 30 555 0102",
+			"newsletter": true
+		},
+		{
+			"id": "seed_applicant_2",
+			"firstName": "Lili",
+			"lastName": "Nagy",
+			"birthYear": 2010,
+			"schoolName": "Példa Gimnázium",
+			"hometown": "Debrecen",
+			"email": "lili.nagy@example.com",
+			"parentFirstName": "Gábor",
+			"parentLastName": "Nagy",
+			"parentEmail": "gabor.nagy@example.com",
+			"parentPhone": "+36 30 555 0202",
+			"newsletter": false
+		},
+		{
+			"id": "seed_applicant_3",
+			"firstName": "Márk",
+			"lastName": "Szabó",
+			"birthYear": 2012,
+			"schoolName": "Minta Általános Iskola",
+			"hometown": "Szeged",
+			"parentFirstName": "Katalin",
+			"parentLastName": "Szabó",
+			"parentEmail": "katalin.szabo@example.com",
+			"newsletter": true
+		},
+		{
+			"id": "seed_applicant_4",
+			"firstName": "Hanna",
+			"lastName": "Tóth",
+			"birthYear": 2009,
+			"schoolName": "Példa Gimnázium",
+			"hometown": "Budapest",
+			"email": "hanna.toth@example.com",
+			"parentEmail": "tibor.toth@example.com",
+			"newsletter": false
+		},
+		{
+			"id": "seed_applicant_5",
+			"firstName": "Dávid",
+			"lastName": "Kiss",
+			"birthYear": 2011,
+			"hometown": "Pécs",
+			"parentFirstName": "Judit",
+			"parentLastName": "Kiss",
+			"parentEmail": "judit.kiss@example.com",
+			"newsletter": true
+		},
+		{
+			"id": "seed_applicant_6",
+			"firstName": "Zsófia",
+			"lastName": "Varga",
+			"birthYear": null,
+			"hometown": null,
+			"email": "zsofia.varga@example.com",
+			"newsletter": false
+		},
+		{
+			"id": "seed_applicant_7",
+			"firstName": "Bence",
+			"lastName": "Kovacs",
+			"birthYear": 2011,
+			"schoolName": "Minta Általános Iskola",
+			"hometown": "Budapest",
+			"phoneNumber": "+36 70 555 0707",
+			"email": "Bence.Kovacs@example.com",
+			"parentFirstName": "Péter",
+			"parentLastName": "Kovács",
+			"parentEmail": "peter.kovacs@example.com",
+			"parentPhone": "+36 30 555 0708",
+			"newsletter": false
+		},
+		{
+			"id": "seed_applicant_8",
+			"firstName": "Lili",
+			"lastName": "Nagy",
+			"birthYear": 2014,
+			"schoolName": "Debreceni Általános Iskola",
+			"hometown": "Debrecen",
+			"email": "lili.nagy@example.com",
+			"parentFirstName": "Gábor",
+			"parentLastName": "Nagy",
+			"parentEmail": "gabor.nagy@example.com",
+			"parentPhone": "+36 30 555 0202",
+			"newsletter": true
+		},
+		{
+			"id": "seed_applicant_9",
+			"firstName": "Lili",
+			"lastName": "Nagy",
+			"birthYear": 2010,
+			"schoolName": "Példa Gimnázium",
+			"hometown": "Debrecen",
+			"phoneNumber": "+36 20 555 0909",
+			"email": "lili.nagy@example.com",
+			"parentFirstName": "Gábor",
+			"parentLastName": "Nagy",
+			"parentEmail": "gabor.nagy@example.com",
+			"parentPhone": "+36 30 555 0202",
+			"newsletter": false
+		}
+	],
+	"applications": [
+		{
+			"id": "seed_application_1",
+			"eventId": "seed_event_1",
+			"applicantId": "seed_applicant_1",
+			"receivedAt": "2026-02-01T10:00:00+01:00",
+			"status": "ATTENDED",
+			"foodPreference": "vegetáriánus",
+			"heardFromWhere": "iskola",
+			"solvedProblem": "Sorbarendezés Scratchben.",
+			"pastParticipationSkool": false,
+			"companyAwareness": true
+		},
+		{
+			"id": "seed_application_2",
+			"eventId": "seed_event_1",
+			"applicantId": "seed_applicant_2",
+			"receivedAt": "2026-02-03T18:30:00+01:00",
+			"status": "ATTENDED",
+			"heardFromWhere": "barát",
+			"heardFromWhom": "Nagy Anna",
+			"pastParticipationSkool": true,
+			"pastParticipationSkoolDesc": "Tavaly a nyári táborban voltam."
+		},
+		{
+			"id": "seed_application_3",
+			"eventId": "seed_event_1",
+			"applicantId": "seed_applicant_3",
+			"receivedAt": "2026-02-10T09:15:00+01:00",
+			"status": "ACCEPTED"
+		},
+		{
+			"id": "seed_application_4",
+			"eventId": "seed_event_1",
+			"applicantId": "seed_applicant_4",
+			"receivedAt": "2026-02-12T21:00:00+01:00",
+			"status": "WAITLISTED",
+			"comment": "Csak szombaton tud jönni."
+		},
+		{
+			"id": "seed_application_5",
+			"eventId": "seed_event_1",
+			"applicantId": "seed_applicant_5",
+			"receivedAt": "2026-02-14T08:00:00+01:00",
+			"status": "REJECTED"
+		},
+		{
+			"id": "seed_application_6",
+			"eventId": "seed_event_2",
+			"applicantId": "seed_applicant_1",
+			"receivedAt": "2026-05-20T12:00:00+02:00",
+			"status": "ACCEPTED",
+			"foodPreference": "vegetáriánus",
+			"pastExpInProg": "Scratch, kezdő Python.",
+			"pastParticipationSkool": true,
+			"pastParticipationSkoolDesc": "Tavaszi robotika hétvége."
+		},
+		{
+			"id": "seed_application_7",
+			"eventId": "seed_event_2",
+			"applicantId": "seed_applicant_2",
+			"receivedAt": "2026-05-22T16:45:00+02:00",
+			"status": "APPLIED",
+			"pastExpInProg": "Python alapok."
+		},
+		{
+			"id": "seed_application_8",
+			"eventId": "seed_event_2",
+			"applicantId": "seed_applicant_4",
+			"receivedAt": "2026-05-25T11:10:00+02:00",
+			"status": "APPLIED",
+			"companyAwareness": true
+		},
+		{
+			"id": "seed_application_9",
+			"eventId": "seed_event_2",
+			"applicantId": "seed_applicant_6",
+			"receivedAt": "2026-06-01T09:00:00+02:00"
+		},
+		{
+			"id": "seed_application_10",
+			"eventId": "seed_event_3",
+			"applicantId": "seed_applicant_4",
+			"receivedAt": "2026-09-15T19:20:00+02:00",
+			"status": "APPLIED"
+		},
+		{
+			"id": "seed_application_11",
+			"eventId": "seed_event_3",
+			"applicantId": "seed_applicant_7",
+			"receivedAt": "2026-09-20T20:05:00+02:00",
+			"status": "APPLIED",
+			"comment": "Másodszor töltöttük ki, mert nem jött visszaigazolás."
+		},
+		{
+			"id": "seed_application_12",
+			"eventId": "seed_event_3",
+			"applicantId": "seed_applicant_8",
+			"receivedAt": "2026-09-21T10:30:00+02:00",
+			"status": "APPLIED"
+		},
+		{
+			"id": "seed_application_13",
+			"eventId": "seed_event_3",
+			"applicantId": "seed_applicant_9",
+			"receivedAt": "2026-09-22T17:40:00+02:00",
+			"status": "APPLIED"
+		},
+		{
+			"id": "seed_application_14",
+			"eventId": "seed_event_4",
+			"applicantId": "seed_applicant_1",
+			"receivedAt": "2026-11-02T10:00:00+01:00",
+			"status": "ACCEPTED"
+		},
+		{
+			"id": "seed_application_15",
+			"eventId": "seed_event_4",
+			"applicantId": "seed_applicant_2",
+			"receivedAt": "2026-11-03T18:00:00+01:00",
+			"status": "ACCEPTED"
+		},
+		{
+			"id": "seed_application_16",
+			"eventId": "seed_event_4",
+			"applicantId": "seed_applicant_3",
+			"receivedAt": "2026-11-05T09:30:00+01:00",
+			"status": "ACCEPTED"
+		},
+		{
+			"id": "seed_application_17",
+			"eventId": "seed_event_4",
+			"applicantId": "seed_applicant_4",
+			"receivedAt": "2026-11-06T20:15:00+01:00",
+			"status": "ACCEPTED"
+		},
+		{
+			"id": "seed_application_18",
+			"eventId": "seed_event_4",
+			"applicantId": "seed_applicant_5",
+			"receivedAt": "2026-11-08T11:00:00+01:00",
+			"status": "WAITLISTED"
+		},
+		{
+			"id": "seed_application_19",
+			"eventId": "seed_event_4",
+			"applicantId": "seed_applicant_6",
+			"receivedAt": "2026-11-10T16:40:00+01:00",
+			"status": "WAITLISTED"
+		},
+		{
+			"id": "seed_application_20",
+			"eventId": "seed_event_5",
+			"applicantId": "seed_applicant_2",
+			"receivedAt": "2026-11-12T12:00:00+01:00",
+			"status": "APPLIED"
+		},
+		{
+			"id": "seed_application_21",
+			"eventId": "seed_event_5",
+			"applicantId": "seed_applicant_3",
+			"receivedAt": "2026-11-14T08:20:00+01:00",
+			"status": "APPLIED"
+		},
+		{
+			"id": "seed_application_22",
+			"eventId": "seed_event_5",
+			"applicantId": "seed_applicant_5",
+			"receivedAt": "2026-11-15T19:05:00+01:00",
+			"status": "ACCEPTED"
+		},
+		{
+			"id": "seed_application_23",
+			"eventId": "seed_event_6",
+			"applicantId": "seed_applicant_1",
+			"receivedAt": "2026-11-04T10:00:00+01:00",
+			"status": "ACCEPTED"
+		},
+		{
+			"id": "seed_application_24",
+			"eventId": "seed_event_6",
+			"applicantId": "seed_applicant_2",
+			"receivedAt": "2026-11-09T14:00:00+01:00",
+			"status": "APPLIED"
+		},
+		{
+			"id": "seed_application_25",
+			"eventId": "seed_event_6",
+			"applicantId": "seed_applicant_3",
+			"receivedAt": "2026-11-11T09:00:00+01:00",
+			"status": "ACCEPTED"
+		},
+		{
+			"id": "seed_application_26",
+			"eventId": "seed_event_6",
+			"applicantId": "seed_applicant_4",
+			"receivedAt": "2026-11-13T21:30:00+01:00",
+			"status": "WAITLISTED"
+		},
+		{
+			"id": "seed_application_27",
+			"eventId": "seed_event_6",
+			"applicantId": "seed_applicant_5",
+			"receivedAt": "2026-11-17T07:45:00+01:00",
+			"status": "APPLIED"
+		},
+		{
+			"id": "seed_application_28",
+			"eventId": "seed_event_7",
+			"applicantId": "seed_applicant_3",
+			"receivedAt": "2026-09-20T10:00:00+02:00",
+			"status": "ACCEPTED"
+		},
+		{
+			"id": "seed_application_29",
+			"eventId": "seed_event_7",
+			"applicantId": "seed_applicant_6",
+			"receivedAt": "2026-09-25T17:00:00+02:00",
+			"status": "ACCEPTED"
+		}
+	]
+}

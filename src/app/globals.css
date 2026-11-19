@@ -3,7 +3,42 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Skool brand tokens (design board C01-Alapok). */
+@theme {
+	--color-sky: #a6c7e7;
+	--color-sky-50: #eef4fb;
+	--color-peach: #fbc999;
+	--color-lemon: #fbf3a3;
+	--color-pink: #f8c8dc;
+	--color-pink-strong: #ee9fc2;
+	--color-lavender: #c3b1e1;
+	--color-sage: #cee4c4;
+	--color-coral: #e27979;
+	--color-ink: #0f0f0f;
+	--color-canvas: #f6f8fb;
+	--color-text-primary: #121417;
+	--color-text-secondary: #565f6b;
+	--color-text-tertiary: #6b7480;
+	--color-border-default: #e2e7ee;
+	--color-border-strong: #c9d2dd;
+	--color-error-fg: #b42318;
+	--color-error-bg: #fbe4e4;
+	--color-success-fg: #2e6b34;
+	--color-success-bg: #e3f1dc;
+	--color-warning-fg: #7a5000;
+	--color-warning-bg: #fdf3cc;
+	--color-info-fg: #1f5c99;
+	--color-info-bg: #e6f0fa;
+	--color-surface-subtle: #f1f4f8;
+	--shadow-card: 0 1px 2px rgb(18 23 31 / 0.05);
+	--shadow-overlay:
+		0 12px 32px -4px rgb(18 23 31 / 0.14), 0 2px 6px rgb(18 23 31 / 0.06);
+	--radius-pill: 999px;
+}
+
 @theme inline {
+	--font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+	--font-mono: var(--font-azeret-mono), ui-monospace, monospace;
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
@@ -12,6 +47,7 @@
 	--color-popover-foreground: var(--popover-foreground);
 	--color-primary: var(--primary);
 	--color-primary-foreground: var(--primary-foreground);
+	--color-primary-hover: var(--primary-hover);
 	--color-secondary: var(--secondary);
 	--color-secondary-foreground: var(--secondary-foreground);
 	--color-muted: var(--muted);
@@ -35,14 +71,15 @@
 
 :root {
 	--radius: 0.625rem;
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.145 0 0);
+	--background: #f6f8fb; /* canvas */
+	--foreground: #121417; /* text primary */
 	--card: oklch(1 0 0);
 	--card-foreground: oklch(0.145 0 0);
 	--popover: oklch(1 0 0);
 	--popover-foreground: oklch(0.145 0 0);
-	--primary: oklch(0.205 0 0);
-	--primary-foreground: oklch(0.985 0 0);
+	--primary: #0f0f0f; /* ink */
+	--primary-foreground: #ffffff;
+	--primary-hover: #2b3a52; /* ink with a blue tint, ~11:1 against white */
 	--secondary: oklch(0.97 0 0);
 	--secondary-foreground: oklch(0.205 0 0);
 	--muted: oklch(0.97 0 0);
@@ -69,6 +106,7 @@
 	--popover-foreground: oklch(0.985 0 0);
 	--primary: oklch(0.922 0 0);
 	--primary-foreground: oklch(0.205 0 0);
+	--primary-hover: oklch(0.82 0.03 255);
 	--secondary: oklch(0.269 0 0);
 	--secondary-foreground: oklch(0.985 0 0);
 	--muted: oklch(0.269 0 0);
@@ -92,5 +130,17 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+	}
+	button:not(:disabled),
+	[role="button"]:not([aria-disabled="true"]),
+	[role="tab"],
+	[role="menuitem"],
+	[role="option"],
+	summary,
+	select:not(:disabled),
+	input[type="checkbox"]:not(:disabled),
+	input[type="radio"]:not(:disabled),
+	label[for] {
+		cursor: pointer;
 	}
 }

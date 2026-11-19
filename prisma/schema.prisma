@@ -15,6 +15,12 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+
+  updatedApplicants   Applicant[]          @relation("ApplicantUpdatedBy")
+  updatedApplications Application[]        @relation("ApplicationUpdatedBy")
+  historyEntries      History[]
+  deletedApplicants   Applicant[]          @relation("ApplicantDeletedBy")
+  duplicateDismissals DuplicateDismissal[]
 }
 
 model Account {
@@ -52,4 +58,146 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// ─── Domain ──────────────────────────────────────────────────────────────────
+
+/// Jelentkező
+model Applicant {
+  id                String               @id @default(cuid())
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  updatedById       String?              @map("updated_by")
+  updatedBy         User?                @relation("ApplicantUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  firstName         String               @map("first_name")
+  lastName          String               @map("last_name")
+  birthYear         Int?                 @map("birth_year")
+  schoolName        String?              @map("school_name")
+  hometown          String?
+  phoneNumber       String?              @map("phone_number")
+  email             String?
+  parentFirstName   String?              @map("parent_first_name")
+  parentLastName    String?              @map("parent_last_name")
+  parentMothersName String?              @map("parent_mothers_name")
+  parentAddress     String?              @map("parent_address")
+  parentEmail       String?              @map("parent_email")
+  parentPhone       String?              @map("parent_phone")
+  newsletter        Boolean              @default(false)
+  /// GDPR törlés (anonimizálás) ideje; null = aktív jelentkező
+  deletedAt         DateTime?            @map("deleted_at")
+  deletedById       String?              @map("deleted_by")
+  deletedBy         User?                @relation("ApplicantDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  /// Normalizált vezetéknév + utónév + e-mail; azonos kulcs = lehetséges duplikátum.
+  duplicateKey      String?              @map("duplicate_key")
+  /// Igaz, ha van másik jelentkező ugyanazzal a kulccsal; az admin merge-öli.
+  duplicateFlag     Boolean              @default(false) @map("duplicate_flag")
+  applications      Application[]
+  dismissalsAsA     DuplicateDismissal[] @relation("DismissalApplicantA")
+  dismissalsAsB     DuplicateDismissal[] @relation("DismissalApplicantB")
+
+  @@index([email])
+  @@index([deletedAt])
+  @@index([duplicateKey])
+  @@map("applicant")
+}
+
+/// "Nem duplikáció" admin döntés egy jelentkezőpárra. Párra szól, így egy
+/// később érkező, azonos kulcsú jelentkező új párként újra megjelenik.
+/// A pár rendezett: applicantAId < applicantBId.
+model DuplicateDismissal {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now()) @map("created_at")
+  createdById  String?   @map("created_by")
+  createdBy    User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  applicantAId String    @map("applicant_a_id")
+  applicantA   Applicant @relation("DismissalApplicantA", fields: [applicantAId], references: [id], onDelete: Cascade)
+  applicantBId String    @map("applicant_b_id")
+  applicantB   Applicant @relation("DismissalApplicantB", fields: [applicantBId], references: [id], onDelete: Cascade)
+
+  @@unique([applicantAId, applicantBId])
+  @@index([applicantBId])
+  @@map("duplicate_dismissal")
+}
+
+/// Jelentkezés (Event × Applicant)
+model Application {
+  id                         String            @id @default(cuid())
+  receivedAt                 DateTime          @default(now()) @map("received_at")
+  createdAt                  DateTime          @default(now()) @map("created_at")
+  updatedAt                  DateTime          @updatedAt @map("updated_at")
+  updatedById                String?           @map("updated_by")
+  updatedBy                  User?             @relation("ApplicationUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  eventId                    String            @map("event_id")
+  event                      Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  applicantId                String            @map("applicant_id")
+  applicant                  Applicant         @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  foodPreference             String?           @map("food_preference")
+  heardFromWhere             String?           @map("heard_from_where")
+  heardFromWhom              String?           @map("heard_from_whom")
+  solvedProblem              String?           @map("solved_problem")
+  pastExpInProg              String?           @map("past_exp_in_prog")
+  pastParticipationOther     String?           @map("past_participation_other")
+  pastParticipationSkool     Boolean           @default(false) @map("past_participation_skool")
+  pastParticipationSkoolDesc String?           @map("past_participation_skool_desc")
+  comment                    String?
+  companyAwareness           Boolean           @default(false) @map("company_awareness")
+  status                     ApplicationStatus @default(APPLIED)
+  /// Forrás-sor azonosítója (sheet import): újraszinkronnál nem jön létre kétszer.
+  sourceKey                  String?           @map("source_key")
+
+  @@unique([eventId, sourceKey])
+  @@index([applicantId])
+  @@index([eventId, applicantId])
+  @@index([eventId, status])
+  @@map("application")
+}
+
+/// Jelentkezés állapota
+enum ApplicationStatus {
+  APPLIED    @map("applied") /// jelentkezett
+  ACCEPTED   @map("accepted") /// elfogadva
+  REJECTED   @map("rejected") /// elutasítva
+  ATTENDED   @map("attended") /// részt vett
+  WAITLISTED @map("waitlisted") /// várólistás
+
+  @@map("application_status")
+}
+
+/// Program / esemény
+model Event {
+  id               String        @id @default(cuid())
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  name             String
+  from             DateTime
+  to               DateTime
+  companyName      String?       @map("company_name")
+  location         String?
+  description      String?       @map("desc")
+  sheetUrl         String?       @map("sheet_url")
+  feedbackSheetUrl String?       @map("feedback_sheet_url")
+  ageRange         String?       @map("age_range")
+  instructor       String?
+  mentors          String[]
+  tags             String[]      @default([])
+  capacity         Int           @default(0)
+  applications     Application[]
+
+  @@map("event")
+}
+
+/// Mezőszintű változásnapló
+model History {
+  id          String   @id @default(cuid())
+  tableName   String   @map("table_name")
+  fieldName   String   @map("field_name")
+  oldValue    String?  @map("old_value")
+  newValue    String?  @map("new_value")
+  recordId    String   @map("record_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdById String?  @map("created_by")
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([tableName, recordId])
+  @@map("history")
 }

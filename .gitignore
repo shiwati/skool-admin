@@ -2,6 +2,7 @@ node_modules/
 .next/
 out/
 coverage/
+temp/
 .env*
 !.env.example
 *.tsbuildinfo
@@ -9,3 +10,7 @@ next-env.d.ts
 .DS_Store
 *.log
 .git-credentials
+docker/mnt
+
+# local seed data (may contain real personal data)
+prisma/seed-data/local.json
