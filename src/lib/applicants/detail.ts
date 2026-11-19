@@ -59,6 +59,54 @@ export type ApplicantDetail = {
 	history: ApplicantHistoryEntry[];
 };
 
+export type ApplicantForEdit = {
+	id: string;
+	updatedAt: Date;
+	lastName: string;
+	firstName: string;
+	birthYear: number | null;
+	email: string | null;
+	phoneNumber: string | null;
+	schoolName: string | null;
+	hometown: string | null;
+	parentLastName: string | null;
+	parentFirstName: string | null;
+	parentMothersName: string | null;
+	parentAddress: string | null;
+	parentEmail: string | null;
+	parentPhone: string | null;
+	newsletter: boolean;
+};
+
+/**
+ * A szerkesztő űrlap adatai (csak a szerkeszthető mezők + `updatedAt` az
+ * ütközés-ellenőrzéshez). Ismeretlen vagy törölt jelentkezőnél `null`.
+ */
+export const getApplicantForEdit = cache(
+	async (id: string): Promise<ApplicantForEdit | null> =>
+		db.applicant.findFirst({
+			where: { id, deletedAt: null },
+			select: {
+				id: true,
+				updatedAt: true,
+				lastName: true,
+				firstName: true,
+				birthYear: true,
+				email: true,
+				phoneNumber: true,
+				schoolName: true,
+				hometown: true,
+				parentLastName: true,
+				parentFirstName: true,
+				parentMothersName: true,
+				parentAddress: true,
+				parentEmail: true,
+				parentPhone: true,
+				newsletter: true,
+			},
+		}),
+);
+
 /**
  * Egy jelentkező adatlapja az adatbázisból. Ismeretlen vagy törölt
  * (anonimizált) jelentkezőnél `null`. Kérésenként memoizált, így a

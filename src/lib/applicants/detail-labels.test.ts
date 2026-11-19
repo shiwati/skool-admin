@@ -20,6 +20,11 @@ describe("detail labels", () => {
 		expect(historyValue("status", null)).toBeNull();
 	});
 
+	it("shows newsletter values as Igen/Nem", () => {
+		expect(historyValue("newsletter", "true")).toBe("Igen");
+		expect(historyValue("newsletter", "false")).toBe("Nem");
+	});
+
 	it("lists form answers in the specified order", () => {
 		expect(FORM_ANSWER_FIELDS.map((f) => f.label)).toEqual([
 			"Honnan hallottál rólunk?",

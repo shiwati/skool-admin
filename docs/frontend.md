@@ -33,7 +33,12 @@
 - `/applicants/[id]`: Jelentkező adatlap (`src/app/(admin)/applicants/[id]/`, komponensek: `src/components/applicants/detail/`).
     - **Adat:** nincs API-végpont; a Server Component renderelés előtt maga kérdez az adatbázisba (`getApplicantDetail`, `src/lib/applicants/detail.ts`, `React.cache`-elve, így a `generateMetadata` is ugyanazt használja). Előtte maga is hívja a `requireAdmin`-t, mert a layout és az oldal párhuzamosan renderelődik.
     - **404:** ismeretlen vagy törölt (anonimizált) jelentkezőnél `notFound()` → `not-found.tsx`.
-    - **Tartalom:** személyes és szülői adatok, programok, a legfrissebb jelentkezés űrlapválaszai, címkék, változástörténet (`History`, legfrissebb 20). A kliens csak a fejléc-műveleteket kapja (`ApplicantDetailActions`: törlés; a visszaigazolás és a szerkesztés letiltva).
+    - **Tartalom:** személyes és szülői adatok, programok, a legfrissebb jelentkezés űrlapválaszai, címkék, változástörténet (`History`, legfrissebb 20). A kliens csak a fejléc-műveleteket kapja (`ApplicantDetailActions`: szerkesztés linkje, törlés; a visszaigazolás letiltva).
+- `/applicants/[id]/edit`: Adatlap szerkesztése (`src/app/(admin)/applicants/[id]/edit/`, űrlap: `src/components/applicants/edit/applicant-edit-form.tsx`).
+    - **Előtöltés:** a Server Component a `getApplicantForEdit`-tel olvas (csak a szerkeszthető mezők + `updatedAt`), `requireAdmin` után; ismeretlen/törölt jelentkezőnél 404.
+    - **Validáció:** közös Zod-séma az űrlapnak és a végpontnak (`src/lib/applicants/edit-schema.ts`); kötelező a név és az e-mail. Beküldés után `FormErrorSummary` („N mező javításra szorul”), a szerver mezőhibái (`details.fieldErrors`) is a mezőkre kerülnek.
+    - **Mentési sáv:** csak módosításkor látszik („N nem mentett módosítás”, Elvetés/Mentés; a szám a React Hook Form `dirtyFields`-ből); mentetlen módosításnál a lap bezárása/újratöltése megerősítést kér (`beforeunload`, az alkalmazáson belüli linkeknél nincs figyelmeztetés).
+    - **Mentés:** `POST /api/applicants/[id]/edit` a betöltéskori `updatedAt`-tel; siker után toast és vissza az adatlapra. `409` esetén ütközés-figyelmeztetés „Újratöltés” gombbal, a beírt értékek megmaradnak.
 - Kliensoldali API-hívások: `apiFetch` (`src/lib/api/client.ts`). 401 esetén teljes oldalas átirányítás a `/login`-ra, az aktuális URL-lel mint visszatérési címmel.
 - `error.tsx`, `not-found.tsx`: globális hibaoldalak.
 

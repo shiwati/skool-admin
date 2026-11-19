@@ -1,8 +1,8 @@
 # API
 
-A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/merge`, `POST /api/events`, `POST /api/events/[id]/sync`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
+A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/[id]/edit`, `POST /api/applicants/merge`, `POST /api/events`, `POST /api/events/[id]/sync`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
 
-A jelentkező adatlapnak (`/applicants/[id]`) nincs végpontja: az oldal szerveroldalon közvetlenül az adatbázisból olvas (lásd [frontend.md](frontend.md)).
+A jelentkező adatlapjának és szerkesztő űrlapjának (`/applicants/[id]`, `/applicants/[id]/edit`) nincs olvasó végpontja: az oldalak szerveroldalon közvetlenül az adatbázisból olvasnak (lásd [frontend.md](frontend.md)).
 
 ## Közös válaszformák
 
@@ -19,6 +19,12 @@ Válasz: jelentkezők + `applications` (id, status, receivedAt, event{id,name,fr
 ### `POST /api/applicants/delete`
 
 GDPR-törlés anonimizálással (részletek: [data-and-db.md](data-and-db.md#jelentkező-törlése-gdpr-anonimizálás)). Törzs: `{ "ids": string[] }` (1–100, egyedi, nem üres). Válasz: `200 { deleted }`, ahol a `deleted` a most törölt jelentkezők száma (a már törölteket kihagyja). Hibák: `401` · `400 {error:"Invalid request body", details}` · `404`, ha bármelyik id ismeretlen (ilyenkor semmi sem változik) · `500`. Egy tranzakcióban fut; a log csak `{ event: "applicants.anonymized", userId, count }`.
+
+### `POST /api/applicants/[id]/edit` — jelentkező szerkesztése
+
+A szerkesztő űrlap (`/applicants/[id]/edit`) mentése. Törzs (séma: `applicantEditRequestSchema`, `src/lib/applicants/edit-schema.ts`, ugyanazt használja az űrlap is): a szerkeszthető mezők űrlap-alakban (`lastName`, `firstName`, `email` kötelező; `birthYear` szövegként, 1900..idei év; `phoneNumber`, `schoolName`, `hometown`, `parentLastName`, `parentFirstName`, `parentMothersName`, `parentAddress`, `parentEmail`, `parentPhone`; `newsletter` bool) + `expectedUpdatedAt` (ISO, a betöltéskori `updatedAt`). Üres opcionális szöveg `null`-ként mentődik.
+Válasz: `200 { updatedAt }`. Hibák: `401` · `400 {error:"Invalid request body", details}` (mezőnkénti hibák, magyar üzenettel) · `404` ismeretlen vagy törölt jelentkezőre · `409 {error:"Conflict"}`, ha a jelentkező a betöltés óta módosult (ilyenkor semmi sem változik) · `500`.
+Egy tranzakcióban: csak a ténylegesen változott mezőket írja, mindegyikhez egy `History`-sort (`tableName: "applicant"`); név- vagy e-mail-változáskor újraszámolja a `duplicateKey`-t és a régi/új kulcs `duplicateFlag`-jeit. A log csak `{ event: "applicant.updated", userId, changed }`.
 
 ### `GET /api/events`
 

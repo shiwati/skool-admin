@@ -1,6 +1,7 @@
 "use client";
 
 import { MoreHorizontal, Pencil, Send, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ function UnavailableButton({
 	children,
 }: {
 	id: string;
-	variant: "surface" | "default";
+	variant: "surface";
 	children: ReactNode;
 }) {
 	return (
@@ -74,11 +75,13 @@ export function ApplicantDetailActions({
 					<Send aria-hidden="true" />
 					Visszaigazolás küldése
 				</UnavailableButton>
-				<UnavailableButton id="edit-unavailable" variant="default">
+			</TooltipProvider>
+			<Button asChild className="rounded-full">
+				<Link href={`/applicants/${encodeURIComponent(id)}/edit`}>
 					<Pencil aria-hidden="true" />
 					Szerkesztés
-				</UnavailableButton>
-			</TooltipProvider>
+				</Link>
+			</Button>
 			<DropdownMenu>
 				<DropdownMenuTrigger
 					aria-label="További műveletek"

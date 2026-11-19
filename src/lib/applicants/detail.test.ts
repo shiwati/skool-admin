@@ -12,7 +12,11 @@ vi.mock("@/lib/db", () => ({
 	},
 }));
 
-import { getApplicantDetail, HISTORY_LIMIT } from "./detail";
+import {
+	getApplicantDetail,
+	getApplicantForEdit,
+	HISTORY_LIMIT,
+} from "./detail";
 
 const applicant = {
 	id: "a1",
@@ -115,5 +119,19 @@ describe("getApplicantDetail", () => {
 				createdAt: at,
 			},
 		]);
+	});
+});
+
+describe("getApplicantForEdit", () => {
+	beforeEach(() => vi.resetAllMocks());
+
+	it("reads only non-deleted applicants and only the editable fields", async () => {
+		findFirst.mockResolvedValue(null);
+		expect(await getApplicantForEdit("a1")).toBeNull();
+		const args = findFirst.mock.calls[0][0];
+		expect(args.where).toEqual({ id: "a1", deletedAt: null });
+		expect(args.select).toMatchObject({ updatedAt: true, email: true });
+		expect(args.select).not.toHaveProperty("duplicateKey");
+		expect(args.select).not.toHaveProperty("applications");
 	});
 });

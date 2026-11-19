@@ -33,13 +33,16 @@ describe("ApplicantDetailActions", () => {
 		);
 	}
 
-	it("shows confirmation and edit as disabled", () => {
+	it("keeps confirmation disabled and links edit to the editor", () => {
 		render(<ApplicantDetailActions id="a1" name="Nagy Luca" />);
-		for (const name of [/Visszaigazolás küldése/, /Szerkesztés/]) {
-			const button = screen.getByRole("button", { name });
-			expect(button).toBeDisabled();
-			expect(button).toHaveAccessibleDescription("Hamarosan elérhető.");
-		}
+		const confirm = screen.getByRole("button", {
+			name: /Visszaigazolás küldése/,
+		});
+		expect(confirm).toBeDisabled();
+		expect(confirm).toHaveAccessibleDescription("Hamarosan elérhető.");
+		expect(
+			screen.getByRole("link", { name: /Szerkesztés/ }),
+		).toHaveAttribute("href", "/applicants/a1/edit");
 	});
 
 	it("opens the deletion confirmation naming the applicant", async () => {

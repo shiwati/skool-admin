@@ -71,5 +71,8 @@ export function historyValue(
 ): string | null {
 	if (value === null) return null;
 	if (field === "status" && isStatus(value)) return STATUS_LABELS[value];
+	if (field === "newsletter" && (value === "true" || value === "false")) {
+		return value === "true" ? "Igen" : "Nem";
+	}
 	return value;
 }

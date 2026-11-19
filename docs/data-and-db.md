@@ -44,6 +44,13 @@ Jelentkezőt fizikailag nem törlünk. A törlés (`anonymizeApplicants`, `src/l
 
 Minden jelentkezőt olvasó lekérdezésnek `deletedAt: null`-ra kell szűrnie (a `GET /api/applicants` ezt teszi). Lokálisan: a `db:seed` upsertje egy törölt mintajelentkezőnek visszaírja a személyes adatait, de a `deletedAt`-et nem nullázza, így a jelentkező rejtve marad. Teljes visszaállításhoz használd a `db:seed:reset`-et.
 
-## History (terv)
+## History
 
-A `History` tábla mezőszintű változásnaplónak készült (`tableName`, `fieldName`, `recordId`, régi/új érték, ki változtatta). Konvenció: a `tableName` az adatbázistábla neve (`@@map`, pl. `applicant`), a `fieldName` a Prisma-mezőnév. Jelenleg csak a GDPR-törlés ír bele. Általános írási logika még nincs; ha lesz, érdemes egy központi helyen (pl. szerviz-réteg vagy Prisma extension) megoldani, hogy ne lehessen kihagyni. Az `updatedBy` mezők ugyanezt a célt szolgálják rekordszinten.
+A `History` tábla mezőszintű változásnapló (`tableName`, `fieldName`, `recordId`, régi/új érték, ki változtatta). Konvenció: a `tableName` az adatbázistábla neve (`@@map`, pl. `applicant`), a `fieldName` a Prisma-mezőnév, az érték szövegként (szám és logikai is, pl. `"2010"`, `"true"`).
+
+Írói:
+
+- **GDPR-törlés** (`anonymize.ts`): kitisztítja a jelentkező és jelentkezései régi/új értékeit, és egy `deletedAt` sort ír.
+- **Jelentkező szerkesztése** (`updateApplicant`, `src/lib/applicants/update.ts`): minden ténylegesen megváltozott mezőhöz egy sor, a mentéssel azonos tranzakcióban. Mivel `tableName: "applicant"`, a GDPR-törlés ezeket is kitisztítja.
+
+Általános írási logika (pl. Prisma extension) még nincs; ha lesz harmadik író, érdemes központosítani. Az `updatedBy` mezők ugyanezt a célt szolgálják rekordszinten.
