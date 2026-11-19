@@ -57,6 +57,29 @@ describe("GET /api/events", () => {
 		]);
 	});
 
+	it("filters by place (location or partner) and phase", async () => {
+		findMany.mockResolvedValue([]);
+		count.mockResolvedValue(0);
+		await call("?place=pécs&phase=planned");
+		const [place, phase] = findMany.mock.calls[0][0].where.AND;
+		expect(place).toEqual({
+			OR: [
+				{ location: { contains: "pécs", mode: "insensitive" } },
+				{ companyName: { contains: "pécs", mode: "insensitive" } },
+			],
+		});
+		expect(phase).toEqual({
+			to: { gte: expect.any(Date) },
+			sheetUrl: null,
+		});
+	});
+
+	it("rejects an unknown phase", async () => {
+		const res = await call("?phase=draft");
+		expect(res.status).toBe(400);
+		expect(findMany).not.toHaveBeenCalled();
+	});
+
 	it("rejects a tag that is not in the fixed list", async () => {
 		const res = await call("?tags=robotika&tags=nemletezik");
 		expect(res.status).toBe(400);

@@ -22,7 +22,7 @@ GDPR-törlés anonimizálással (részletek: [data-and-db.md](data-and-db.md#jel
 
 ### `GET /api/events`
 
-Paraméterek: `page`, `pageSize`, `year`, `companyName`, `instructor`, `q` (név), `tags` (csak a [fix címkelistából](domain.md#címkék-eventtags), csak ismételt paraméterként, pl. `?tags=robotika&tags=kezdő`, vesszőnél nem vág; bármelyik címke egyezése elég; listán kívüli címke → `400`), `sort` (`from`|`name`|`companyName`|`capacity`, alap `from`), `order` (alap: `from` esetén desc, különben asc).
+Paraméterek: `page`, `pageSize`, `year`, `companyName`, `place` (helyszín vagy partnercég, részszöveg), `instructor`, `q` (név), `phase` (`active`: még nem ért véget és van jelentkezési sheet / `planned`: még nem ért véget, sheet nélkül / `closed`: véget ért; hiányzik = mind), `tags` (csak a [fix címkelistából](domain.md#címkék-eventtags), csak ismételt paraméterként, pl. `?tags=robotika&tags=kezdő`, vesszőnél nem vág; bármelyik címke egyezése elég; listán kívüli címke → `400`), `sort` (`from`|`name`|`companyName`|`capacity`, alap `from`), `order` (alap: `from` esetén desc, különben asc).
 Válasz: események + `applicationCounts` (státuszonként + `total`).
 
 ### `GET /api/events/tags`
