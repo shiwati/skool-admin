@@ -1,6 +1,6 @@
 # API
 
-A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/merge`, `POST /api/events`, `POST /api/events/[id]/sync`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
+A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/merge`, `POST /api/events`, `PATCH /api/events/[id]`, `POST /api/events/[id]/sync`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
 
 A jelentkező adatlapnak (`/applicants/[id]`) nincs végpontja: az oldal szerveroldalon közvetlenül az adatbázisból olvas (lásd [frontend.md](frontend.md)).
 
@@ -31,8 +31,18 @@ Paraméter nincs. Válasz: `{ items: string[] }`, a **fix címkelista** (`EVENT_
 
 ### `POST /api/events` — új program
 
-Törzs (JSON, sémája `createEventSchema` az `api/events/route.ts`-ben): `name` (kötelező), `from`/`to` (dátum, `to >= from`); választható: `tags[]` (csak a fix címkelistából, alap üres), `description`, `companyName`, `location`, `sheetUrl`, `ageRange` (`"12-18"`), `instructor`, `mentors[]`, `capacity` (egész, ≥ 0, alap 0). Üres szöveg `null`-ra normalizálódik. Az űrlap legalább 1 fős létszámot kér, ezt a kliens ellenőrzi.
+Törzs (JSON, sémája `createEventSchema` a `src/lib/events/api-schema.ts`-ben): `name` (kötelező), `from`/`to` (dátum, `to >= from`); választható: `tags[]` (csak a fix címkelistából, alap üres), `description`, `companyName`, `location`, `sheetUrl`, `ageRange` (`"12-18"`), `instructor`, `mentors[]`, `capacity` (egész, ≥ 0, alap 0). Üres szöveg `null`-ra normalizálódik. Az űrlap legalább 1 fős létszámot kér, ezt a kliens ellenőrzi.
 Válasz: `201 { id }`; `400` `{error, details}` (mezőnkénti hibák); `401`.
+
+### `GET /api/events/[id]`
+
+Egy program összes mezője. `404`, ha nem létezik; `401`. A szerkesztő oldal (`/events/[id]/edit`) ugyanazt a `getEvent` függvényt (`src/lib/events/queries.ts`) hívja közvetlenül, nem HTTP-n.
+
+### `PATCH /api/events/[id]` — program módosítása
+
+Törzs: a `POST` mezői (`src/lib/events/api-schema.ts`, `updateEventSchema`), mind választható, de legalább egy kell. Csak a megadott mezők változnak; az opcionális szöveges mezők (`description`, `companyName`, `location`, `sheetUrl`, `ageRange`, `instructor`) `null`-lal törölhetők. A `to >= from` ellenőrzés a tárolt értékekkel egyesítve történik.
+A tranzakció a ténylegesen megváltozott mezőnként egy `History` sort ír (`tableName: "event"`, `fieldName` a Prisma mezőnév, `oldValue`/`newValue` szövegként; dátum ISO, lista JSON). Ha semmi sem változik, nem ír semmit.
+Válasz: `200 { id }`; `400` `{error, details}`; `401`; `404`.
 
 ### `GET /api/events/[id]/applicants`
 

@@ -6,6 +6,7 @@ import {
 	ArrowUpDown,
 	CalendarX,
 	MoreHorizontal,
+	Pencil,
 	Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -76,6 +77,10 @@ export function applicantsHref(eventId: string) {
 /** A program saját oldala (még nem készült el, addig 404). */
 export function eventHref(eventId: string) {
 	return `/events/${encodeURIComponent(eventId)}`;
+}
+
+export function eventEditHref(eventId: string) {
+	return `/events/${encodeURIComponent(eventId)}/edit`;
 }
 
 const headClass =
@@ -380,6 +385,12 @@ function EventRow({ item, now }: { item: EventListItem; now: Date }) {
 							<Link href={applicantsHref(item.id)}>
 								<Users aria-hidden="true" />
 								Jelentkezők megtekintése
+							</Link>
+						</DropdownMenuItem>
+						<DropdownMenuItem asChild>
+							<Link href={eventEditHref(item.id)}>
+								<Pencil aria-hidden="true" />
+								Program szerkesztése
 							</Link>
 						</DropdownMenuItem>
 					</DropdownMenuContent>

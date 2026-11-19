@@ -74,7 +74,7 @@ export const eventFormSchema = z
 
 export type EventFormValues = z.infer<typeof eventFormSchema>;
 
-/** A `POST /api/events` törzse; a szerver sémája az `api/events/route.ts`-ben van. */
+/** A `POST /api/events` törzse; a szerver sémája az `api-schema.ts`-ben van. */
 export type CreateEventInput = {
 	name: string;
 	tags: EventTag[];
@@ -89,6 +89,83 @@ export type CreateEventInput = {
 	instructor?: string;
 	mentors: string[];
 };
+
+/** A `PATCH /api/events/[id]` törzse: minden mező megy, az üres választhatók `null`-ként törlődnek. */
+export type UpdateEventInput = {
+	name: string;
+	tags: EventTag[];
+	description: string | null;
+	from: string;
+	to: string;
+	companyName: string | null;
+	location: string | null;
+	capacity: number;
+	ageRange: string | null;
+	sheetUrl: string | null;
+	instructor: string | null;
+	mentors: string[];
+};
+
+/** A szerkesztőoldalnak átadott program: dátumok ISO szövegként, ahogy az API adja. */
+export type EventFormSource = {
+	id: string;
+	name: string;
+	tags: string[];
+	description: string | null;
+	from: string;
+	to: string;
+	companyName: string | null;
+	location: string | null;
+	capacity: number;
+	ageRange: string | null;
+	sheetUrl: string | null;
+	instructor: string | null;
+	mentors: string[];
+};
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** ISO időpontból a böngésző helyi idejében vett `datetime-local` érték. */
+function toLocalDateTime(iso: string): string {
+	const d = new Date(iso);
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** A `toCreateEventInput` fordítottja; böngészőben fusson, hogy a helyi idő egyezzen a mentéskorival. */
+export function toEventFormValues(event: EventFormSource): EventFormValues {
+	const age = event.ageRange?.match(/^(\d{1,2})-(\d{1,2})$/);
+	return {
+		name: event.name,
+		tags: event.tags.filter(
+			(value): value is EventTag =>
+				eventTagSchema.safeParse(value).success,
+		),
+		description: event.description ?? "",
+		from: toLocalDateTime(event.from),
+		to: toLocalDateTime(event.to),
+		companyName: event.companyName ?? "",
+		location: event.location ?? "",
+		capacity: String(event.capacity),
+		ageFrom: age?.[1] ?? "",
+		ageTo: age?.[2] ?? "",
+		sheetUrl: event.sheetUrl ?? "",
+		instructor: event.instructor ?? "",
+		mentors: event.mentors,
+	};
+}
+
+export function toUpdateEventInput(values: EventFormValues): UpdateEventInput {
+	const create = toCreateEventInput(values);
+	return {
+		...create,
+		description: create.description ?? null,
+		companyName: create.companyName ?? null,
+		location: create.location ?? null,
+		ageRange: create.ageRange ?? null,
+		sheetUrl: create.sheetUrl ?? null,
+		instructor: create.instructor ?? null,
+	};
+}
 
 /** Az űrlap értékeiből a végpont törzse; az üres választható mezők kimaradnak. */
 export function toCreateEventInput(values: EventFormValues): CreateEventInput {

@@ -1,7 +1,6 @@
-import { z } from "zod";
 import { db } from "@/lib/db";
+import { createEventSchema } from "@/lib/events/api-schema";
 import { eventsQuerySchema, listEvents } from "@/lib/events/list";
-import { eventTagSchema } from "@/lib/events/tags";
 import { handleQuery, jsonResponse } from "@/lib/api/handler";
 import { logger } from "@/lib/logger";
 import { getAdminSession } from "@/lib/session";
@@ -15,32 +14,6 @@ export async function GET(request: Request) {
 		jsonResponse(await listEvents(query)),
 	);
 }
-
-const optionalField = z
-	.string()
-	.trim()
-	.transform((v) => v || null)
-	.nullish();
-
-const createEventSchema = z
-	.object({
-		name: z.string().trim().min(1),
-		from: z.coerce.date(),
-		to: z.coerce.date(),
-		companyName: optionalField,
-		location: optionalField,
-		description: optionalField,
-		tags: z.array(eventTagSchema).default([]),
-		sheetUrl: z.url().nullish(),
-		ageRange: optionalField,
-		instructor: optionalField,
-		mentors: z.array(z.string().trim().min(1)).default([]),
-		capacity: z.number().int().min(0).default(0),
-	})
-	.refine((e) => e.to >= e.from, {
-		path: ["to"],
-		message: "Must not be earlier than `from`",
-	});
 
 /** Creates an event; responds 201 with `{ id }`. */
 export async function POST(request: Request) {

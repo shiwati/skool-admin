@@ -18,7 +18,7 @@ export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
 							{item.href && !last ? (
 								<Link
 									href={item.href}
-									className="text-info-fg underline underline-offset-2 hover:text-ink"
+									className="text-info-fg underline underline-offset-2 hover:text-ink hover:no-underline"
 								>
 									{item.label}
 								</Link>

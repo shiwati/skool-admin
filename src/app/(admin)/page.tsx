@@ -15,7 +15,10 @@ export default async function Home() {
 			</h1>
 			<p className="text-lg text-text-secondary">
 				Az áttekintő oldal hamarosan elkészül. Addig a jelentkezőket a{" "}
-				<Link href="/applicants" className="font-medium underline">
+				<Link
+					href="/applicants"
+					className="font-medium underline hover:no-underline"
+				>
 					Jelentkezők
 				</Link>{" "}
 				oldalon találod.
