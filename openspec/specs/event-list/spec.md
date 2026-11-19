@@ -112,14 +112,14 @@ The table SHALL show these columns, in this order: "Program", "Időpont", "Helys
 - **WHEN** the table is rendered
 - **THEN** the columns appear in the order listed
 
-### Requirement: Program cell
+### Requirement: Program name links to the program page
 
-The "Program" cell SHALL show the program name and its tags as badges. The name SHALL link to the applicants list, filtered to that program (`/applicants?eventIds=<id>`).
+The "Program" cell SHALL show the program name and its tags as badges. The name SHALL link to the program's own page (`/events/<id>`).
 
-#### Scenario: Opening a program's applicants
+#### Scenario: Opening a program's page
 
 - **WHEN** the admin activates the name "Python alapok – tél"
-- **THEN** `/applicants` opens, filtered to that program
+- **THEN** `/events/<id>` opens for that program
 
 ### Requirement: Date cell
 
