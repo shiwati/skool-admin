@@ -2,6 +2,8 @@
 
 A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/merge`, `POST /api/events/[id]/sync`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
 
+A jelentkező adatlapnak (`/applicants/[id]`) nincs végpontja: az oldal szerveroldalon közvetlenül az adatbázisból olvas (lásd [frontend.md](frontend.md)).
+
 ## Közös válaszformák
 
 - Lapozott lista: `{ items, total, page, pageSize }`

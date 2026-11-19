@@ -24,6 +24,11 @@
     - **Oszlopválasztó:** a beállítás `localStorage`-ban mentődik (`column-settings.ts`, `use-column-settings.ts`).
     - **Kijelölés és tömeges műveletek:** e-mail másolás és törlés (`POST /api/applicants/delete`), valamint e-mail lista a teljes szűrésről.
     - **Helyőrzők:** a „Szinkronizálás” gomb letiltva, a duplikáció-banner funkció nélkül.
+    - **Navigáció:** a sorra kattintva (a checkbox és a „Műveletek” menü kivételével) az adatlap nyílik; a név link is (billentyűzet, új lap).
+- `/applicants/[id]`: Jelentkező adatlap (`src/app/(admin)/applicants/[id]/`, komponensek: `src/components/applicants/detail/`).
+    - **Adat:** nincs API-végpont; a Server Component renderelés előtt maga kérdez az adatbázisba (`getApplicantDetail`, `src/lib/applicants/detail.ts`, `React.cache`-elve, így a `generateMetadata` is ugyanazt használja). Előtte maga is hívja a `requireAdmin`-t, mert a layout és az oldal párhuzamosan renderelődik.
+    - **404:** ismeretlen vagy törölt (anonimizált) jelentkezőnél `notFound()` → `not-found.tsx`.
+    - **Tartalom:** személyes és szülői adatok, programok, a legfrissebb jelentkezés űrlapválaszai, címkék, változástörténet (`History`, legfrissebb 20). A kliens csak a fejléc-műveleteket kapja (`ApplicantDetailActions`: törlés; a visszaigazolás és a szerkesztés letiltva).
 - Kliensoldali API-hívások: `apiFetch` (`src/lib/api/client.ts`). 401 esetén teljes oldalas átirányítás a `/login`-ra, az aktuális URL-lel mint visszatérési címmel.
 - `error.tsx`, `not-found.tsx`: globális hibaoldalak.
 

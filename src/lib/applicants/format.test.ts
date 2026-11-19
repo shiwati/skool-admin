@@ -6,9 +6,13 @@ import {
 	buildEmailList,
 	formatCount,
 	formatDate,
+	formatDateRange,
+	formatDateTime,
 	fullName,
 	historyLabel,
+	isAlumni,
 	isOver16,
+	programsSummary,
 	latestApplication,
 	parentLabel,
 	programColorClass,
@@ -150,5 +154,52 @@ describe("parentLabel", () => {
 				parentEmail: null,
 			}),
 		).toEqual({ name: null, email: null });
+	});
+});
+
+describe("detail page date helpers", () => {
+	it("formats date and time in Budapest time", () => {
+		// 23:30 UTC on 1 Oct is 01:30 on 2 Oct in Budapest (CEST).
+		expect(formatDateTime("2026-10-01T23:30:00.000Z")).toBe(
+			"2026.10.02 01:30",
+		);
+		expect(formatDateTime(new Date("2026-11-10T09:05:00.000Z"))).toBe(
+			"2026.11.10 10:05",
+		);
+		expect(formatDateTime("nope")).toBe("—");
+	});
+
+	it("accepts Date objects in formatDate", () => {
+		expect(formatDate(new Date("2026-11-10T09:00:00.000Z"))).toBe(
+			"2026.11.10",
+		);
+	});
+
+	it("formats a date range", () => {
+		expect(
+			formatDateRange(
+				new Date("2026-11-21T09:00:00.000Z"),
+				"2026-12-12T15:00:00.000Z",
+			),
+		).toBe("2026.11.21 – 2026.12.12");
+	});
+});
+
+describe("alumni and programs summary", () => {
+	const apps = [
+		{ status: "ACCEPTED" as const },
+		{ status: "ATTENDED" as const },
+		{ status: "ATTENDED" as const },
+	];
+
+	it("summarises applications", () => {
+		expect(programsSummary(apps)).toBe("3 jelentkezés · 2 elvégzett");
+		expect(programsSummary([])).toBe("0 jelentkezés · 0 elvégzett");
+	});
+
+	it("flags alumni only with an attended application", () => {
+		expect(isAlumni(apps)).toBe(true);
+		expect(isAlumni([{ status: "ACCEPTED" }])).toBe(false);
+		expect(isAlumni([])).toBe(false);
 	});
 });
