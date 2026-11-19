@@ -12,11 +12,8 @@ vi.mock("@/lib/db", () => ({
 	},
 }));
 
-import {
-	getApplicantDetail,
-	getApplicantForEdit,
-	HISTORY_LIMIT,
-} from "./detail";
+import { HISTORY_PREVIEW_LIMIT } from "@/lib/history/queries";
+import { getApplicantDetail, getApplicantForEdit } from "./detail";
 
 const applicant = {
 	id: "a1",
@@ -60,8 +57,8 @@ describe("getApplicantDetail", () => {
 			{ tableName: "applicant", recordId: "a1" },
 			{ tableName: "application", recordId: { in: ["app1", "app2"] } },
 		]);
-		expect(args.take).toBe(HISTORY_LIMIT);
-		expect(HISTORY_LIMIT).toBe(20);
+		expect(args.take).toBe(HISTORY_PREVIEW_LIMIT);
+		expect(HISTORY_PREVIEW_LIMIT).toBe(5);
 		expect(args.orderBy[0]).toEqual({ createdAt: "desc" });
 	});
 

@@ -28,11 +28,7 @@ describe("EventTabs", () => {
 
 	it("shows the screens that do not exist yet as disabled, not as links", () => {
 		render(<EventTabs eventId="e1" applications={0} />);
-		for (const name of [
-			"Visszajelzések",
-			"Záró riport",
-			"Változástörténet",
-		]) {
+		for (const name of ["Visszajelzések", "Záró riport"]) {
 			expect(screen.getByText(name)).toHaveAttribute(
 				"aria-disabled",
 				"true",
@@ -41,6 +37,11 @@ describe("EventTabs", () => {
 				screen.queryByRole("link", { name }),
 			).not.toBeInTheDocument();
 		}
+	});
+
+	it("has no change history tab (the log opens from „Teljes napló”)", () => {
+		render(<EventTabs eventId="e1" applications={0} />);
+		expect(screen.queryByText("Változástörténet")).not.toBeInTheDocument();
 	});
 
 	it("is not current on another path", () => {

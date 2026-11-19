@@ -88,7 +88,10 @@ export default async function ApplicantDetailPage({ params }: Props) {
 					aria-label="Kiegészítő adatok"
 				>
 					<TagsCard applicant={applicant} now={now} />
-					<HistoryCard entries={applicant.history} />
+					<HistoryCard
+						applicantId={applicant.id}
+						entries={applicant.history}
+					/>
 				</aside>
 			</div>
 		</div>

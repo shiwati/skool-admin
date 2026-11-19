@@ -92,7 +92,7 @@ export default async function EventOverviewPage({ params }: Props) {
 						eventId={event.id}
 						sheetUrl={event.sheetUrl}
 					/>
-					<EventHistoryCard entries={history} />
+					<EventHistoryCard eventId={event.id} entries={history} />
 				</aside>
 			</div>
 		</>

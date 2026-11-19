@@ -12,7 +12,7 @@ Fontos: a Next.js verziója eltér a megszokottól; kódírás előtt nézd meg 
 
 - Kész: Google-belépés, védelem, health check, logolás, env-validáció, közös UI-elemek.
 - Kész: doménmodell a Prisma sémában (lásd [domain.md](domain.md)) és három API végpont, amelyek **egyelőre mind GET** (lásd [api.md](api.md)); írási (POST/PATCH/DELETE) végpontok várhatók.
-- **Nincs még**: valódi admin felület (a főoldal placeholder), írási végpontok, History-napló feltöltése, Sheet-import (lásd [gaps-and-decisions.md](gaps-and-decisions.md)). Lokális mintaadat van: [data-and-db.md](data-and-db.md).
+- **Nincs még**: valódi admin felület (a főoldal placeholder), Sheet-import (lásd [gaps-and-decisions.md](gaps-and-decisions.md)). Lokális mintaadat van: [data-and-db.md](data-and-db.md).
 
 ## Könyvtárszerkezet
 

@@ -187,6 +187,7 @@ describe("HistoryCard", () => {
 	it("shows a status change of an application (spec scenario)", () => {
 		render(
 			<HistoryCard
+				applicantId="a1"
 				entries={[
 					{
 						id: "h1",
@@ -211,6 +212,7 @@ describe("HistoryCard", () => {
 	it("attributes changes without a user to Rendszer and skips empty values", () => {
 		render(
 			<HistoryCard
+				applicantId="a1"
 				entries={[
 					{
 						id: "h2",
@@ -229,8 +231,18 @@ describe("HistoryCard", () => {
 		expect(item).not.toHaveTextContent("→");
 	});
 
+	it("links to the full history page", () => {
+		render(<HistoryCard applicantId="a 1" entries={[]} />);
+		expect(
+			screen.getByRole("heading", { name: "Legutóbbi változások" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("link", { name: "Teljes napló" }),
+		).toHaveAttribute("href", "/history/a%201");
+	});
+
 	it("says when there are no changes", () => {
-		render(<HistoryCard entries={[]} />);
+		render(<HistoryCard applicantId="a1" entries={[]} />);
 		expect(
 			screen.getByText("Még nincs rögzített változás"),
 		).toBeInTheDocument();

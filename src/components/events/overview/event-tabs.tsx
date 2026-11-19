@@ -37,7 +37,7 @@ export function EventTabs({
 }) {
 	const pathname = usePathname();
 	const overviewActive = pathname === eventHref(eventId);
-	const disabled = ["Visszajelzések", "Záró riport", "Változástörténet"];
+	const disabled = ["Visszajelzések", "Záró riport"];
 
 	return (
 		<nav aria-label="Program szakaszai" className="overflow-x-auto">

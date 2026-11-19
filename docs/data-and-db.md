@@ -53,6 +53,10 @@ A `History` tábla mezőszintű változásnapló (`tableName`, `fieldName`, `rec
 Írói:
 
 - **GDPR-törlés** (`anonymize.ts`): kitisztítja a jelentkező és jelentkezései régi/új értékeit, és egy `deletedAt` sort ír.
+- **Duplikátum-összevonás** (`merged_from`) és **-elvetés** (`duplicate_dismissed`).
+- **Program szerkesztése** (`PATCH /api/events/[id]`): `tableName: "event"`, mezőnként egy sor; dátum ISO, lista JSON.
 - **Jelentkező szerkesztése** (`updateApplicant`, `src/lib/applicants/update.ts`): minden ténylegesen megváltozott mezőhöz egy sor, a mentéssel azonos tranzakcióban. Mivel `tableName: "applicant"`, a GDPR-törlés ezeket is kitisztítja.
 
-Általános írási logika (pl. Prisma extension) még nincs; ha lesz harmadik író, érdemes központosítani. Az `updatedBy` mezők ugyanezt a célt szolgálják rekordszinten.
+Általános írási logika (pl. Prisma extension) még nincs; ha még több író lesz, érdemes központosítani. Az `updatedBy` mezők ugyanezt a célt szolgálják rekordszinten.
+
+Olvasói: a jelentkező adatlap (legfrissebb 5) és a `/history/[id]` oldal (legfeljebb 200).

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { DetailCard } from "@/components/applicants/detail/detail-card";
 import { EMPTY, formatDateTime } from "@/lib/applicants/format";
 import {
@@ -5,14 +6,28 @@ import {
 	eventHistoryValue,
 } from "@/lib/events/history-labels";
 import type { EventHistoryEntry } from "@/lib/events/overview";
+import { historyHref } from "@/lib/history/href";
 
+/** Az utolsó néhány változás, link a teljes naplóra (`/history/[id]`). */
 export function EventHistoryCard({
+	eventId,
 	entries,
 }: {
+	eventId: string;
 	entries: EventHistoryEntry[];
 }) {
 	return (
-		<DetailCard title="Legutóbbi változások">
+		<DetailCard
+			title="Legutóbbi változások"
+			aside={
+				<Link
+					href={historyHref(eventId)}
+					className="text-sm font-medium underline-offset-2 hover:underline"
+				>
+					Teljes napló
+				</Link>
+			}
+		>
 			{entries.length === 0 ? (
 				<p className="text-sm text-text-secondary">
 					Még nincs rögzített változás

@@ -7,7 +7,7 @@ Forrás: `prisma/schema.prisma`. A mezők DB-oszlopnevei snake_case-ek (`@map`),
 - **Applicant (jelentkező)**: a gyerek adatai (név, születési év, iskola, lakóhely, telefon, e-mail), a szülő adatai (`parent*` mezők), `newsletter` hozzájárulás. Egy jelentkező több eseményre jelentkezhet.
 - **Event (program/esemény)**: `name`, `from`/`to`, `companyName`, `location`, `description` (DB: `desc`), `sheetUrl`, `ageRange` (szabad szöveg), `instructor`, `mentors` (szöveglista), `tags` (címkelista a fix listából, alapérték üres; lásd lent), `capacity` (alapérték 0).
 - **Application (jelentkezés)**: egy Applicant × Event kapcsolat, **egyedi** `(eventId, applicantId)` párra. Tartalmazza a jelentkezési űrlap válaszait (`foodPreference`, `heardFromWhere/Whom`, `solvedProblem`, `pastExpInProg`, korábbi részvétel mezők, `comment`, `companyAwareness`), a `receivedAt` beérkezési időt és a `status`-t.
-- **History (változásnapló)**: mezőszintű napló (`tableName`, `fieldName`, `recordId`, `oldValue`, `newValue`, `createdBy`). A séma létezik, de jelenleg semmi nem tölti.
+- **History (változásnapló)**: mezőszintű napló (`tableName`, `fieldName`, `recordId`, `oldValue`, `newValue`, `createdBy`). Írja: a GDPR-törlés, a duplikátum-összevonás és -elvetés, valamint a program szerkesztése (`PATCH /api/events/[id]`). Olvassa: a jelentkező adatlap és a `/history/[id]` oldal.
 - **User**: NextAuth felhasználó (admin). `updatedBy` kapcsolatot ad az Applicant és Application felé.
 
 ## Címkék (`Event.tags`)
