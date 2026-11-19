@@ -22,6 +22,21 @@ export function csvList<T extends z.ZodType>(item: T) {
 	}, z.array(item).optional());
 }
 
+/**
+ * Csak ismételt paraméterként (`?a=x&a=y`) megadható lista, vesszőnél nem
+ * vág: szabad szöveges értékekhez (pl. címkék), amelyekben lehet vessző.
+ */
+export function repeatedList<T extends z.ZodType>(item: T) {
+	return z.preprocess((value) => {
+		if (value === undefined) return undefined;
+		const raw = Array.isArray(value) ? value : [value];
+		const parts = [...new Set(raw.map((v) => String(v).trim()))].filter(
+			Boolean,
+		);
+		return parts.length ? parts : undefined;
+	}, z.array(item).optional());
+}
+
 export const booleanParam = z
 	.enum(["true", "false", "1", "0"])
 	.transform((v) => v === "true" || v === "1")

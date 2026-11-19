@@ -33,6 +33,26 @@ describe("dataFileSchema", () => {
 		expect(parsed.applicants[0].newsletter).toBe(false);
 	});
 
+	it("defaults event tags to an empty list", () => {
+		expect(dataFileSchema.parse(base).events[0].tags).toEqual([]);
+	});
+
+	it("accepts tags from the fixed list", () => {
+		const parsed = dataFileSchema.parse({
+			...base,
+			events: [{ ...base.events[0], tags: ["robotika", "kezdő"] }],
+		});
+		expect(parsed.events[0].tags).toEqual(["robotika", "kezdő"]);
+	});
+
+	it("rejects a tag that is not in the fixed list", () => {
+		const result = dataFileSchema.safeParse({
+			...base,
+			events: [{ ...base.events[0], tags: ["nemletezik"] }],
+		});
+		expect(result.success).toBe(false);
+	});
+
 	it("rejects an application pointing at an unknown event", () => {
 		const result = dataFileSchema.safeParse({
 			...base,

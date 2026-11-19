@@ -48,6 +48,28 @@ describe("GET /api/events", () => {
 		expect(groupBy).not.toHaveBeenCalled();
 	});
 
+	it("filters by tags (any match), repeated params only, deduplicated", async () => {
+		findMany.mockResolvedValue([]);
+		count.mockResolvedValue(0);
+		await call("?tags=robotika&tags=kezd%C5%91&tags=robotika&tags=%20");
+		expect(findMany.mock.calls[0][0].where.AND).toEqual([
+			{ tags: { hasSome: ["robotika", "kezdő"] } },
+		]);
+	});
+
+	it("rejects a tag that is not in the fixed list", async () => {
+		const res = await call("?tags=robotika&tags=nemletezik");
+		expect(res.status).toBe(400);
+		expect((await res.json()).error).toBe("Invalid query parameters");
+		expect(findMany).not.toHaveBeenCalled();
+	});
+
+	it("does not split tags on commas", async () => {
+		const res = await call("?tags=robotika,kezd%C5%91");
+		expect(res.status).toBe(400);
+		expect(findMany).not.toHaveBeenCalled();
+	});
+
 	it("attaches application counts per status", async () => {
 		findMany.mockResolvedValue([{ id: "e1" }, { id: "e2" }]);
 		count.mockResolvedValue(2);

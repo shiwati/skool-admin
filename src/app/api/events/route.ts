@@ -1,6 +1,7 @@
 import { ApplicationStatus, type Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { eventTagSchema } from "@/lib/events/tags";
 import { handleQuery, jsonResponse } from "@/lib/api/handler";
 import { logger } from "@/lib/logger";
 import { getAdminSession } from "@/lib/session";
@@ -12,6 +13,7 @@ import {
 	orderSchema,
 	pageResult,
 	paginationSchema,
+	repeatedList,
 	searchTokens,
 } from "@/lib/api/query";
 
@@ -24,6 +26,8 @@ const querySchema = z.object({
 	companyName: optionalText,
 	instructor: optionalText,
 	q: optionalText,
+	/** Ismételt paraméter, csak a fix listából; legalább egy egyezzen. */
+	tags: repeatedList(eventTagSchema),
 	sort: z.enum(["from", "name", "companyName", "capacity"]).default("from"),
 	order: orderSchema.optional(),
 });
@@ -48,6 +52,7 @@ export async function GET(request: Request) {
 		if (query.instructor) {
 			and.push({ instructor: containsInsensitive(query.instructor) });
 		}
+		if (query.tags) and.push({ tags: { hasSome: query.tags } });
 		for (const token of searchTokens(query.q)) {
 			and.push({ name: containsInsensitive(token) });
 		}

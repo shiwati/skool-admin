@@ -11,6 +11,7 @@
 			"ageRange": "12-16",
 			"instructor": "Kovács Péter",
 			"mentors": ["Nagy Anna", "Szabó Gergő"],
+			"tags": ["robotika", "kezdő"],
 			"capacity": 3
 		},
 		{
@@ -24,6 +25,7 @@
 			"ageRange": "13-17",
 			"instructor": "Tóth Réka",
 			"mentors": ["Kiss Dániel"],
+			"tags": ["programozás", "haladó"],
 			"capacity": 20
 		},
 		{
@@ -37,6 +39,7 @@
 			"ageRange": "15-18",
 			"instructor": "Varga Zsuzsa",
 			"mentors": [],
+			"tags": ["programozás", "kezdő"],
 			"capacity": 15
 		}
 	],

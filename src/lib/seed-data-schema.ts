@@ -1,5 +1,6 @@
 import { ApplicationStatus } from "@prisma/client";
 import { z } from "zod";
+import { eventTagSchema } from "./events/tags";
 
 const id = z.string().min(1);
 const text = z.string().nullish();
@@ -17,6 +18,7 @@ const eventSchema = z.object({
 	ageRange: text,
 	instructor: text,
 	mentors: z.array(z.string()).default([]),
+	tags: z.array(eventTagSchema).default([]),
 	capacity: z.number().int().min(0).default(0),
 });
 
