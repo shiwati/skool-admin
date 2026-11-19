@@ -1,6 +1,6 @@
 # API
 
-A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/merge`, `POST /api/events/[id]/sync`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
+A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/merge`, `POST /api/events`, `POST /api/events/[id]/sync`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
 
 ## Közös válaszformák
 
@@ -26,6 +26,11 @@ Válasz: események + `applicationCounts` (státuszonként + `total`).
 ### `GET /api/events/tags`
 
 Paraméter nincs. Válasz: `{ items: string[] }`, a **fix címkelista** (`EVENT_TAGS`) minden eleme magyar ábécérendben, akkor is, ha egyik esemény sem használja; adatbázist nem olvas. Ez a címkeszűrő multiselect opciólistája; új címke a felületen nem vehető fel. Azért végpont és nem közvetlen import, hogy a lista később dinamikussá válhasson a felület módosítása nélkül.
+
+### `POST /api/events` — új program
+
+Törzs (JSON, sémája `createEventSchema` az `api/events/route.ts`-ben): `name` (kötelező), `from`/`to` (dátum, `to >= from`); választható: `tags[]` (csak a fix címkelistából, alap üres), `description`, `companyName`, `location`, `sheetUrl`, `ageRange` (`"12-18"`), `instructor`, `mentors[]`, `capacity` (egész, ≥ 0, alap 0). Üres szöveg `null`-ra normalizálódik. Az űrlap legalább 1 fős létszámot kér, ezt a kliens ellenőrzi.
+Válasz: `201 { id }`; `400` `{error, details}` (mezőnkénti hibák); `401`.
 
 ### `GET /api/events/[id]/applicants`
 
