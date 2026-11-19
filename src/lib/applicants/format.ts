@@ -58,11 +58,53 @@ const dateParts = new Intl.DateTimeFormat("en-CA", {
 	day: "2-digit",
 });
 
+const timeParts = new Intl.DateTimeFormat("en-GB", {
+	timeZone: "Europe/Budapest",
+	hour: "2-digit",
+	minute: "2-digit",
+	hourCycle: "h23",
+});
+
+function toDate(value: Date | string): Date | null {
+	const date = value instanceof Date ? value : new Date(value);
+	return Number.isNaN(date.getTime()) ? null : date;
+}
+
 /** `ÉÉÉÉ.HH.NN` budapesti idő szerint. */
-export function formatDate(iso: string): string {
-	const date = new Date(iso);
-	if (Number.isNaN(date.getTime())) return EMPTY;
+export function formatDate(value: Date | string): string {
+	const date = toDate(value);
+	if (!date) return EMPTY;
 	return dateParts.format(date).replaceAll("-", ".");
+}
+
+/** `ÉÉÉÉ.HH.NN ÓÓ:PP` budapesti idő szerint. */
+export function formatDateTime(value: Date | string): string {
+	const date = toDate(value);
+	if (!date) return EMPTY;
+	return `${formatDate(date)} ${timeParts.format(date)}`;
+}
+
+/** `ÉÉÉÉ.HH.NN – ÉÉÉÉ.HH.NN` budapesti idő szerint. */
+export function formatDateRange(
+	from: Date | string,
+	to: Date | string,
+): string {
+	return `${formatDate(from)} – ${formatDate(to)}`;
+}
+
+/** Alumni: legalább egy „Részt vett” státuszú jelentkezés. */
+export function isAlumni(
+	applications: { status: ApplicationStatus }[],
+): boolean {
+	return applications.some((a) => a.status === "ATTENDED");
+}
+
+/** „N jelentkezés · M elvégzett”. */
+export function programsSummary(
+	applications: { status: ApplicationStatus }[],
+): string {
+	const done = applications.filter((a) => a.status === "ATTENDED").length;
+	return `${formatCount(applications.length)} jelentkezés · ${formatCount(done)} elvégzett`;
 }
 
 const countFormat = new Intl.NumberFormat("hu-HU", { useGrouping: "always" });

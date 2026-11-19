@@ -33,12 +33,15 @@ export function Pager({
 	pageSize,
 	onPage,
 	onPageSize,
+	itemLabel = "jelentkező",
 }: {
 	total: number;
 	page: number;
 	pageSize: PageSize;
 	onPage: (page: number) => void;
 	onPageSize: (size: PageSize) => void;
+	/** A számlált elemek neve a „1–10 / 42 …” feliratban. */
+	itemLabel?: string;
 }) {
 	const pageCount = Math.max(1, Math.ceil(total / pageSize));
 	const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -48,7 +51,7 @@ export function Pager({
 		<div className="flex flex-wrap items-center gap-3 border-t border-border-default px-4 py-3">
 			<span className="flex-1 text-xs text-text-secondary">
 				{formatCount(from)}–{formatCount(to)} / {formatCount(total)}{" "}
-				jelentkező
+				{itemLabel}
 			</span>
 			<label className="flex items-center gap-2 text-xs text-text-secondary">
 				Sorok / oldal

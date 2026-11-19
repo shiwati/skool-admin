@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import {
 	ageFromBirthYear,
@@ -35,6 +36,11 @@ export type ColumnDef = {
 	cell: (item: ApplicantListItem, now: Date) => ReactNode;
 };
 
+/** Az adatlap útvonala. */
+export function applicantHref(id: string): string {
+	return `/applicants/${encodeURIComponent(id)}`;
+}
+
 const dash = <span className="text-text-tertiary">{EMPTY}</span>;
 
 export const COLUMNS: Record<ColumnId, ColumnDef> = {
@@ -53,7 +59,12 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 					{applicantInitials(item)}
 				</span>
 				<div className="min-w-0">
-					<div className="truncate font-medium">{fullName(item)}</div>
+					<Link
+						href={applicantHref(item.id)}
+						className="block truncate font-medium underline-offset-2 hover:underline focus-visible:underline"
+					>
+						{fullName(item)}
+					</Link>
 					<div className="truncate text-xs text-text-tertiary">
 						{item.email ?? EMPTY}
 					</div>

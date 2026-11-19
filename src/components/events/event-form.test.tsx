@@ -18,7 +18,7 @@ vi.mock("@/lib/api/client", async (importOriginal) => ({
 }));
 
 import { ApiError } from "@/lib/api/client";
-import { NewEventForm } from "./new-event-form";
+import { EventForm } from "./event-form";
 
 async function fillValid(user: ReturnType<typeof userEvent.setup>) {
 	await user.type(screen.getByLabelText(/Program neve/), "Python alapok");
@@ -27,14 +27,14 @@ async function fillValid(user: ReturnType<typeof userEvent.setup>) {
 	await user.type(screen.getByLabelText(/Max. tanulói létszám/), "24");
 }
 
-describe("NewEventForm", () => {
+describe("EventForm", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 	});
 
 	it("lists the problems after an empty submit", async () => {
 		const user = userEvent.setup();
-		render(<NewEventForm />);
+		render(<EventForm mode="create" />);
 		await user.click(
 			screen.getByRole("button", { name: "Program mentése" }),
 		);
@@ -49,7 +49,7 @@ describe("NewEventForm", () => {
 
 	it("shows the end-before-start error on the end field", async () => {
 		const user = userEvent.setup();
-		render(<NewEventForm />);
+		render(<EventForm mode="create" />);
 		await fillValid(user);
 		await user.clear(screen.getByLabelText(/Befejezés/));
 		await user.type(screen.getByLabelText(/Befejezés/), "2027-03-05T14:00");
@@ -70,7 +70,7 @@ describe("NewEventForm", () => {
 
 	it("requires a capacity of at least 1", async () => {
 		const user = userEvent.setup();
-		render(<NewEventForm />);
+		render(<EventForm mode="create" />);
 		await fillValid(user);
 		await user.clear(screen.getByLabelText(/Max. tanulói létszám/));
 		await user.type(screen.getByLabelText(/Max. tanulói létszám/), "0");
@@ -85,7 +85,7 @@ describe("NewEventForm", () => {
 	it("posts the event and opens it by the returned id", async () => {
 		const user = userEvent.setup();
 		apiFetch.mockResolvedValue({ id: "ev1" });
-		render(<NewEventForm />);
+		render(<EventForm mode="create" />);
 		await fillValid(user);
 		await user.click(screen.getByRole("button", { name: "robotika" }));
 		await user.type(screen.getByLabelText(/Mentorok/), "Szűcs Petra,");
@@ -117,7 +117,7 @@ describe("NewEventForm", () => {
 				},
 			}),
 		);
-		render(<NewEventForm />);
+		render(<EventForm mode="create" />);
 		await fillValid(user);
 		await user.click(
 			screen.getByRole("button", { name: "Program mentése" }),
@@ -129,10 +129,95 @@ describe("NewEventForm", () => {
 		expect(push).not.toHaveBeenCalled();
 	});
 
+	describe("edit mode", () => {
+		const event = {
+			id: "ev1",
+			name: "Python alapok",
+			tags: ["robotika"],
+			description: "Régi leírás",
+			from: new Date("2027-03-06T10:00").toISOString(),
+			to: new Date("2027-03-06T14:00").toISOString(),
+			companyName: null,
+			location: null,
+			capacity: 24,
+			ageRange: "12-18",
+			sheetUrl: null,
+			instructor: null,
+			mentors: ["Szűcs Petra"],
+		};
+
+		it("prefills the fields from the event", () => {
+			render(<EventForm mode="edit" event={event} />);
+
+			expect(
+				screen.getByRole("heading", { name: "Program szerkesztése" }),
+			).toBeInTheDocument();
+			expect(screen.getByLabelText(/Program neve/)).toHaveValue(
+				"Python alapok",
+			);
+			expect(screen.getByLabelText(/Kezdés/)).toHaveValue(
+				"2027-03-06T10:00",
+			);
+			expect(screen.getByLabelText(/Max. tanulói létszám/)).toHaveValue(
+				24,
+			);
+			expect(screen.getByLabelText(/Korosztály – tól/)).toHaveValue(12);
+			expect(screen.getByLabelText(/Korosztály – ig/)).toHaveValue(18);
+			expect(screen.getByText("Szűcs Petra")).toBeInTheDocument();
+		});
+
+		it("patches the event and sends null for cleared optional fields", async () => {
+			const user = userEvent.setup();
+			apiFetch.mockResolvedValue({ id: "ev1" });
+			render(<EventForm mode="edit" event={event} />);
+			await user.clear(screen.getByLabelText(/Rövid leírás/));
+			await user.click(
+				screen.getByRole("button", { name: "Változtatások mentése" }),
+			);
+
+			await waitFor(() =>
+				expect(push).toHaveBeenCalledWith("/events/ev1"),
+			);
+			const [url, init] = apiFetch.mock.calls[0];
+			expect(url).toBe("/api/events/ev1");
+			expect(init.method).toBe("PATCH");
+			expect(JSON.parse(init.body)).toEqual({
+				name: "Python alapok",
+				tags: ["robotika"],
+				description: null,
+				from: event.from,
+				to: event.to,
+				companyName: null,
+				location: null,
+				capacity: 24,
+				ageRange: "12-18",
+				sheetUrl: null,
+				instructor: null,
+				mentors: ["Szűcs Petra"],
+			});
+		});
+
+		it("toasts when the event no longer exists", async () => {
+			const user = userEvent.setup();
+			apiFetch.mockRejectedValue(new ApiError(404));
+			render(<EventForm mode="edit" event={event} />);
+			await user.click(
+				screen.getByRole("button", { name: "Változtatások mentése" }),
+			);
+
+			await waitFor(() =>
+				expect(toastError).toHaveBeenCalledWith(
+					"A program már nem létezik.",
+				),
+			);
+			expect(push).not.toHaveBeenCalled();
+		});
+	});
+
 	it("toasts on unexpected failures and stays on the page", async () => {
 		const user = userEvent.setup();
 		apiFetch.mockRejectedValue(new ApiError(500));
-		render(<NewEventForm />);
+		render(<EventForm mode="create" />);
 		await fillValid(user);
 		await user.click(
 			screen.getByRole("button", { name: "Program mentése" }),

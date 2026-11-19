@@ -1,11 +1,19 @@
 import { TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatCount } from "@/lib/applicants/format";
 
 /**
- * Helyőrző a duplikáció-ellenőrzéshez (terv: 03.4). Még nincs mögötte
- * észlelés, ezért darabszámot sem állít.
+ * Figyelmeztetés az eldöntetlen duplikátumpárokról (terv: 03.4). Nulla
+ * párnál (vagy amíg a szám nem ismert) nem jelenik meg.
  */
-export function DuplicateBanner() {
+export function DuplicateBanner({
+	count,
+	onReview,
+}: {
+	count: number | null;
+	onReview: () => void;
+}) {
+	if (!count) return null;
 	return (
 		<div
 			role="status"
@@ -17,20 +25,18 @@ export function DuplicateBanner() {
 			/>
 			<div className="flex min-w-0 flex-1 flex-col">
 				<span className="text-sm font-medium">
-					Lehetséges duplikált jelentkezések
+					{formatCount(count)} lehetséges duplikált jelentkezés
 				</span>
 				<span className="text-xs">
-					Ugyanarról az e-mail címről több jelentkezés is érkezhet.
-					Ellenőrizd őket, mielőtt visszaigazolást küldesz. Az
-					automatikus ellenőrzés hamarosan elérhető.
+					Azonos névvel és e-mail címmel több jelentkező is van.
+					Ellenőrizd őket, mielőtt visszaigazolást küldesz.
 				</span>
 			</div>
 			<Button
 				variant="surface"
 				size="sm"
-				disabled
 				className="rounded-full"
-				title="Hamarosan"
+				onClick={onReview}
 			>
 				Ellenőrzés
 			</Button>

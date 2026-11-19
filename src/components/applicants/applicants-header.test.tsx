@@ -45,13 +45,22 @@ describe("ApplicantsHeader", () => {
 });
 
 describe("DuplicateBanner", () => {
-	it("is a placeholder without a count and with a disabled check", () => {
-		render(<DuplicateBanner />);
-		const banner = screen.getByRole("status");
-		expect(banner).toHaveTextContent("Lehetséges duplikált jelentkezések");
-		expect(banner.textContent).not.toMatch(/\d/);
-		expect(
+	it("is hidden without pairs", () => {
+		const { container } = render(
+			<DuplicateBanner count={0} onReview={vi.fn()} />,
+		);
+		expect(container).toBeEmptyDOMElement();
+	});
+
+	it("shows the pair count and opens the review", async () => {
+		const onReview = vi.fn();
+		render(<DuplicateBanner count={3} onReview={onReview} />);
+		expect(screen.getByRole("status")).toHaveTextContent(
+			"3 lehetséges duplikált jelentkezés",
+		);
+		await userEvent.click(
 			screen.getByRole("button", { name: "Ellenőrzés" }),
-		).toBeDisabled();
+		);
+		expect(onReview).toHaveBeenCalledOnce();
 	});
 });

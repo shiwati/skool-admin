@@ -9,6 +9,8 @@ import {
 	SearchX,
 	Trash2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,7 +29,7 @@ import type {
 } from "@/lib/applicants/list-params";
 import type { ApplicantListItem } from "@/lib/applicants/types";
 import { cn } from "@/lib/utils";
-import { COLUMNS, type ColumnId } from "./columns";
+import { applicantHref, COLUMNS, type ColumnId } from "./columns";
 import { Pager } from "./pager";
 
 export type TableData =
@@ -57,6 +59,13 @@ type Props = {
 
 const SKELETON_ROWS = 6;
 
+/**
+ * Clicks on (or inside) these keep their own behaviour instead of opening the
+ * detail page. Menu items are portaled, but React events still bubble to the row.
+ */
+const ROW_NAV_IGNORE =
+	'a, button, input, label, [role="checkbox"], [role="menuitem"], [role="menu"], [data-row-nav="off"]';
+
 function nextOrder(
 	column: SortKey,
 	sort: SortKey,
@@ -85,6 +94,18 @@ export function ApplicantsTable({
 	onClearFilters,
 	onReload,
 }: Props) {
+	const router = useRouter();
+
+	function openRow(event: MouseEvent<HTMLTableRowElement>, id: string) {
+		const target = event.target;
+		if (target instanceof Element && target.closest(ROW_NAV_IGNORE)) return;
+		// Selecting text in a cell is not a click on the row.
+		if (window.getSelection()?.toString()) return;
+		const href = applicantHref(id);
+		if (event.ctrlKey || event.metaKey) window.open(href, "_blank");
+		else router.push(href);
+	}
+
 	const items = data.status === "success" ? data.items : [];
 	const ids = items.map((item) => item.id);
 	const selectedOnPage = ids.filter((id) => selected.has(id)).length;
@@ -269,14 +290,18 @@ export function ApplicantsTable({
 								<tr
 									key={item.id}
 									aria-selected={isSelected}
+									onClick={(event) => openRow(event, item.id)}
 									className={cn(
-										"border-b border-border-default last:border-0",
+										"cursor-pointer border-b border-border-default last:border-0",
 										isSelected
 											? "bg-sky-50"
 											: "hover:bg-canvas",
 									)}
 								>
-									<td className="px-3 py-2.5">
+									<td
+										className="px-3 py-2.5"
+										data-row-nav="off"
+									>
 										<Checkbox
 											aria-label={`${name} kijelölése`}
 											checked={isSelected}
@@ -293,7 +318,10 @@ export function ApplicantsTable({
 											{COLUMNS[id].cell(item, now)}
 										</td>
 									))}
-									<td className="px-2 py-2.5">
+									<td
+										className="px-2 py-2.5"
+										data-row-nav="off"
+									>
 										<DropdownMenu>
 											<DropdownMenuTrigger
 												aria-label={`Műveletek: ${name}`}

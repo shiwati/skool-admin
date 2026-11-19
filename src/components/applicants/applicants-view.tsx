@@ -21,6 +21,7 @@ import {
 import type {
 	ApplicantListItem,
 	ApplicantsPage,
+	DuplicatesResponse,
 	EventOption,
 } from "@/lib/applicants/types";
 import { copyText } from "@/lib/clipboard";
@@ -31,6 +32,7 @@ import { BulkActionBar } from "./bulk-action-bar";
 import { ColumnPicker } from "./column-picker";
 import { DeleteDialog, type DeleteTarget } from "./delete-dialog";
 import { DuplicateBanner } from "./duplicate-banner";
+import { DuplicateReviewDialog } from "./duplicate-review-dialog";
 import { EmailListDialog } from "./email-list-dialog";
 
 const NO_SELECTION: ReadonlySet<string> = new Set();
@@ -54,6 +56,23 @@ function useEventOptions(): EventOption[] {
 	return events;
 }
 
+/** Eldöntetlen duplikátumpárok száma a bannerhez; `null`, amíg nem ismert. */
+function useDuplicateCount() {
+	const [count, setCount] = useState<number | null>(null);
+	useEffect(() => {
+		const controller = new AbortController();
+		apiFetch<DuplicatesResponse>("/api/applicants/duplicates", {
+			signal: controller.signal,
+		})
+			.then((data) => setCount(data.total))
+			.catch(() => {
+				// No banner when the count is unavailable.
+			});
+		return () => controller.abort();
+	}, []);
+	return [count, setCount] as const;
+}
+
 /** A szerveren már lekért első oldal, és a query, amire válaszol. */
 export type InitialApplicants = { apiQuery: string; data: ApplicantsPage };
 
@@ -69,6 +88,9 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 
 	const applicants = useApplicants(toApiQuery(state).toString(), initial);
 	const events = useEventOptions();
+	const [duplicateCount, setDuplicateCount] = useDuplicateCount();
+	const [duplicatesOpen, setDuplicatesOpen] = useState(false);
+	const [duplicatesRun, setDuplicatesRun] = useState(0);
 	const [columnSettings, setColumnSettings] = useColumnSettings();
 
 	// The selection belongs to one result set: any change to page, sort,
@@ -151,7 +173,13 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 					setEmailListOpen(true);
 				}}
 			/>
-			<DuplicateBanner />
+			<DuplicateBanner
+				count={duplicateCount}
+				onReview={() => {
+					setDuplicatesRun((n) => n + 1);
+					setDuplicatesOpen(true);
+				}}
+			/>
 			<ApplicantsToolbar
 				filters={state}
 				events={events}
@@ -217,6 +245,15 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 				open={emailListOpen}
 				onOpenChange={setEmailListOpen}
 				state={state}
+			/>
+			<DuplicateReviewDialog
+				key={`duplicates-${duplicatesRun}`}
+				open={duplicatesOpen}
+				onOpenChange={setDuplicatesOpen}
+				onChanged={(remaining) => {
+					setDuplicateCount(remaining);
+					applicants.reload();
+				}}
 			/>
 			<DeleteDialog
 				key={`delete-${deleteRun}`}

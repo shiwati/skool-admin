@@ -111,12 +111,16 @@ export function ApplicantsToolbar({
 	);
 }
 
-function SearchField({
+export function SearchField({
 	value,
 	onSearch,
+	label = "Keresés a listában",
+	placeholder = "Keresés a listában…",
 }: {
 	value: string;
 	onSearch: (q: string | undefined) => void;
+	label?: string;
+	placeholder?: string;
 }) {
 	const [draft, setDraft] = useState(value);
 	// The last query this field sent, so its own echo from the URL does not
@@ -146,8 +150,8 @@ function SearchField({
 			<Search aria-hidden="true" className="size-4" />
 			<input
 				type="search"
-				aria-label="Keresés a listában"
-				placeholder="Keresés a listában…"
+				aria-label={label}
+				placeholder={placeholder}
 				value={draft}
 				onChange={(e) => setDraft(e.target.value)}
 				className="min-w-0 flex-1 bg-transparent text-xs text-text-primary outline-none"
@@ -322,7 +326,7 @@ function AgeChip({
 	);
 }
 
-function TextChip({
+export function TextChip({
 	label,
 	value,
 	placeholder,

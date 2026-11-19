@@ -139,6 +139,16 @@ Use `db:migrate` when authoring schema changes locally and commit the resulting 
 - `prisma/seed-data/local.json` is **optional and gitignored**. If it exists, the seed uses it instead of `sample.json`. Use it for your own data set (for example a real export you were given) without risking committing personal data. Same format as `sample.json`: `events`, `applicants`, `applications`, linked by the ids you give them.
 - The seed refuses to run when `NODE_ENV=production` or when `DATABASE_URL` does not point at `localhost`, `127.0.0.1` or `::1`, so it cannot touch a production database. It is never part of `db:deploy`, the build or CI. Production data will be loaded by the application itself in a later phase, not by the seed.
 
+### Inspecting the database
+
+To see what is currently in your local database (the local Postgres must be running: `npm run services:up`):
+
+- **Prisma Studio**: `npm run db:studio` opens a browser UI (usually <http://localhost:5555>) where you can browse, filter and edit rows table by table (`Applicant`, `Application`, `Event`, `History`, …). The quickest way to check what the seed or the app wrote.
+- **pgAdmin**: <http://localhost:5050> (started by `services:up`, credentials in [Quick start](#quick-start)). Use it for ad-hoc SQL queries, inspecting indexes and constraints, or exporting data.
+- **psql**: for a one-off query, for example `psql "$DATABASE_URL" -c 'SELECT count(*) FROM "Applicant";'`.
+
+Both tools use `DATABASE_URL` from `.env` (Prisma Studio) or the preconfigured server (pgAdmin). Pointing `DATABASE_URL` at a shared or production database also works, but treat it as read-only there: Studio edits take effect immediately and are not reversible.
+
 The client uses Prisma's PostgreSQL driver adapter with a bounded connection pool and development hot-reload reuse. The `prisma-client-js` generator preserves compatibility with the stable v4 authentication adapter's `@prisma/client` types.
 
 ## Authentication

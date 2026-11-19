@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	DEFAULT_COLUMN_SETTINGS,
 	visibleColumns,
@@ -9,6 +9,9 @@ import {
 import { ApplicantsTable } from "./applicants-table";
 import { pageNumbers } from "./pager";
 import { applicant, boroka } from "./test-fixtures";
+
+const router = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
 
 const in2026 = new Date("2026-11-19T12:00:00Z");
 
@@ -249,5 +252,46 @@ describe("Pager", () => {
 		expect(pageNumbers(1, 5)).toEqual([1, 2, 3, 4, 5]);
 		expect(pageNumbers(1, 50)).toEqual([1, 2, null, 50]);
 		expect(pageNumbers(25, 50)).toEqual([1, null, 24, 25, 26, null, 50]);
+	});
+});
+
+describe("ApplicantsTable row navigation", () => {
+	const rowOf = (name: string) =>
+		screen.getByRole("link", { name }).closest("tr")!;
+
+	beforeEach(() => vi.clearAllMocks());
+
+	it("opens the detail page when a cell is clicked", async () => {
+		renderTable();
+		const row = rowOf("Nagy Luca");
+		await userEvent.click(within(row).getAllByRole("cell")[5]);
+		expect(router.push).toHaveBeenCalledWith("/applicants/a1");
+	});
+
+	it("links the name to the detail page", () => {
+		renderTable();
+		expect(
+			screen.getByRole("link", { name: "Kiss Boróka" }),
+		).toHaveAttribute("href", "/applicants/a2");
+	});
+
+	it("does not navigate from the checkbox or the row menu", async () => {
+		const { onToggleRow, onDeleteRow } = renderTable();
+		await userEvent.click(
+			screen.getByRole("checkbox", { name: "Nagy Luca kijelölése" }),
+		);
+		expect(onToggleRow).toHaveBeenCalledWith("a1");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Műveletek: Nagy Luca" }),
+		);
+		await userEvent.click(screen.getByRole("menuitem", { name: "Törlés" }));
+		expect(onDeleteRow).toHaveBeenCalled();
+		expect(router.push).not.toHaveBeenCalled();
+	});
+
+	it("does not navigate from loading or empty rows", async () => {
+		renderTable({ data: { status: "loading" } });
+		await userEvent.click(screen.getAllByTestId("skeleton-row")[0]);
+		expect(router.push).not.toHaveBeenCalled();
 	});
 });

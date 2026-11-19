@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useColumnSettings } from "@/hooks/use-column-settings";
 import {
 	COLUMN_SETTINGS_KEY,
@@ -10,6 +10,8 @@ import {
 import { ApplicantsTable } from "./applicants-table";
 import { ColumnPicker } from "./column-picker";
 import { applicant } from "./test-fixtures";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 /** Picker + table wired through the real browser-storage hook. */
 function Harness() {
