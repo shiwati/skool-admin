@@ -42,6 +42,7 @@ const FIELD_LABELS: Record<FieldName, string> = {
 	capacity: "Maximális létszám",
 	ageFrom: "Korosztály – tól",
 	ageTo: "Korosztály – ig",
+	sheetUrl: "Jelentkezők sheetje",
 	instructor: "Oktató",
 	mentors: "Mentorok",
 };
@@ -60,7 +61,7 @@ const SECTIONS: { id: string; title: string; fields: FieldName[] }[] = [
 	{
 		id: "kapacitas",
 		title: "Kapacitás",
-		fields: ["capacity", "ageFrom", "ageTo"],
+		fields: ["capacity", "ageFrom", "ageTo", "sheetUrl"],
 	},
 	{
 		id: "oktatok",
@@ -142,6 +143,7 @@ export function NewEventForm() {
 			capacity: "",
 			ageFrom: "",
 			ageTo: "",
+			sheetUrl: "",
 			instructor: "",
 			mentors: [],
 		},
@@ -415,6 +417,24 @@ export function NewEventForm() {
 										inputMode="numeric"
 										min={0}
 										placeholder="év"
+										className={controlClass}
+									/>
+								)}
+							</FormField>
+							<FormField
+								id={inputId("sheetUrl")}
+								label="Jelentkezők sheetje"
+								hint="A jelentkezők Google Sheetjének linkje; a másolt link gid része jelöli a lapot."
+								error={message("sheetUrl")}
+								className="sm:col-span-2"
+							>
+								{(field) => (
+									<Input
+										{...field}
+										{...register("sheetUrl")}
+										type="url"
+										autoComplete="off"
+										placeholder="https://docs.google.com/spreadsheets/d/…"
 										className={controlClass}
 									/>
 								)}

@@ -1,7 +1,9 @@
 import { z } from "zod";
+import { parseSheetUrl } from "@/lib/google/sheet-url";
 import { eventTagSchema, type EventTag } from "./tags";
 
 export const REQUIRED_MESSAGE = "Kötelező mező";
+export const SHEET_URL_MESSAGE = "Adj meg egy érvényes Google Sheets linket.";
 export const END_BEFORE_START_MESSAGE =
 	"A befejezés nem lehet korábbi a kezdésnél.";
 export const CAPACITY_MESSAGE = "Legalább 1 fő legyen.";
@@ -46,6 +48,16 @@ export const eventFormSchema = z
 			),
 		ageFrom: ageField,
 		ageTo: ageField,
+		sheetUrl: z
+			.string()
+			.trim()
+			.refine(
+				(value) =>
+					value === "" ||
+					(z.url().safeParse(value).success &&
+						parseSheetUrl(value) !== null),
+				SHEET_URL_MESSAGE,
+			),
 		instructor: z.string().trim().max(200),
 		mentors: z.array(tag).max(MAX_MENTORS),
 	})
@@ -73,6 +85,7 @@ export type CreateEventInput = {
 	location?: string;
 	capacity: number;
 	ageRange?: string;
+	sheetUrl?: string;
 	instructor?: string;
 	mentors: string[];
 };
@@ -93,6 +106,7 @@ export function toCreateEventInput(values: EventFormValues): CreateEventInput {
 		location: values.location || undefined,
 		capacity: Number(values.capacity),
 		ageRange,
+		sheetUrl: values.sheetUrl || undefined,
 		instructor: values.instructor || undefined,
 		mentors: values.mentors,
 	};

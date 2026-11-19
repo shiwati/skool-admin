@@ -1,10 +1,7 @@
 import { jsonResponse } from "@/lib/api/handler";
 import { db } from "@/lib/db";
-import {
-	fetchSheet,
-	parseSheetUrl,
-	SheetAccessError,
-} from "@/lib/google/sheets";
+import { parseSheetUrl } from "@/lib/google/sheet-url";
+import { fetchSheet, SheetAccessError } from "@/lib/google/sheets";
 import {
 	getGoogleAccessToken,
 	GoogleReauthRequiredError,

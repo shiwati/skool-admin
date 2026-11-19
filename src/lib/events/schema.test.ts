@@ -4,6 +4,7 @@ import {
 	CAPACITY_MESSAGE,
 	END_BEFORE_START_MESSAGE,
 	REQUIRED_MESSAGE,
+	SHEET_URL_MESSAGE,
 	eventFormSchema,
 	toCreateEventInput,
 	type EventFormValues,
@@ -20,6 +21,7 @@ const values: EventFormValues = {
 	capacity: "24",
 	ageFrom: "12",
 	ageTo: "18",
+	sheetUrl: "",
 	instructor: "",
 	mentors: [],
 };
@@ -73,6 +75,18 @@ describe("eventFormSchema", () => {
 			ageTo: AGE_ORDER_MESSAGE,
 		});
 	});
+
+	it("accepts an empty or Google Sheets link, rejects anything else", () => {
+		const sheet =
+			"https://docs.google.com/spreadsheets/d/13alVrAZOW7rpKmcAsOkhpdVzln5dT-lKXm41N-fCwuw/edit?resourcekey=&gid=1961583770#gid=1961583770";
+		expect(messages({ ...values, sheetUrl: sheet })).toEqual({});
+		expect(
+			messages({ ...values, sheetUrl: "https://example.com/sheet" }),
+		).toEqual({ sheetUrl: SHEET_URL_MESSAGE });
+		expect(messages({ ...values, sheetUrl: "nem link" })).toEqual({
+			sheetUrl: SHEET_URL_MESSAGE,
+		});
+	});
 });
 
 describe("toCreateEventInput", () => {
@@ -90,5 +104,13 @@ describe("toCreateEventInput", () => {
 		expect(input.description).toBeUndefined();
 		expect(input.companyName).toBeUndefined();
 		expect(input.instructor).toBeUndefined();
+		expect(input.sheetUrl).toBeUndefined();
+	});
+
+	it("passes the sheet link through", () => {
+		const sheetUrl = "https://docs.google.com/spreadsheets/d/abc123/edit";
+		expect(toCreateEventInput({ ...values, sheetUrl }).sheetUrl).toBe(
+			sheetUrl,
+		);
 	});
 });
