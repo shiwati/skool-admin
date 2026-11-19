@@ -5,6 +5,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { logger } from "../src/lib/logger";
 import { dataFileSchema } from "../src/lib/seed-data-schema";
+import { duplicateKey } from "../src/lib/sheet-import/mapping";
 import { assertLocalDatabase } from "../src/lib/seed-guard";
 import { formatValidationErrors } from "../src/lib/validation";
 
@@ -53,11 +54,28 @@ async function seed() {
 				update: data,
 			});
 		}
-		for (const { id, ...data } of applicants) {
+		// Same duplicate detection as the sheet import (name + e-mail), so
+		// sample duplicates show up in the duplicate review.
+		const keys = new Set<string>();
+		for (const { id, ...rest } of applicants) {
+			const key = rest.email
+				? duplicateKey(rest.lastName, rest.firstName, rest.email)
+				: null;
+			if (key) keys.add(key);
+			const data = { ...rest, duplicateKey: key };
 			await tx.applicant.upsert({
 				where: { id },
 				create: { id, ...data },
 				update: data,
+			});
+		}
+		for (const key of keys) {
+			const count = await tx.applicant.count({
+				where: { duplicateKey: key, deletedAt: null },
+			});
+			await tx.applicant.updateMany({
+				where: { duplicateKey: key },
+				data: { duplicateFlag: count > 1 },
 			});
 		}
 		for (const { id, ...data } of applications) {

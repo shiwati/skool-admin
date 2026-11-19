@@ -30,8 +30,11 @@
 | (korábban) | Google az egyetlen belépési mód, nincs allowlist                                                                                         | Workspace-tagság = jogosultság                        |
 | (korábban) | NextAuth v4, ESLint v9, pontos függőségverziók                                                                                           | Kompatibilitás és reprodukálhatóság                   |
 
-## Duplikátum-merge (nyitott)
+## Duplikátum-ellenőrzés (megvalósítva)
 
-A sheet import duplikátumként jelöli az azonos név + e-mail jelentkezőket (`duplicateFlag`). A merge még hiányzik: az admin kiválasztja az elsődleges jelentkezőt, annak adatai maradnak, a többiek jelentkezései átkerülnek hozzá (minden jelentkezési adat megmarad), a többi rekord törlődik, a `duplicateFlag` lekerül, a `duplicateKey` marad — így egy későbbi azonos jelentkező újra jelölődik és újra merge-elhető.
+A sheet import duplikátumként jelöli az azonos név + e-mail jelentkezőket (`duplicateFlag`). A jelentkezők képernyő bannere megnyitja az ellenőrző modált (terv: 03.4), amely páronként mutatja őket mezőnkénti összehasonlítással. Az admin dönt:
+
+- **Összevonás**: mindig az admin választja ki, melyik adatlap marad; a másik jelentkezései átkerülnek, a rekordja törlődik, a `duplicateKey` marad — így egy későbbi azonos jelentkező újra jelölődik.
+- **Nem duplikáció**: a pár a `DuplicateDismissal` táblába kerül, és többé nem jelenik meg. Döntés: párra szól, nem jelentkezőre, hogy egy új, azonos kulcsú jelentkező a korábbiakkal újra ellenőrzésre kerüljön.
 
 Döntés: egy jelentkezőnek **ugyanarra az eseményre is lehet több jelentkezése** (pl. kétszer kitöltött form merge után); ezt az adminok kezelik. Ezért nincs `@@unique([eventId, applicantId])`.

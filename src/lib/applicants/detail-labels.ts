@@ -53,6 +53,8 @@ export const HISTORY_FIELD_LABELS: Record<string, string> = {
 	pastParticipationSkoolDesc: "Korábbi Skool program",
 	comment: "Megjegyzés",
 	companyAwareness: "Céges tájékoztatás",
+	merged_from: "Összevonva (duplikáció)",
+	duplicate_dismissed: "Nem duplikáció",
 };
 
 /** Ismeretlen mezőnél a technikai név jelenik meg. */

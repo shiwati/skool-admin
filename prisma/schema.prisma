@@ -16,10 +16,11 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
-  updatedApplicants   Applicant[]   @relation("ApplicantUpdatedBy")
-  updatedApplications Application[] @relation("ApplicationUpdatedBy")
+  updatedApplicants   Applicant[]          @relation("ApplicantUpdatedBy")
+  updatedApplications Application[]        @relation("ApplicationUpdatedBy")
   historyEntries      History[]
-  deletedApplicants   Applicant[]   @relation("ApplicantDeletedBy")
+  deletedApplicants   Applicant[]          @relation("ApplicantDeletedBy")
+  duplicateDismissals DuplicateDismissal[]
 }
 
 model Account {
@@ -63,39 +64,59 @@ model VerificationToken {
 
 /// Jelentkező
 model Applicant {
-  id                String        @id @default(cuid())
-  createdAt         DateTime      @default(now()) @map("created_at")
-  updatedAt         DateTime      @updatedAt @map("updated_at")
-  updatedById       String?       @map("updated_by")
-  updatedBy         User?         @relation("ApplicantUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  firstName         String        @map("first_name")
-  lastName          String        @map("last_name")
-  birthYear         Int?          @map("birth_year")
-  schoolName        String?       @map("school_name")
+  id                String               @id @default(cuid())
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  updatedById       String?              @map("updated_by")
+  updatedBy         User?                @relation("ApplicantUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  firstName         String               @map("first_name")
+  lastName          String               @map("last_name")
+  birthYear         Int?                 @map("birth_year")
+  schoolName        String?              @map("school_name")
   hometown          String?
-  phoneNumber       String?       @map("phone_number")
+  phoneNumber       String?              @map("phone_number")
   email             String?
-  parentFirstName   String?       @map("parent_first_name")
-  parentLastName    String?       @map("parent_last_name")
-  parentMothersName String?       @map("parent_mothers_name")
-  parentAddress     String?       @map("parent_address")
-  parentEmail       String?       @map("parent_email")
-  parentPhone       String?       @map("parent_phone")
-  newsletter        Boolean       @default(false)
+  parentFirstName   String?              @map("parent_first_name")
+  parentLastName    String?              @map("parent_last_name")
+  parentMothersName String?              @map("parent_mothers_name")
+  parentAddress     String?              @map("parent_address")
+  parentEmail       String?              @map("parent_email")
+  parentPhone       String?              @map("parent_phone")
+  newsletter        Boolean              @default(false)
   /// GDPR törlés (anonimizálás) ideje; null = aktív jelentkező
-  deletedAt         DateTime?     @map("deleted_at")
-  deletedById       String?       @map("deleted_by")
-  deletedBy         User?         @relation("ApplicantDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedAt         DateTime?            @map("deleted_at")
+  deletedById       String?              @map("deleted_by")
+  deletedBy         User?                @relation("ApplicantDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
   /// Normalizált vezetéknév + utónév + e-mail; azonos kulcs = lehetséges duplikátum.
-  duplicateKey      String?       @map("duplicate_key")
+  duplicateKey      String?              @map("duplicate_key")
   /// Igaz, ha van másik jelentkező ugyanazzal a kulccsal; az admin merge-öli.
-  duplicateFlag     Boolean       @default(false) @map("duplicate_flag")
+  duplicateFlag     Boolean              @default(false) @map("duplicate_flag")
   applications      Application[]
+  dismissalsAsA     DuplicateDismissal[] @relation("DismissalApplicantA")
+  dismissalsAsB     DuplicateDismissal[] @relation("DismissalApplicantB")
 
   @@index([email])
   @@index([deletedAt])
   @@index([duplicateKey])
   @@map("applicant")
+}
+
+/// "Nem duplikáció" admin döntés egy jelentkezőpárra. Párra szól, így egy
+/// később érkező, azonos kulcsú jelentkező új párként újra megjelenik.
+/// A pár rendezett: applicantAId < applicantBId.
+model DuplicateDismissal {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now()) @map("created_at")
+  createdById  String?   @map("created_by")
+  createdBy    User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  applicantAId String    @map("applicant_a_id")
+  applicantA   Applicant @relation("DismissalApplicantA", fields: [applicantAId], references: [id], onDelete: Cascade)
+  applicantBId String    @map("applicant_b_id")
+  applicantB   Applicant @relation("DismissalApplicantB", fields: [applicantBId], references: [id], onDelete: Cascade)
+
+  @@unique([applicantAId, applicantBId])
+  @@index([applicantBId])
+  @@map("duplicate_dismissal")
 }
 
 /// Jelentkezés (Event × Applicant)

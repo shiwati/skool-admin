@@ -60,9 +60,17 @@ Az esemény `sheetUrl`-jében megadott válasz-sheetet olvassa a **bejelentkezet
 
 - Oszlop ↔ mező párosítás fejléc-kulcsszavak alapján: `src/lib/sheet-import/mapping.ts` (kötelező: vezetéknév, utónév, e-mail). Ismeretlen oszlopok (pl. kézi „1. oszlop”) kimaradnak, a válasz `unmappedHeaders`-ben listázza őket.
 - Minden új válasz **új** `Applicant` + `Application`. Újraszinkronnál az `Application.sourceKey` (időbélyeg + e-mail, eseményen belül egyedi) miatt semmi nem jön létre kétszer, és semmi nem íródik felül.
-- Duplikátum: azonos `Applicant.duplicateKey` (normalizált név + e-mail) → minden érintett jelentkező `duplicateFlag = true`. A merge (elsődleges kiválasztása, jelentkezések átkötése) admin döntés, még nincs megvalósítva.
+- Duplikátum: azonos `Applicant.duplicateKey` (normalizált név + e-mail) → minden érintett jelentkező `duplicateFlag = true`. Az eldöntésük a duplikáció-ellenőrzés képernyőn történik (merge vagy „nem duplikáció”), lásd lent.
 - Válasz: `{ created, existing, duplicates, errors: [{ row, reason }], unmappedHeaders }`.
 
 ## `POST /api/applicants/merge` — duplikátumok összevonása
 
 Body: `{ "primaryId": "…", "mergeIds": ["…"] }` (1–50 egyedi id, a `primaryId` nem lehet köztük). Egy tranzakcióban: a `mergeIds` jelentkezők összes jelentkezése az elsődlegeshez kerül (a jelentkezési adatok változatlanok; ugyanarra az eseményre több is maradhat), a `History`-ba `merged_from` sor kerül, a merge-elt jelentkezők törlődnek. A `duplicateFlag` csak akkor marad igaz, ha még van másik jelentkező ugyanazzal a `duplicateKey`-jel. Válasz: `{ applicant (jelentkezésekkel), movedApplications }`; hibák: 400 (validáció), 401, 404 (ismeretlen id).
+
+## `GET /api/applicants/duplicates` — következő eldöntetlen duplikátumpár
+
+Query: `skip` (≥ 0, alapértelmezés 0; a „Kihagyás most” lépteti, a végén körbeér). A párok az azonos `duplicateKey`-ű, nem törölt, `duplicateFlag`-es jelentkezőkből képződnek (egy N tagú csoport minden párja), kivéve a „nem duplikáció”-nak jelölt párokat (`src/lib/applicants/duplicate-pairs.ts`). Válasz: `{ total, index, pair: { a, b } | null }`; az `a` a korábban rögzített jelentkező, mindkettő minden adatával és jelentkezéseivel (program, státusz, beküldés). A jelentkezőlista bannere ebből veszi a darabszámot.
+
+## `POST /api/applicants/duplicates/dismiss` — „nem duplikáció”
+
+Body: `{ "applicantIds": ["…", "…"] }` (két különböző id). A pár rendezve (`applicantAId < applicantBId`) a `DuplicateDismissal` táblába kerül, a `History`-ba `duplicate_dismissed` sor. A döntés **párra** szól: ha később egy harmadik, azonos kulcsú jelentkező érkezik, az bármelyikükkel új párt alkot és megjelenik. A `duplicateFlag` nem változik. Hibák: 400, 401, 404 (ismeretlen vagy törölt), 409 (eltérő `duplicateKey`).
