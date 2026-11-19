@@ -13,7 +13,7 @@
 	},
 	"scripts": {
 		"dev": "next dev",
-		"dev:all": "npm run services:up && prisma migrate deploy && prisma generate && next dev",
+		"dev:all": "npm run services:up && prisma migrate deploy && prisma generate && prisma db seed && next dev",
 		"build": "prisma generate && next build",
 		"start": "next start",
 		"lint": "eslint . --max-warnings=0",
@@ -28,6 +28,7 @@
 		"db:migrate": "prisma migrate dev",
 		"db:deploy": "prisma migrate deploy",
 		"db:seed": "prisma db seed",
+		"db:seed:reset": "tsx prisma/seed.ts --reset",
 		"db:studio": "prisma studio",
 		"services:up": "docker compose up -d --wait",
 		"services:down": "docker compose down",

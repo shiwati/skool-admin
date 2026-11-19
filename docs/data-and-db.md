@@ -8,11 +8,23 @@
 
 - Új migráció: `npm run db:migrate -- --name leiras` → **commitold** a `prisma/migrations/` tartalmát.
 - Alkalmazás (deploy/CI): `npm run db:deploy`. Prodban soha `db push` vagy `migrate dev`.
-- Jelenleg egyetlen migráció van: `20261028212000_auth_infrastructure` (csak a NextAuth táblák). **A doménmodellhez még nincs migráció**, lásd [gaps-and-decisions.md](gaps-and-decisions.md).
+- `20261028212000_auth_infrastructure`: NextAuth táblák.
+- `20261119171300_domain_models`: `applicant`, `application`, `event`, `history`, `application_status` enum.
 
-## Seed
+## Lokális mintaadat (seed)
 
-`prisma/seed.ts` idempotens, jelenleg csak egy `SELECT 1`-et futtat; nem hoz létre felhasználót vagy adatot. Új seed-lépés is legyen idempotens.
+Cél: fejlesztéshez legyen alapadat a **lokális** adatbázisban, ami az éles adatbázist soha nem érintheti. A seed **nem** az éles adatbetöltés: azt később maga az app végzi majd Google Sheetből (lásd lent).
+
+- Parancsok: `npm run db:seed` (upsert, újrafuttatható) · `npm run db:seed:reset` (törli az `application`/`applicant`/`event` sorokat, majd újratölti). A `dev:all` is futtatja a `db:seed`-et.
+- Forrás: `prisma/seed-data/local.json`, ha létezik (**gitignore**, ide jöhet valódi adat), különben a commitolt, kitalált `prisma/seed-data/sample.json`.
+- Formátum: `events[]`, `applicants[]`, `applications[]`, explicit szöveges id-kkel, amikre egymásra hivatkoznak (pl. `seed_event_1`). Validáció és hivatkozás-ellenőrzés: `src/lib/seed-data-schema.ts` (Zod).
+- Védelem (`src/lib/seed-guard.ts`): a seed megtagad minden futást, ha `NODE_ENV=production`, vagy a `DATABASE_URL` hosztja nem `localhost` / `127.0.0.1` / `::1`, vagy az URL érvénytelen. Nem része a `db:deploy`-nak, a buildnek, a CI-nak.
+- A seed csak a `DATABASE_URL`-t igényli, nem az app teljes env-jét.
+- Figyelem: a `dev:all` minden indításkor visszaírja a seedelt sorokat a fájl szerinti állapotra (upsert), tehát a lokális kézi módosításukat felülírja.
+
+## Sheet-import (tervezett)
+
+Az éles adatot az app tölti majd be Google Sheetből, bejelentkezett adminként. A seed adatfájl-formátuma (`dataFileSchema`) úgy készült, hogy az import ugyanebbe a formába konvertálhasson és ugyanazt a validációt használja. Nyitott: a Sheet sorainak nincs id-ja, a jelentkezőnek nincs természetes egyedi kulcsa, ezt az import tervezésekor kell eldönteni ([gaps-and-decisions.md](gaps-and-decisions.md)).
 
 ## Lokális környezet
 

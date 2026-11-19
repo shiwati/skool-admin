@@ -87,6 +87,8 @@ prisma/
   migrations/
   schema.prisma
   seed.ts
+  seed-data/
+    sample.json
 docker/pgadmin/servers.json
 tests/
   setup.ts
@@ -116,17 +118,26 @@ Environment values are server-only. Add a separate, explicitly public schema if 
 
 ## Database
 
-Only the standard `User`, `Account`, `Session`, and `VerificationToken` models used by the authentication adapter are included. They are infrastructure, not business entities. The initial migration is committed.
+The schema contains the standard `User`, `Account`, `Session`, and `VerificationToken` models used by the authentication adapter, plus the domain models `Applicant`, `Application`, `Event`, and `History`. All migrations are committed.
 
 ```sh
 npm run db:generate
 npm run db:migrate -- --name describe_change
 npm run db:deploy
 npm run db:seed
+npm run db:seed:reset
 npm run db:studio
 ```
 
-Use `db:migrate` when authoring schema changes locally and commit the resulting migrations. Use `db:deploy` in deployment automation; do not use `db push` or `migrate dev` in production. Seeding is explicit, idempotent infrastructure and creates no users or application data.
+Use `db:migrate` when authoring schema changes locally and commit the resulting migrations. Use `db:deploy` in deployment automation; do not use `db push` or `migrate dev` in production.
+
+### Local sample data
+
+`db:seed` loads sample events, applicants and applications into your **local** database so there is something to work with. It is idempotent (upserts by id); `db:seed:reset` first deletes all rows of those three tables, then reloads. `npm run dev:all` also runs `db:seed`, which resets seeded rows to the file's state on every start.
+
+- `prisma/seed-data/sample.json` is committed and contains made-up data. It is used by default.
+- `prisma/seed-data/local.json` is **optional and gitignored**. If it exists, the seed uses it instead of `sample.json`. Use it for your own data set (for example a real export you were given) without risking committing personal data. Same format as `sample.json`: `events`, `applicants`, `applications`, linked by the ids you give them.
+- The seed refuses to run when `NODE_ENV=production` or when `DATABASE_URL` does not point at `localhost`, `127.0.0.1` or `::1`, so it cannot touch a production database. It is never part of `db:deploy`, the build or CI. Production data will be loaded by the application itself in a later phase, not by the seed.
 
 The client uses Prisma's PostgreSQL driver adapter with a bounded connection pool and development hot-reload reuse. The `prisma-client-js` generator preserves compatibility with the stable v4 authentication adapter's `@prisma/client` types.
 
