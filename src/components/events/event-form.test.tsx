@@ -142,6 +142,7 @@ describe("EventForm", () => {
 			capacity: 24,
 			ageRange: "12-18",
 			sheetUrl: null,
+			feedbackSheetUrl: null,
 			instructor: null,
 			mentors: ["Szűcs Petra"],
 		};
@@ -192,6 +193,7 @@ describe("EventForm", () => {
 				capacity: 24,
 				ageRange: "12-18",
 				sheetUrl: null,
+				feedbackSheetUrl: null,
 				instructor: null,
 				mentors: ["Szűcs Petra"],
 			});

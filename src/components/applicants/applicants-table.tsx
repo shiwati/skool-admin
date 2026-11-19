@@ -334,13 +334,13 @@ export function ApplicantsTable({
 											</DropdownMenuTrigger>
 											<DropdownMenuContent align="end">
 												<DropdownMenuItem
-													className="text-error-fg focus:text-error-fg"
+													className="text-error-fg focus:text-error-fg [&_svg]:text-error-fg!"
 													onSelect={() =>
 														onDeleteRow(item)
 													}
 												>
 													<Trash2 aria-hidden="true" />
-													Törlés
+													Jelentkező törlése
 												</DropdownMenuItem>
 											</DropdownMenuContent>
 										</DropdownMenu>

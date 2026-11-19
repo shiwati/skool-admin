@@ -46,6 +46,7 @@ const FIELD_LABELS: Record<FieldName, string> = {
 	ageFrom: "Korosztály – tól",
 	ageTo: "Korosztály – ig",
 	sheetUrl: "Jelentkezők sheetje",
+	feedbackSheetUrl: "Feedbackek sheetje",
 	instructor: "Oktató",
 	mentors: "Mentorok",
 };
@@ -70,6 +71,11 @@ const SECTIONS: { id: string; title: string; fields: FieldName[] }[] = [
 		id: "oktatok",
 		title: "Oktatók & mentorok",
 		fields: ["instructor", "mentors"],
+	},
+	{
+		id: "zaro-riport",
+		title: "Záró riport mezői",
+		fields: ["feedbackSheetUrl"],
 	},
 ];
 
@@ -136,6 +142,7 @@ const EMPTY_VALUES: EventFormValues = {
 	ageFrom: "",
 	ageTo: "",
 	sheetUrl: "",
+	feedbackSheetUrl: "",
 	instructor: "",
 	mentors: [],
 };
@@ -524,6 +531,31 @@ export function EventForm(props: EventFormProps) {
 												}
 											/>
 										)}
+									/>
+								)}
+							</FormField>
+						</FormSection>
+
+						<FormSection
+							id="zaro-riport"
+							index={5}
+							title="Záró riport mezői"
+						>
+							<FormField
+								id={inputId("feedbackSheetUrl")}
+								label="Feedbackek sheetje"
+								hint="A feedbackek Google Sheetjének linkje; a másolt link gid része jelöli a lapot."
+								error={message("feedbackSheetUrl")}
+								className="sm:col-span-2"
+							>
+								{(field) => (
+									<Input
+										{...field}
+										{...register("feedbackSheetUrl")}
+										type="url"
+										autoComplete="off"
+										placeholder="https://docs.google.com/spreadsheets/d/…"
+										className={controlClass}
 									/>
 								)}
 							</FormField>

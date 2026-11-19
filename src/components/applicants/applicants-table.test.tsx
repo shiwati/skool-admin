@@ -206,7 +206,7 @@ describe("ApplicantsTable", () => {
 			screen.getByRole("button", { name: "Műveletek: Kiss Boróka" }),
 		);
 		await userEvent.click(
-			await screen.findByRole("menuitem", { name: "Törlés" }),
+			await screen.findByRole("menuitem", { name: "Jelentkező törlése" }),
 		);
 		expect(onDeleteRow).toHaveBeenCalledWith(boroka);
 	});
@@ -284,7 +284,9 @@ describe("ApplicantsTable row navigation", () => {
 		await userEvent.click(
 			screen.getByRole("button", { name: "Műveletek: Nagy Luca" }),
 		);
-		await userEvent.click(screen.getByRole("menuitem", { name: "Törlés" }));
+		await userEvent.click(
+			screen.getByRole("menuitem", { name: "Jelentkező törlése" }),
+		);
 		expect(onDeleteRow).toHaveBeenCalled();
 		expect(router.push).not.toHaveBeenCalled();
 	});

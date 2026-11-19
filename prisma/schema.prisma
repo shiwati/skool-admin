@@ -165,22 +165,23 @@ enum ApplicationStatus {
 
 /// Program / esemény
 model Event {
-  id           String        @id @default(cuid())
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  name         String
-  from         DateTime
-  to           DateTime
-  companyName  String?       @map("company_name")
-  location     String?
-  description  String?       @map("desc")
-  sheetUrl     String?       @map("sheet_url")
-  ageRange     String?       @map("age_range")
-  instructor   String?
-  mentors      String[]
-  tags         String[]      @default([])
-  capacity     Int           @default(0)
-  applications Application[]
+  id               String        @id @default(cuid())
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  name             String
+  from             DateTime
+  to               DateTime
+  companyName      String?       @map("company_name")
+  location         String?
+  description      String?       @map("desc")
+  sheetUrl         String?       @map("sheet_url")
+  feedbackSheetUrl String?       @map("feedback_sheet_url")
+  ageRange         String?       @map("age_range")
+  instructor       String?
+  mentors          String[]
+  tags             String[]      @default([])
+  capacity         Int           @default(0)
+  applications     Application[]
 
   @@map("event")
 }

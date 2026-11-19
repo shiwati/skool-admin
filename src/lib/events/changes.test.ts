@@ -10,6 +10,7 @@ const current = {
 	description: null,
 	tags: ["robotika"],
 	sheetUrl: null,
+	feedbackSheetUrl: null,
 	ageRange: "12-18",
 	instructor: null,
 	mentors: [],

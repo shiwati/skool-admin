@@ -25,7 +25,9 @@ describe("ApplicantDetailActions", () => {
 		await userEvent.click(
 			screen.getByRole("button", { name: "További műveletek" }),
 		);
-		await userEvent.click(screen.getByRole("menuitem", { name: "Törlés" }));
+		await userEvent.click(
+			screen.getByRole("menuitem", { name: "Jelentkező törlése" }),
+		);
 		await userEvent.click(
 			screen.getByRole("checkbox", {
 				name: "Értem, a törlés nem vonható vissza",
@@ -50,7 +52,9 @@ describe("ApplicantDetailActions", () => {
 		await userEvent.click(
 			screen.getByRole("button", { name: "További műveletek" }),
 		);
-		await userEvent.click(screen.getByRole("menuitem", { name: "Törlés" }));
+		await userEvent.click(
+			screen.getByRole("menuitem", { name: "Jelentkező törlése" }),
+		);
 		expect(screen.getByRole("alertdialog")).toHaveTextContent(
 			"Törlöd Nagy Luca adatait?",
 		);

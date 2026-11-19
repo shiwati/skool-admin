@@ -155,7 +155,9 @@ describe("ApplicantsView", () => {
 		await userEvent.click(
 			screen.getByRole("checkbox", { name: "Kiss Boróka kijelölése" }),
 		);
-		await userEvent.click(screen.getByRole("button", { name: "Törlés" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Jelentkezők törlése" }),
+		);
 		expect(screen.getByRole("alertdialog")).toHaveTextContent(
 			"Törlöd Kiss Boróka adatait?",
 		);

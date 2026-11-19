@@ -1,10 +1,38 @@
 import { describe, expect, it } from "vitest";
 import {
 	demandRatio,
+	eventPeople,
+	formatAgeRange,
 	formatDateRange,
 	formatRatio,
 	ratioBadgeClass,
 } from "./format";
+
+describe("formatAgeRange", () => {
+	it("writes the range with years", () => {
+		expect(formatAgeRange("12-18")).toBe("12–18 év");
+	});
+
+	it("keeps text of an unknown shape", () => {
+		expect(formatAgeRange("12+")).toBe("12+");
+	});
+});
+
+describe("eventPeople", () => {
+	it("puts the instructor first and tags the roles", () => {
+		expect(eventPeople("Kiss Bence", ["Szűcs Petra"])).toEqual([
+			{ name: "Kiss Bence", role: "oktató" },
+			{ name: "Szűcs Petra", role: "mentor" },
+		]);
+	});
+
+	it("skips a missing instructor and blank names", () => {
+		expect(eventPeople(null, ["Szűcs Petra", "  "])).toEqual([
+			{ name: "Szűcs Petra", role: "mentor" },
+		]);
+		expect(eventPeople(null, [])).toEqual([]);
+	});
+});
 
 describe("formatDateRange", () => {
 	it("starts with the year", () => {

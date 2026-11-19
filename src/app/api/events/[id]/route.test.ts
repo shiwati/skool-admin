@@ -34,6 +34,7 @@ const existing = {
 	description: null,
 	tags: [],
 	sheetUrl: null,
+	feedbackSheetUrl: null,
 	ageRange: null,
 	instructor: null,
 	mentors: [],

@@ -33,6 +33,25 @@ export function formatDateRange(
 	return `${start} – ${end}`;
 }
 
+/** `12-18` → `12–18 év`; ismeretlen alakú szöveg változatlanul marad. */
+export function formatAgeRange(ageRange: string): string {
+	const match = /^(\d{1,2})-(\d{1,2})$/.exec(ageRange.trim());
+	return match ? `${match[1]}–${match[2]} év` : ageRange;
+}
+
+export type EventPerson = { name: string; role: "oktató" | "mentor" };
+
+/** Az oktató és a mentorok egy listában (üres nevek nélkül), az oktató elöl. */
+export function eventPeople(
+	instructor: string | null,
+	mentors: string[],
+): EventPerson[] {
+	return [
+		...(instructor ? [{ name: instructor, role: "oktató" as const }] : []),
+		...mentors.map((name) => ({ name, role: "mentor" as const })),
+	].filter((person) => person.name.trim() !== "");
+}
+
 /** Túljelentkezés aránya (jelentkezők / kapacitás); kapacitás nélkül `null`. */
 export function demandRatio(applications: number, capacity: number) {
 	return capacity > 0 ? applications / capacity : null;

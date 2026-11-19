@@ -22,12 +22,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { PageSize } from "@/lib/applicants/list-params";
 import { EMPTY, formatCount, programColorClass } from "@/lib/applicants/format";
+import { AVATAR_CLASSES, tagClass } from "@/lib/events/colors";
 import {
 	demandRatio,
 	formatDateRange,
 	formatRatio,
 	ratioBadgeClass,
 } from "@/lib/events/format";
+import { applicantsHref, eventEditHref, eventHref } from "@/lib/events/links";
 import {
 	defaultOrder,
 	type EventSortKey,
@@ -60,29 +62,6 @@ export type EventListItem = {
 	capacity: number;
 	applicationCounts: { total: number };
 };
-
-const TAG_CLASSES: Record<string, string> = {
-	robotika: "bg-sky",
-	programozás: "bg-lavender",
-	kezdő: "bg-sage",
-	haladó: "bg-peach",
-};
-
-const AVATAR_CLASSES = ["bg-pink-strong", "bg-pink"];
-
-/** Egy program jelentkezői a Jelentkezők listán, erre a programra szűrve. */
-export function applicantsHref(eventId: string) {
-	return `/applicants?eventIds=${encodeURIComponent(eventId)}`;
-}
-
-/** A program saját oldala (még nem készült el, addig 404). */
-export function eventHref(eventId: string) {
-	return `/events/${encodeURIComponent(eventId)}`;
-}
-
-export function eventEditHref(eventId: string) {
-	return `/events/${encodeURIComponent(eventId)}/edit`;
-}
 
 const headClass =
 	"px-3 py-2.5 font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase";
@@ -277,7 +256,7 @@ function EventRow({
 									key={tag}
 									className={cn(
 										"rounded-full px-2 text-xs leading-5 font-medium",
-										TAG_CLASSES[tag] ?? "bg-surface-subtle",
+										tagClass(tag),
 									)}
 								>
 									{tag}
@@ -408,7 +387,7 @@ function EventRow({
 						</DropdownMenuItem>
 						{onDelete && (
 							<DropdownMenuItem
-								className="text-error-fg focus:text-error-fg"
+								className="text-error-fg focus:text-error-fg [&_svg]:text-error-fg!"
 								onSelect={() =>
 									onDelete({
 										id: item.id,
@@ -418,7 +397,7 @@ function EventRow({
 								}
 							>
 								<Trash2 aria-hidden="true" />
-								Törlés
+								Program törlése
 							</DropdownMenuItem>
 						)}
 					</DropdownMenuContent>

@@ -16,6 +16,7 @@ const shape = {
 	description: optionalField,
 	tags: z.array(eventTagSchema),
 	sheetUrl: z.url().nullish(),
+	feedbackSheetUrl: z.url().nullish(),
 	ageRange: optionalField,
 	instructor: optionalField,
 	mentors: z.array(z.string().trim().min(1)),

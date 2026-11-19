@@ -41,7 +41,7 @@ export function BulkActionBar({
 					onClick={onDelete}
 				>
 					<Trash2 aria-hidden="true" />
-					Törlés
+					Jelentkezők törlése
 				</button>
 				<button
 					type="button"

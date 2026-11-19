@@ -38,7 +38,7 @@ export type StatusCounts = Record<ApplicationStatus, number> & {
 	total: number;
 };
 
-function emptyCounts(): StatusCounts {
+export function emptyCounts(): StatusCounts {
 	const counts = { total: 0 } as StatusCounts;
 	for (const status of Object.values(ApplicationStatus)) counts[status] = 0;
 	return counts;

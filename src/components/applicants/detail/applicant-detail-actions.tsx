@@ -75,7 +75,7 @@ export function ApplicantDetailActions({
 					Visszaigazolás küldése
 				</UnavailableButton>
 			</TooltipProvider>
-			<Button asChild className="rounded-full">
+			<Button asChild variant="surface">
 				<Link href={`/applicants/${encodeURIComponent(id)}/edit`}>
 					<Pencil aria-hidden="true" />
 					Szerkesztés
@@ -84,7 +84,7 @@ export function ApplicantDetailActions({
 			<DropdownMenu>
 				<DropdownMenuTrigger
 					aria-label="További műveletek"
-					className="flex size-10 items-center justify-center rounded-full border border-border-default bg-white hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+					className="flex size-9 items-center justify-center rounded-full border border-border-default bg-white hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
 				>
 					<MoreHorizontal
 						aria-hidden="true"
@@ -93,14 +93,14 @@ export function ApplicantDetailActions({
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
 					<DropdownMenuItem
-						className="text-error-fg focus:text-error-fg"
+						className="text-error-fg focus:text-error-fg [&_svg]:text-error-fg!"
 						onSelect={() => {
 							setRun((r) => r + 1);
 							setTarget({ ids: [id], name });
 						}}
 					>
 						<Trash2 aria-hidden="true" />
-						Törlés
+						Jelentkező törlése
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>

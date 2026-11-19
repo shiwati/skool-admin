@@ -11,6 +11,7 @@ export const TRACKED_EVENT_FIELDS = [
 	"description",
 	"tags",
 	"sheetUrl",
+	"feedbackSheetUrl",
 	"ageRange",
 	"instructor",
 	"mentors",

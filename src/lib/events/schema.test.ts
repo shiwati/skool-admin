@@ -22,6 +22,7 @@ const values: EventFormValues = {
 	ageFrom: "12",
 	ageTo: "18",
 	sheetUrl: "",
+	feedbackSheetUrl: "",
 	instructor: "",
 	mentors: [],
 };

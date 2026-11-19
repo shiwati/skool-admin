@@ -1,17 +1,9 @@
 "use client";
 
-import { Copy, RefreshCw } from "lucide-react";
+import { Copy } from "lucide-react";
 import { PageHeader } from "@/components/admin-shell/page-header";
 import { Button } from "@/components/ui/button";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { formatCount } from "@/lib/applicants/format";
-
-const SYNC_UNAVAILABLE = "A Google Sheet szinkronizálás még nem érhető el.";
 
 export function ApplicantsHeader({
 	total,
@@ -32,34 +24,10 @@ export function ApplicantsHeader({
 				</>
 			}
 			actions={
-				<>
-					<TooltipProvider>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								{/* Disabled buttons get no pointer or focus events, so the
-						    wrapper carries the tooltip trigger. */}
-								<span tabIndex={0} className="rounded-md">
-									<Button
-										variant="ghost"
-										disabled
-										aria-describedby="sync-unavailable"
-									>
-										<RefreshCw aria-hidden="true" />
-										Szinkronizálás
-									</Button>
-								</span>
-							</TooltipTrigger>
-							<TooltipContent>{SYNC_UNAVAILABLE}</TooltipContent>
-						</Tooltip>
-					</TooltipProvider>
-					<span id="sync-unavailable" className="sr-only">
-						{SYNC_UNAVAILABLE}
-					</span>
-					<Button variant="surface" onClick={onEmailList}>
-						<Copy aria-hidden="true" />
-						E-mail lista
-					</Button>
-				</>
+				<Button variant="surface" onClick={onEmailList}>
+					<Copy aria-hidden="true" />
+					E-mail lista
+				</Button>
 			}
 		/>
 	);

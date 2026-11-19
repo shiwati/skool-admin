@@ -28,6 +28,16 @@ const ageField = z
 	.trim()
 	.refine((value) => value === "" || /^\d{1,2}$/.test(value), "Egész szám");
 
+const sheetUrlField = z
+	.string()
+	.trim()
+	.refine(
+		(value) =>
+			value === "" ||
+			(z.url().safeParse(value).success && parseSheetUrl(value) !== null),
+		SHEET_URL_MESSAGE,
+	);
+
 /** Az űrlap értékei: minden szám és dátum szövegként, ahogy a mezők adják. */
 export const eventFormSchema = z
 	.object({
@@ -48,16 +58,8 @@ export const eventFormSchema = z
 			),
 		ageFrom: ageField,
 		ageTo: ageField,
-		sheetUrl: z
-			.string()
-			.trim()
-			.refine(
-				(value) =>
-					value === "" ||
-					(z.url().safeParse(value).success &&
-						parseSheetUrl(value) !== null),
-				SHEET_URL_MESSAGE,
-			),
+		sheetUrl: sheetUrlField,
+		feedbackSheetUrl: sheetUrlField,
 		instructor: z.string().trim().max(200),
 		mentors: z.array(tag).max(MAX_MENTORS),
 	})
@@ -86,6 +88,7 @@ export type CreateEventInput = {
 	capacity: number;
 	ageRange?: string;
 	sheetUrl?: string;
+	feedbackSheetUrl?: string;
 	instructor?: string;
 	mentors: string[];
 };
@@ -102,6 +105,7 @@ export type UpdateEventInput = {
 	capacity: number;
 	ageRange: string | null;
 	sheetUrl: string | null;
+	feedbackSheetUrl: string | null;
 	instructor: string | null;
 	mentors: string[];
 };
@@ -119,6 +123,7 @@ export type EventFormSource = {
 	capacity: number;
 	ageRange: string | null;
 	sheetUrl: string | null;
+	feedbackSheetUrl: string | null;
 	instructor: string | null;
 	mentors: string[];
 };
@@ -149,6 +154,7 @@ export function toEventFormValues(event: EventFormSource): EventFormValues {
 		ageFrom: age?.[1] ?? "",
 		ageTo: age?.[2] ?? "",
 		sheetUrl: event.sheetUrl ?? "",
+		feedbackSheetUrl: event.feedbackSheetUrl ?? "",
 		instructor: event.instructor ?? "",
 		mentors: event.mentors,
 	};
@@ -163,6 +169,7 @@ export function toUpdateEventInput(values: EventFormValues): UpdateEventInput {
 		location: create.location ?? null,
 		ageRange: create.ageRange ?? null,
 		sheetUrl: create.sheetUrl ?? null,
+		feedbackSheetUrl: create.feedbackSheetUrl ?? null,
 		instructor: create.instructor ?? null,
 	};
 }
@@ -184,6 +191,7 @@ export function toCreateEventInput(values: EventFormValues): CreateEventInput {
 		capacity: Number(values.capacity),
 		ageRange,
 		sheetUrl: values.sheetUrl || undefined,
+		feedbackSheetUrl: values.feedbackSheetUrl || undefined,
 		instructor: values.instructor || undefined,
 		mentors: values.mentors,
 	};
