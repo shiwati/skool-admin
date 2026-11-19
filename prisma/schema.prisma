@@ -143,6 +143,7 @@ model Event {
   ageRange     String?       @map("age_range")
   instructor   String?
   mentors      String[]
+  capacity     Int           @default(0)
   applications Application[]
 
   @@map("event")
