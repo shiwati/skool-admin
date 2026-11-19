@@ -261,7 +261,6 @@ export function DuplicateReviewDialog({
 						<Button
 							variant="surface"
 							size="sm"
-							className="rounded-full"
 							onClick={() => {
 								setLoad({ status: "loading" });
 								setRun((n) => n + 1);
@@ -397,7 +396,6 @@ export function DuplicateReviewDialog({
 				<DialogFooter className="items-center gap-2 sm:justify-between">
 					<Button
 						variant="ghost"
-						className="rounded-full"
 						disabled={pending || !data || data.total < 2}
 						onClick={() => {
 							setLoad({ status: "loading" });
@@ -409,14 +407,12 @@ export function DuplicateReviewDialog({
 					<div className="flex gap-2">
 						<Button
 							variant="surface"
-							className="rounded-full"
 							disabled={pending}
 							onClick={() => onOpenChange(false)}
 						>
 							Mégse
 						</Button>
 						<Button
-							className="rounded-full"
 							disabled={!canSave}
 							aria-busy={pending || undefined}
 							onClick={() => void save()}

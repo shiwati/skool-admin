@@ -35,7 +35,7 @@ export function ColumnPicker({
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
-				<Button variant="ghost" size="sm" className="rounded-full">
+				<Button variant="ghost" size="sm">
 					<Columns3 aria-hidden="true" />
 					Oszlopok
 				</Button>

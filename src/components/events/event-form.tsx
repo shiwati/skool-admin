@@ -532,15 +532,15 @@ export function EventForm(props: EventFormProps) {
 						<Card className="mt-5 flex items-center justify-end gap-2 p-4">
 							<Button
 								asChild
-								variant="ghost"
-								className="h-11 rounded-full px-6 font-mono text-[13px]"
+								variant="surface"
+								className="h-11 px-6 font-mono text-[13px]"
 							>
 								<Link href="/events">Mégse</Link>
 							</Button>
 							<Button
 								type="submit"
 								disabled={isSubmitting || saved}
-								className="h-11 rounded-full px-6 font-mono text-[13px]"
+								className="h-11 px-6 font-mono text-[13px]"
 							>
 								{editing
 									? "Változtatások mentése"

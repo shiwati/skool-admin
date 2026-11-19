@@ -96,12 +96,7 @@ export function ApplicantsToolbar({
 				/>
 			</FilterChip>
 			{hasActiveFilters(filters) && (
-				<Button
-					variant="ghost"
-					size="sm"
-					className="rounded-full"
-					onClick={onClearAll}
-				>
+				<Button variant="ghost" size="sm" onClick={onClearAll}>
 					Szűrők törlése
 				</Button>
 			)}
@@ -314,11 +309,7 @@ function AgeChip({
 						{error}
 					</p>
 				)}
-				<Button
-					type="submit"
-					size="sm"
-					className="self-end rounded-full"
-				>
+				<Button type="submit" size="sm" className="self-end">
 					Alkalmaz
 				</Button>
 			</form>
@@ -367,11 +358,7 @@ export function TextChip({
 						onChange={(e) => setDraft(e.target.value)}
 					/>
 				</label>
-				<Button
-					type="submit"
-					size="sm"
-					className="self-end rounded-full"
-				>
+				<Button type="submit" size="sm" className="self-end">
 					Alkalmaz
 				</Button>
 			</form>

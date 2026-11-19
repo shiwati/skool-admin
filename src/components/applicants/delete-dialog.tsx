@@ -98,15 +98,11 @@ export function DeleteDialog({
 				)}
 
 				<AlertDialogFooter>
-					<AlertDialogCancel
-						disabled={pending}
-						className="rounded-full"
-					>
+					<AlertDialogCancel disabled={pending}>
 						Mégse
 					</AlertDialogCancel>
 					<Button
 						variant="destructive"
-						className="rounded-full"
 						disabled={!acknowledged || pending}
 						aria-busy={pending || undefined}
 						onClick={() => void confirm()}

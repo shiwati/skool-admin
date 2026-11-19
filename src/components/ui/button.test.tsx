@@ -13,7 +13,7 @@ describe("Button", () => {
 		for (const cls of [
 			"h-11",
 			"w-full",
-			"rounded-full",
+			"rounded-md",
 			"font-mono",
 			"text-[13px]",
 			"bg-white",

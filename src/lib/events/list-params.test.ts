@@ -10,7 +10,7 @@ import {
 const parse = (qs: string) => parseEventListState(new URLSearchParams(qs));
 
 describe("event list URL state", () => {
-	it("defaults to the active tab, newest first", () => {
+	it("defaults to the all tab, newest first", () => {
 		expect(parse("")).toEqual(DEFAULT_EVENT_LIST_STATE);
 		expect(toEventSearchParams(DEFAULT_EVENT_LIST_STATE).toString()).toBe(
 			"",
@@ -43,11 +43,11 @@ describe("event list URL state", () => {
 	it("resets the page on any change but paging", () => {
 		const state = { ...DEFAULT_EVENT_LIST_STATE, page: 4 };
 		expect(updateEventListState(state, { page: 5 }).page).toBe(5);
-		expect(updateEventListState(state, { tab: "all" }).page).toBe(1);
+		expect(updateEventListState(state, { tab: "closed" }).page).toBe(1);
 	});
 
 	it("maps the tab to the API phase", () => {
-		expect(toEventsQueryInput(parse("")).phase).toBe("active");
-		expect(toEventsQueryInput(parse("tab=all")).phase).toBeUndefined();
+		expect(toEventsQueryInput(parse("")).phase).toBeUndefined();
+		expect(toEventsQueryInput(parse("tab=planned")).phase).toBe("planned");
 	});
 });

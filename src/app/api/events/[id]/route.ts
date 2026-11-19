@@ -39,6 +39,54 @@ export async function GET(
 }
 
 /**
+ * Hard-deletes the event; its applications cascade (applicants stay).
+ * Records the deletion in `History`. Responds with `{ id }`.
+ */
+export async function DELETE(
+	_request: Request,
+	{ params }: RouteContext<"/api/events/[id]">,
+) {
+	const session = await getAdminSession();
+	const userId = session?.user?.id;
+	if (!userId) return jsonResponse({ error: "Unauthorized" }, 401);
+
+	const { id } = await params;
+	try {
+		await db.$transaction(async (tx) => {
+			const current = await tx.event.findUnique({
+				where: { id },
+				select: { name: true },
+			});
+			if (!current) throw new NotFoundError();
+
+			await tx.event.delete({ where: { id } });
+			await tx.history.create({
+				data: {
+					tableName: EVENT_TABLE,
+					recordId: id,
+					createdById: userId,
+					fieldName: "deleted",
+					oldValue: current.name,
+					newValue: null,
+				},
+			});
+		});
+
+		logger.info({ event: "event.deleted", userId, eventId: id });
+		return jsonResponse({ id });
+	} catch (error) {
+		if (error instanceof NotFoundError) {
+			return jsonResponse({ error: "Event not found" }, 404);
+		}
+		logger.error(
+			{ event: "event.delete_failed", userId, eventId: id, err: error },
+			"Event delete failed",
+		);
+		return jsonResponse({ error: "Internal Server Error" }, 500);
+	}
+}
+
+/**
  * Updates the sent fields (optional text fields can be cleared with `null`)
  * and records every changed field in `History`. Responds with `{ id }`.
  */

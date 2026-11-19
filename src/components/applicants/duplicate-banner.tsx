@@ -32,12 +32,7 @@ export function DuplicateBanner({
 					Ellenőrizd őket, mielőtt visszaigazolást küldesz.
 				</span>
 			</div>
-			<Button
-				variant="surface"
-				size="sm"
-				className="rounded-full"
-				onClick={onReview}
-			>
+			<Button variant="surface" size="sm" onClick={onReview}>
 				Ellenőrzés
 			</Button>
 		</div>

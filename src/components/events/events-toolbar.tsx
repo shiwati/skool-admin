@@ -58,12 +58,7 @@ export function EventsToolbar({
 				onChange={(instructor) => onChange({ instructor })}
 			/>
 			{hasActiveEventFilters(filters) && (
-				<Button
-					variant="ghost"
-					size="sm"
-					className="rounded-full"
-					onClick={onClearAll}
-				>
+				<Button variant="ghost" size="sm" onClick={onClearAll}>
 					Szűrők törlése
 				</Button>
 			)}

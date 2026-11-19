@@ -68,10 +68,7 @@ describe("GET /api/events", () => {
 				{ companyName: { contains: "pécs", mode: "insensitive" } },
 			],
 		});
-		expect(phase).toEqual({
-			to: { gte: expect.any(Date) },
-			sheetUrl: null,
-		});
+		expect(phase).toEqual({ to: { gte: expect.any(Date) } });
 	});
 
 	it("rejects an unknown phase", async () => {

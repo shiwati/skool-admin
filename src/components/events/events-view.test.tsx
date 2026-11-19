@@ -31,7 +31,7 @@ function event(overrides: Partial<EventListItem> = {}): EventListItem {
 	};
 }
 
-const counts = { active: 9, planned: 6, closed: 9, all: 24 };
+const counts = { planned: 6, closed: 9, all: 15 };
 
 describe("EventsView", () => {
 	beforeEach(() => {
@@ -51,9 +51,9 @@ describe("EventsView", () => {
 		expect(
 			screen.getByRole("heading", { name: "Programok és események" }),
 		).toBeInTheDocument();
-		expect(screen.getByText(/24 program · 9 aktív/)).toBeInTheDocument();
+		expect(screen.getByText(/15 program/)).toBeInTheDocument();
 		expect(
-			screen.getByRole("tab", { name: /^Aktív\s*9$/ }),
+			screen.getByRole("tab", { name: /^Összes\s*15$/ }),
 		).toHaveAttribute("aria-selected", "true");
 		expect(
 			screen.getByRole("link", { name: "Új program" }),
@@ -63,7 +63,7 @@ describe("EventsView", () => {
 		expect(
 			within(row).getByRole("link", { name: "Python alapok – ősz" }),
 		).toHaveAttribute("href", "/events/e1");
-		expect(within(row).getByText("11.21 – 12.12")).toBeInTheDocument();
+		expect(within(row).getByText("2026.11.21 – 12.12")).toBeInTheDocument();
 		expect(within(row).getByText("62 / 20 fő")).toBeInTheDocument();
 		expect(within(row).getByText("3,1×")).toBeInTheDocument();
 		expect(within(row).getByText("Betelt · várólista")).toBeInTheDocument();
@@ -181,10 +181,10 @@ describe("EventsView", () => {
 				now={now}
 			/>,
 		);
-		expect(screen.getByText(/1–1 \/ 1 aktív program/)).toBeInTheDocument();
+		expect(screen.getByText(/1–1 \/ 1 program$/)).toBeInTheDocument();
 		unmount();
 
-		nav.search = "tab=all";
+		nav.search = "tab=planned";
 		render(
 			<EventsView
 				items={[event()]}
@@ -193,6 +193,8 @@ describe("EventsView", () => {
 				now={now}
 			/>,
 		);
-		expect(screen.getByText(/1–1 \/ 1 program$/)).toBeInTheDocument();
+		expect(
+			screen.getByText(/1–1 \/ 1 tervezett program/),
+		).toBeInTheDocument();
 	});
 });

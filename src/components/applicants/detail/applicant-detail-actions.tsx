@@ -36,12 +36,11 @@ function UnavailableButton({
 				<TooltipTrigger asChild>
 					{/* Disabled buttons get no pointer or focus events, so the
 					    wrapper carries the tooltip trigger. */}
-					<span tabIndex={0} className="rounded-full">
+					<span tabIndex={0} className="rounded-md">
 						<Button
 							variant={variant}
 							disabled
 							aria-describedby={id}
-							className="rounded-full"
 						>
 							{children}
 						</Button>

@@ -3,7 +3,7 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { PageHeader } from "@/components/admin-shell/page-header";
 import { Button } from "@/components/ui/button";
 import { formatCount } from "@/lib/applicants/format";
@@ -16,6 +16,10 @@ import {
 	updateEventListState,
 	type EventListState,
 } from "@/lib/events/list-params";
+import {
+	EventDeleteDialog,
+	type EventDeleteTarget,
+} from "./event-delete-dialog";
 import { EventsTable, type EventListItem } from "./events-table";
 import { EventsTabs } from "./events-tabs";
 import { EventsToolbar } from "./events-toolbar";
@@ -42,6 +46,9 @@ export function EventsView({
 		[searchKey],
 	);
 	const [pending, startTransition] = useTransition();
+	const [deleteTarget, setDeleteTarget] = useState<EventDeleteTarget | null>(
+		null,
+	);
 
 	function navigate(next: EventListState) {
 		const query = toEventSearchParams(next).toString();
@@ -60,15 +67,9 @@ export function EventsView({
 			<PageHeader
 				eyebrow="Programok"
 				title="Programok és események"
-				description={
-					<>
-						{formatCount(counts.all)} program ·{" "}
-						{formatCount(counts.active)} aktív jelentkezési
-						időszakban
-					</>
-				}
+				description={<>{formatCount(counts.all)} program</>}
 				actions={
-					<Button asChild className="rounded-full">
+					<Button asChild>
 						<Link href="/events/new">
 							<Plus aria-hidden="true" />
 							Új program
@@ -101,6 +102,16 @@ export function EventsView({
 				onPage={(page) => change({ page })}
 				onPageSize={(pageSize) => change({ pageSize })}
 				onClearFilters={clearFilters}
+				onDelete={setDeleteTarget}
+			/>
+			<EventDeleteDialog
+				key={deleteTarget?.id}
+				target={deleteTarget}
+				onOpenChange={(open) => !open && setDeleteTarget(null)}
+				onDeleted={() => {
+					setDeleteTarget(null);
+					router.refresh();
+				}}
 			/>
 		</>
 	);

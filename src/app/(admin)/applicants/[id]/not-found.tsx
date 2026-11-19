@@ -11,7 +11,7 @@ export default function ApplicantNotFound() {
 			<p className="text-sm text-text-secondary">
 				Lehet, hogy a jelentkezőt törölték, vagy hibás a hivatkozás.
 			</p>
-			<Button asChild variant="surface" className="rounded-full">
+			<Button asChild variant="surface">
 				<Link href="/applicants">Jelentkezők</Link>
 			</Button>
 		</div>

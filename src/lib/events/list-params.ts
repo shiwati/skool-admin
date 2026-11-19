@@ -12,7 +12,7 @@ export type EventSortKey = (typeof EVENT_SORT_KEYS)[number];
 export type SortOrder = "asc" | "desc";
 
 export type EventTab = EventPhase | "all";
-export const EVENT_TABS: EventTab[] = [...EVENT_PHASES, "all"];
+export const EVENT_TABS: EventTab[] = ["all", ...EVENT_PHASES];
 
 export type EventListFilters = {
 	q?: string;
@@ -30,7 +30,7 @@ export type EventListState = EventListFilters & {
 	pageSize: PageSize;
 };
 
-export const DEFAULT_TAB: EventTab = "active";
+export const DEFAULT_TAB: EventTab = "all";
 export const DEFAULT_PAGE_SIZE: PageSize = 25;
 
 export const DEFAULT_EVENT_LIST_STATE: EventListState = {

@@ -38,12 +38,11 @@ export function ApplicantsHeader({
 							<TooltipTrigger asChild>
 								{/* Disabled buttons get no pointer or focus events, so the
 						    wrapper carries the tooltip trigger. */}
-								<span tabIndex={0} className="rounded-full">
+								<span tabIndex={0} className="rounded-md">
 									<Button
 										variant="ghost"
 										disabled
 										aria-describedby="sync-unavailable"
-										className="rounded-full"
 									>
 										<RefreshCw aria-hidden="true" />
 										Szinkronizálás
@@ -56,11 +55,7 @@ export function ApplicantsHeader({
 					<span id="sync-unavailable" className="sr-only">
 						{SYNC_UNAVAILABLE}
 					</span>
-					<Button
-						variant="surface"
-						className="rounded-full"
-						onClick={onEmailList}
-					>
+					<Button variant="surface" onClick={onEmailList}>
 						<Copy aria-hidden="true" />
 						E-mail lista
 					</Button>

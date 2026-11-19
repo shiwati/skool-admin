@@ -174,13 +174,11 @@ export function EmailListDialog({
 				<DialogFooter>
 					<Button
 						variant="surface"
-						className="rounded-full"
 						onClick={() => onOpenChange(false)}
 					>
 						{load.status === "loading" ? "Mégse" : "Bezárás"}
 					</Button>
 					<Button
-						className="rounded-full"
 						disabled={load.status !== "done" || load.count === 0}
 						onClick={() =>
 							load.status === "done" &&

@@ -7,6 +7,7 @@ import {
 	CalendarX,
 	MoreHorizontal,
 	Pencil,
+	Trash2,
 	Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -24,7 +25,6 @@ import { EMPTY, formatCount, programColorClass } from "@/lib/applicants/format";
 import {
 	demandRatio,
 	formatDateRange,
-	formatDuration,
 	formatRatio,
 	ratioBadgeClass,
 } from "@/lib/events/format";
@@ -42,6 +42,7 @@ import {
 } from "@/lib/events/phase";
 import { initials } from "@/lib/initials";
 import { cn } from "@/lib/utils";
+import type { EventDeleteTarget } from "./event-delete-dialog";
 import { EVENTS_TABLE_ID } from "./events-tabs";
 
 /** Egy lista-elem a `GET /api/events` válaszának alakjában (ISO dátumok). */
@@ -67,7 +68,7 @@ const TAG_CLASSES: Record<string, string> = {
 	haladó: "bg-peach",
 };
 
-const AVATAR_CLASSES = ["bg-sage", "bg-pink", "bg-lavender", "bg-sky"];
+const AVATAR_CLASSES = ["bg-pink-strong", "bg-pink"];
 
 /** Egy program jelentkezői a Jelentkezők listán, erre a programra szűrve. */
 export function applicantsHref(eventId: string) {
@@ -102,6 +103,7 @@ type Props = {
 	onPage: (page: number) => void;
 	onPageSize: (size: PageSize) => void;
 	onClearFilters: () => void;
+	onDelete?: (target: EventDeleteTarget) => void;
 };
 
 export function EventsTable({
@@ -119,6 +121,7 @@ export function EventsTable({
 	onPage,
 	onPageSize,
 	onClearFilters,
+	onDelete,
 }: Props) {
 	const sortProps = { sort, order, onSort };
 	const itemLabel =
@@ -215,7 +218,12 @@ export function EventsTable({
 							</tr>
 						)}
 						{items.map((item) => (
-							<EventRow key={item.id} item={item} now={now} />
+							<EventRow
+								key={item.id}
+								item={item}
+								now={now}
+								onDelete={onDelete}
+							/>
 						))}
 					</tbody>
 				</table>
@@ -234,7 +242,15 @@ export function EventsTable({
 	);
 }
 
-function EventRow({ item, now }: { item: EventListItem; now: Date }) {
+function EventRow({
+	item,
+	now,
+	onDelete,
+}: {
+	item: EventListItem;
+	now: Date;
+	onDelete?: (target: EventDeleteTarget) => void;
+}) {
 	const applications = item.applicationCounts.total;
 	const ratio = demandRatio(applications, item.capacity);
 	const status = eventStatus({ ...item, applications }, now);
@@ -273,10 +289,7 @@ function EventRow({ item, now }: { item: EventListItem; now: Date }) {
 			</td>
 			<td className="px-3 py-2.5 align-middle">
 				<div className="font-mono text-xs">
-					{formatDateRange(item.from, item.to, now)}
-				</div>
-				<div className="text-xs text-text-tertiary">
-					{formatDuration(item.from, item.to)}
+					{formatDateRange(item.from, item.to)}
 				</div>
 			</td>
 			<td className="px-3 py-2.5 align-middle text-xs">
@@ -393,6 +406,21 @@ function EventRow({ item, now }: { item: EventListItem; now: Date }) {
 								Program szerkesztése
 							</Link>
 						</DropdownMenuItem>
+						{onDelete && (
+							<DropdownMenuItem
+								className="text-error-fg focus:text-error-fg"
+								onSelect={() =>
+									onDelete({
+										id: item.id,
+										name: item.name,
+										applications,
+									})
+								}
+							>
+								<Trash2 aria-hidden="true" />
+								Törlés
+							</DropdownMenuItem>
+						)}
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</td>

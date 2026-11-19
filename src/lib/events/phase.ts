@@ -3,13 +3,13 @@
  *
  * Nincs külön státuszmező: a szakasz a dátumokból és abból adódik, hogy
  * az eseményhez tartozik-e jelentkezési (Google Form) sheet.
+ * Tervezett: még nem ért véget; Lezárt: véget ért.
  */
-export const EVENT_PHASES = ["active", "planned", "closed"] as const;
+export const EVENT_PHASES = ["planned", "closed"] as const;
 
 export type EventPhase = (typeof EVENT_PHASES)[number];
 
 export const PHASE_LABELS: Record<EventPhase | "all", string> = {
-	active: "Aktív",
 	planned: "Tervezett",
 	closed: "Lezárt",
 	all: "Összes",

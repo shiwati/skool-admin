@@ -45,19 +45,15 @@ function emptyCounts(): StatusCounts {
 }
 
 /**
- * Szakasz → feltétel. Aktív: még nem ért véget és van jelentkezési
- * (Google Form) sheet; Tervezett: még nem ért véget, sheet nélkül;
- * Lezárt: véget ért.
+ * Szakasz → feltétel. Tervezett: még nem ért véget; Lezárt: véget ért.
  */
 export function phaseWhere(
 	phase: EventPhase,
 	now: Date,
 ): Prisma.EventWhereInput {
 	switch (phase) {
-		case "active":
-			return { to: { gte: now }, sheetUrl: { not: null } };
 		case "planned":
-			return { to: { gte: now }, sheetUrl: null };
+			return { to: { gte: now } };
 		case "closed":
 			return { to: { lt: now } };
 	}
@@ -145,12 +141,12 @@ export async function countEventsByPhase(
 	now = new Date(),
 ): Promise<PhaseCounts> {
 	const base = filterConditions(query);
-	const [active, planned, closed] = await Promise.all(
+	const [planned, closed] = await Promise.all(
 		EVENT_PHASES.map((phase) =>
 			db.event.count({
 				where: { AND: [...base, phaseWhere(phase, now)] },
 			}),
 		),
 	);
-	return { active, planned, closed, all: active + planned + closed };
+	return { planned, closed, all: planned + closed };
 }
