@@ -86,10 +86,15 @@ model Applicant {
   deletedAt         DateTime?     @map("deleted_at")
   deletedById       String?       @map("deleted_by")
   deletedBy         User?         @relation("ApplicantDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  /// Normalizált vezetéknév + utónév + e-mail; azonos kulcs = lehetséges duplikátum.
+  duplicateKey      String?       @map("duplicate_key")
+  /// Igaz, ha van másik jelentkező ugyanazzal a kulccsal; az admin merge-öli.
+  duplicateFlag     Boolean       @default(false) @map("duplicate_flag")
   applications      Application[]
 
   @@index([email])
   @@index([deletedAt])
+  @@index([duplicateKey])
   @@map("applicant")
 }
 
@@ -116,9 +121,12 @@ model Application {
   comment                    String?
   companyAwareness           Boolean           @default(false) @map("company_awareness")
   status                     ApplicationStatus @default(APPLIED)
+  /// Forrás-sor azonosítója (sheet import): újraszinkronnál nem jön létre kétszer.
+  sourceKey                  String?           @map("source_key")
 
-  @@unique([eventId, applicantId])
+  @@unique([eventId, sourceKey])
   @@index([applicantId])
+  @@index([eventId, applicantId])
   @@index([eventId, status])
   @@map("application")
 }

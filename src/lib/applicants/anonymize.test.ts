@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { anonymizeApplicants, ApplicantsNotFoundError } from "./anonymize";
 
 const tx = {
-	applicant: { findMany: vi.fn(), updateMany: vi.fn() },
+	applicant: { findMany: vi.fn(), updateMany: vi.fn(), count: vi.fn() },
 	application: { findMany: vi.fn(), updateMany: vi.fn() },
 	history: { updateMany: vi.fn(), createMany: vi.fn() },
 };
@@ -51,6 +51,8 @@ describe("anonymizeApplicants", () => {
 				parentEmail: null,
 				parentPhone: null,
 				newsletter: false,
+				duplicateKey: null,
+				duplicateFlag: false,
 				deletedAt: now,
 				deletedById: "u1",
 				updatedById: "u1",
@@ -118,6 +120,23 @@ describe("anonymizeApplicants", () => {
 		expect(tx.history.updateMany.mock.calls[0][0].where.OR).toEqual([
 			{ tableName: "applicant", recordId: { in: ["a1", "a2"] } },
 		]);
+	});
+
+	it("clears the duplicate key and recomputes the flag of the remaining twins", async () => {
+		tx.applicant.findMany.mockResolvedValue([
+			{ id: "a1", deletedAt: null, duplicateKey: "nagy|luca|l@x.hu" },
+			{ id: "a2", deletedAt: null, duplicateKey: null },
+		]);
+		tx.applicant.count.mockResolvedValue(1);
+		await anonymizeApplicants(db, ["a1", "a2"], "u1", now);
+		expect(tx.applicant.count).toHaveBeenCalledOnce();
+		expect(tx.applicant.count).toHaveBeenCalledWith({
+			where: { duplicateKey: "nagy|luca|l@x.hu" },
+		});
+		expect(tx.applicant.updateMany).toHaveBeenLastCalledWith({
+			where: { duplicateKey: "nagy|luca|l@x.hu" },
+			data: { duplicateFlag: false },
+		});
 	});
 
 	it("skips already deleted applicants without failing", async () => {

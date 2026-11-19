@@ -1,6 +1,6 @@
 # API
 
-A végpontok többsége `GET`; az első írási végpont a `POST /api/applicants/delete`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
+A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/merge`, `POST /api/events/[id]/sync`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
 
 ## Közös válaszformák
 
@@ -42,3 +42,16 @@ Egyéb: `GET /api/health` (nyilvános readiness, 200/503), `/api/auth/*` (NextAu
 2. Védelem: a layout nem védi a Route Handlert; lásd [auth-and-access.md](auth-and-access.md).
 3. Teszt a végpont mellé (`route.test.ts`, Prisma mockolva); lásd [testing.md](testing.md).
 4. Ne logolj kérés-törzset, felhasználói rekordot, e-mailt.
+
+## `POST /api/events/[id]/sync` — Google Form sheet import
+
+Az esemény `sheetUrl`-jében megadott válasz-sheetet olvassa a **bejelentkezett admin Google-jogosultságával** (`spreadsheets.readonly` scope; ha hiányzik: `403 REAUTH_REQUIRED`, újra be kell jelentkezni). A gid nélküli linknél az első munkalapot veszi.
+
+- Oszlop ↔ mező párosítás fejléc-kulcsszavak alapján: `src/lib/sheet-import/mapping.ts` (kötelező: vezetéknév, utónév, e-mail). Ismeretlen oszlopok (pl. kézi „1. oszlop”) kimaradnak, a válasz `unmappedHeaders`-ben listázza őket.
+- Minden új válasz **új** `Applicant` + `Application`. Újraszinkronnál az `Application.sourceKey` (időbélyeg + e-mail, eseményen belül egyedi) miatt semmi nem jön létre kétszer, és semmi nem íródik felül.
+- Duplikátum: azonos `Applicant.duplicateKey` (normalizált név + e-mail) → minden érintett jelentkező `duplicateFlag = true`. A merge (elsődleges kiválasztása, jelentkezések átkötése) admin döntés, még nincs megvalósítva.
+- Válasz: `{ created, existing, duplicates, errors: [{ row, reason }], unmappedHeaders }`.
+
+## `POST /api/applicants/merge` — duplikátumok összevonása
+
+Body: `{ "primaryId": "…", "mergeIds": ["…"] }` (1–50 egyedi id, a `primaryId` nem lehet köztük). Egy tranzakcióban: a `mergeIds` jelentkezők összes jelentkezése az elsődlegeshez kerül (a jelentkezési adatok változatlanok; ugyanarra az eseményre több is maradhat), a `History`-ba `merged_from` sor kerül, a merge-elt jelentkezők törlődnek. A `duplicateFlag` csak akkor marad igaz, ha még van másik jelentkező ugyanazzal a `duplicateKey`-jel. Válasz: `{ applicant (jelentkezésekkel), movedApplications }`; hibák: 400 (validáció), 401, 404 (ismeretlen id).

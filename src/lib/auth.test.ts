@@ -2,7 +2,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { warn, info } = vi.hoisted(() => ({ warn: vi.fn(), info: vi.fn() }));
-vi.mock("@/lib/db", () => ({ db: {} }));
+const { updateAccount } = vi.hoisted(() => ({ updateAccount: vi.fn() }));
+vi.mock("@/lib/db", () => ({ db: { account: { update: updateAccount } } }));
 vi.mock("@/lib/env", () => ({
 	env: {
 		NEXTAUTH_SECRET: "test-only-secret-with-at-least-32-characters",
@@ -51,7 +52,9 @@ describe("authOptions", () => {
 		};
 		expect(google.id).toBe("google");
 		expect(google.options.authorization.params).toEqual({
-			prompt: "select_account",
+			prompt: "consent select_account",
+			access_type: "offline",
+			scope: "openid email profile https://www.googleapis.com/auth/spreadsheets.readonly",
 			hd: "skool.org.hu",
 		});
 		expect(authOptions.pages).toEqual({
@@ -142,19 +145,42 @@ describe("authOptions", () => {
 		}
 	});
 
-	it("exposes only the internal user id on the session", async () => {
-		const session = await callbacks.session!({
-			session: {
-				user: { name: "Kovács Anna", email: "anna@skool.org.hu" },
-				expires: "2099-01-01T00:00:00.000Z",
-			},
-			user: { id: "u1", email: "anna@skool.org.hu", emailVerified: null },
-		} as unknown as Parameters<NonNullable<typeof callbacks.session>>[0]);
-		expect(session.user).toEqual({
-			id: "u1",
-			name: "Kovács Anna",
-			email: "anna@skool.org.hu",
+	it("stores fresh Google tokens on sign-in, keeping the old refresh token if none is returned", async () => {
+		await events.signIn!({
+			user: { id: "u1" } as User,
+			account: {
+				provider: "google",
+				type: "oauth",
+				providerAccountId: "123",
+				access_token: "new-access",
+				expires_at: 100,
+				scope: "openid email",
+			} as Account,
+			isNewUser: false,
 		});
+		expect(updateAccount).toHaveBeenCalledWith({
+			where: {
+				provider_providerAccountId: {
+					provider: "google",
+					providerAccountId: "123",
+				},
+			},
+			data: {
+				access_token: "new-access",
+				expires_at: 100,
+				scope: "openid email",
+				id_token: undefined,
+				token_type: undefined,
+			},
+		});
+	});
+
+	it("adds the user id to the session", async () => {
+		const session = await callbacks.session!({
+			session: { user: { email: "a@b.hu" }, expires: "" },
+			user: { id: "u1" },
+		} as never);
+		expect((session as Session).user?.id).toBe("u1");
 	});
 
 	it.each([

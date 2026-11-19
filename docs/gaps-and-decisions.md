@@ -29,3 +29,9 @@
 | 2026-11-19 | Lokális mintaadat seed-del (`sample.json` / gitignore-olt `local.json`), localhost-védelemmel; az éles import külön, későbbi app-funkció | Fejlesztői alapadat az éles DB veszélyeztetése nélkül |
 | (korábban) | Google az egyetlen belépési mód, nincs allowlist                                                                                         | Workspace-tagság = jogosultság                        |
 | (korábban) | NextAuth v4, ESLint v9, pontos függőségverziók                                                                                           | Kompatibilitás és reprodukálhatóság                   |
+
+## Duplikátum-merge (nyitott)
+
+A sheet import duplikátumként jelöli az azonos név + e-mail jelentkezőket (`duplicateFlag`). A merge még hiányzik: az admin kiválasztja az elsődleges jelentkezőt, annak adatai maradnak, a többiek jelentkezései átkerülnek hozzá (minden jelentkezési adat megmarad), a többi rekord törlődik, a `duplicateFlag` lekerül, a `duplicateKey` marad — így egy későbbi azonos jelentkező újra jelölődik és újra merge-elhető.
+
+Döntés: egy jelentkezőnek **ugyanarra az eseményre is lehet több jelentkezése** (pl. kétszer kitöltött form merge után); ezt az adminok kezelik. Ezért nincs `@@unique([eventId, applicantId])`.

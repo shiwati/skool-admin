@@ -32,6 +32,10 @@ export const anonymizedApplicantData = {
 	parentEmail: null,
 	parentPhone: null,
 	newsletter: false,
+	// The duplicate key is the normalized name + e-mail, i.e. personal data;
+	// clearing it also stops new imports matching the deleted applicant.
+	duplicateKey: null,
+	duplicateFlag: false,
 } satisfies Prisma.ApplicantUpdateManyMutationInput;
 
 /** A jelentkezések szabad szöveges válaszai, amelyek személyes adatot tartalmazhatnak. */
@@ -72,15 +76,21 @@ export async function anonymizeApplicants(
 	return db.$transaction(async (tx) => {
 		const found = await tx.applicant.findMany({
 			where: { id: { in: uniqueIds } },
-			select: { id: true, deletedAt: true },
+			select: { id: true, deletedAt: true, duplicateKey: true },
 		});
 		if (found.length !== uniqueIds.length)
 			throw new ApplicantsNotFoundError();
 
-		const targets = found
-			.filter((a) => a.deletedAt === null)
-			.map((a) => a.id);
+		const active = found.filter((a) => a.deletedAt === null);
+		const targets = active.map((a) => a.id);
 		if (targets.length === 0) return { deleted: 0 };
+		const duplicateKeys = [
+			...new Set(
+				active
+					.map((a) => a.duplicateKey)
+					.filter((k): k is string => k !== null),
+			),
+		];
 
 		await tx.applicant.updateMany({
 			where: { id: { in: targets }, deletedAt: null },
@@ -91,6 +101,18 @@ export async function anonymizeApplicants(
 				updatedById: actorUserId,
 			},
 		});
+
+		// The remaining applicants that shared a key stay flagged only while
+		// another one with the same key still exists (same rule as merging).
+		for (const key of duplicateKeys) {
+			const remaining = await tx.applicant.count({
+				where: { duplicateKey: key },
+			});
+			await tx.applicant.updateMany({
+				where: { duplicateKey: key },
+				data: { duplicateFlag: remaining > 1 },
+			});
+		}
 
 		const applications = await tx.application.findMany({
 			where: { applicantId: { in: targets } },

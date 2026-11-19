@@ -36,7 +36,7 @@ Az éles adatot az app tölti majd be Google Sheetből, bejelentkezett adminkén
 
 Jelentkezőt fizikailag nem törlünk. A törlés (`anonymizeApplicants`, `src/lib/applicants/anonymize.ts`) egy tranzakcióban fut:
 
-- A név „Törölt” / „jelentkező” lesz; az e-mail, a telefon, az iskola és minden szülői mező `null`, a hírlevél `false`. A születési év és a település megmarad (statisztikához).
+- A név „Törölt” / „jelentkező” lesz; az e-mail, a telefon, az iskola és minden szülői mező `null`, a hírlevél `false`. A `duplicateKey` (normalizált név + e-mail, tehát személyes adat) `null` lesz, a `duplicateFlag` `false`; a vele azonos kulcsú, megmaradt jelentkezők jelölése újraszámolódik. A születési év és a település megmarad (statisztikához).
 - A `deletedAt` / `deletedById` rögzíti, mikor és ki törölte. Visszaállítás nincs.
 - A jelentkezések (program, státusz, dátumok) megmaradnak, a szabad szöveges válaszaik törlődnek.
 - A `history` sorokból (`table_name` = `applicant` vagy `application`, `record_id` = az érintett id) kikerülnek a régi és új értékek, egy új sor (`field_name` = `deletedAt`) pedig rögzíti a törlést.
