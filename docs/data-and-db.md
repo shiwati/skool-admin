@@ -11,6 +11,7 @@
 - `20261028212000_auth_infrastructure`: NextAuth táblák.
 - `20261119171300_domain_models`: `applicant`, `application`, `event`, `history`, `application_status` enum.
 - `20261119172536_applicants_soft_delete`: `applicant.deleted_at` / `deleted_by` (GDPR-törlés, lásd lent).
+- `20261119184343_applicant_duplicates_and_source_key`: `applicant.duplicate_key` / `duplicate_flag` (sync-duplikátumok), `application.source_key`; az `application` egyedi kulcsa `(event_id, applicant_id)` helyett `(event_id, source_key)`.
 - A Prisma 7 a `migrate dev` után **nem** generál klienst automatikusan: futtasd az `npx prisma generate`-et (vagy az `npm run typecheck`-et).
 
 ## Lokális mintaadat (seed)
