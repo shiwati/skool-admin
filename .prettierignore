@@ -4,3 +4,9 @@ package-lock.json
 coverage
 next-env.d.ts
 prisma/migrations
+
+# Vendored skills (copied from upstream, hashed in skills-lock.json) and the
+# tool-generated lock file: keep them byte-identical to their source.
+.claude/skills
+.agents/skills
+skills-lock.json

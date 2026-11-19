@@ -37,11 +37,11 @@
 ## 7. End-to-end verification
 
 - [ ] 7.1 With a real Google OAuth client configured locally, verify the full flow manually:
-  - A `@skool.org.hu` Workspace account lands on `/` and the `User`, `Account` and `Session` rows exist.
-  - With the Internal consent screen, a gmail account is blocked on Google's own page and never reaches the app.
-  - With a temporary External test client, a gmail account lands on the denied state and no new `User` row exists (check in `npm run db:studio`).
-  - "Másik Google-fiók választása" shows the Google account chooser.
-  - Sign-out returns to `/login` and deletes the session row.
+    - A `@skool.org.hu` Workspace account lands on `/` and the `User`, `Account` and `Session` rows exist.
+    - With the Internal consent screen, a gmail account is blocked on Google's own page and never reaches the app.
+    - With a temporary External test client, a gmail account lands on the denied state and no new `User` row exists (check in `npm run db:studio`).
+    - "Másik Google-fiók választása" shows the Google account chooser.
+    - Sign-out returns to `/login` and deletes the session row.
 - [ ] 7.2 Run `npm run lint`, `npm run typecheck`, `npm test`, `npm run format:check` and `npm run build` (with the new environment variables set), and verify all of them pass.
 
 ## Workflow follow-up
