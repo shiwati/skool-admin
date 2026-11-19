@@ -73,6 +73,11 @@ export function applicantsHref(eventId: string) {
 	return `/applicants?eventIds=${encodeURIComponent(eventId)}`;
 }
 
+/** A program saját oldala (még nem készült el, addig 404). */
+export function eventHref(eventId: string) {
+	return `/events/${encodeURIComponent(eventId)}`;
+}
+
 const headClass =
 	"px-3 py-2.5 font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase";
 
@@ -239,7 +244,7 @@ function EventRow({ item, now }: { item: EventListItem; now: Date }) {
 			<td className="px-3 py-2.5 align-middle">
 				<div className="flex min-w-0 flex-col gap-1">
 					<Link
-						href={applicantsHref(item.id)}
+						href={eventHref(item.id)}
 						className="truncate font-medium hover:underline focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
 					>
 						{item.name}

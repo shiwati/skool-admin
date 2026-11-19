@@ -62,7 +62,7 @@ describe("EventsView", () => {
 		const row = screen.getAllByRole("row")[1];
 		expect(
 			within(row).getByRole("link", { name: "Python alapok – ősz" }),
-		).toHaveAttribute("href", "/applicants?eventIds=e1");
+		).toHaveAttribute("href", "/events/e1");
 		expect(within(row).getByText("11.21 – 12.12")).toBeInTheDocument();
 		expect(within(row).getByText("62 / 20 fő")).toBeInTheDocument();
 		expect(within(row).getByText("3,1×")).toBeInTheDocument();
