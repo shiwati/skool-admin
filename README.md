@@ -29,6 +29,12 @@ token and grant their GitHub account repository access rather than sharing a
 personal token. Push access depends on the token owner's repository permissions
 and the token's scopes.
 
+## Quicker start
+
+```sh
+npm run dev:all
+```
+
 ## Quick start
 
 ```sh
