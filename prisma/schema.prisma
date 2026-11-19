@@ -89,30 +89,43 @@ model Applicant {
 
 /// Jelentkezés (Event × Applicant)
 model Application {
-  id                         String    @id @default(cuid())
-  receivedAt                 DateTime  @default(now()) @map("received_at")
-  createdAt                  DateTime  @default(now()) @map("created_at")
-  updatedAt                  DateTime  @updatedAt @map("updated_at")
-  updatedById                String?   @map("updated_by")
-  updatedBy                  User?     @relation("ApplicationUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  eventId                    String    @map("event_id")
-  event                      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  applicantId                String    @map("applicant_id")
-  applicant                  Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-  foodPreference             String?   @map("food_preference")
-  heardFromWhere             String?   @map("heard_from_where")
-  heardFromWhom              String?   @map("heard_from_whom")
-  solvedProblem              String?   @map("solved_problem")
-  pastExpInProg              String?   @map("past_exp_in_prog")
-  pastParticipationOther     String?   @map("past_participation_other")
-  pastParticipationSkool     Boolean   @default(false) @map("past_participation_skool")
-  pastParticipationSkoolDesc String?   @map("past_participation_skool_desc")
+  id                         String            @id @default(cuid())
+  receivedAt                 DateTime          @default(now()) @map("received_at")
+  createdAt                  DateTime          @default(now()) @map("created_at")
+  updatedAt                  DateTime          @updatedAt @map("updated_at")
+  updatedById                String?           @map("updated_by")
+  updatedBy                  User?             @relation("ApplicationUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  eventId                    String            @map("event_id")
+  event                      Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  applicantId                String            @map("applicant_id")
+  applicant                  Applicant         @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  foodPreference             String?           @map("food_preference")
+  heardFromWhere             String?           @map("heard_from_where")
+  heardFromWhom              String?           @map("heard_from_whom")
+  solvedProblem              String?           @map("solved_problem")
+  pastExpInProg              String?           @map("past_exp_in_prog")
+  pastParticipationOther     String?           @map("past_participation_other")
+  pastParticipationSkool     Boolean           @default(false) @map("past_participation_skool")
+  pastParticipationSkoolDesc String?           @map("past_participation_skool_desc")
   comment                    String?
-  companyAwareness           Boolean   @default(false) @map("company_awareness")
+  companyAwareness           Boolean           @default(false) @map("company_awareness")
+  status                     ApplicationStatus @default(APPLIED)
 
   @@unique([eventId, applicantId])
   @@index([applicantId])
+  @@index([eventId, status])
   @@map("application")
+}
+
+/// Jelentkezés állapota
+enum ApplicationStatus {
+  APPLIED    @map("applied") /// jelentkezett
+  ACCEPTED   @map("accepted") /// elfogadva
+  REJECTED   @map("rejected") /// elutasítva
+  ATTENDED   @map("attended") /// részt vett
+  WAITLISTED @map("waitlisted") /// várólistás
+
+  @@map("application_status")
 }
 
 /// Program / esemény
