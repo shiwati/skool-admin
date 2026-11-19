@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { PageShell } from "@/components/admin-shell/page-shell";
 import { searchParamsToObject } from "@/lib/api/query";
 import { applicantsQuerySchema, listApplicants } from "@/lib/applicants/list";
 import { parseListState, toApiQuery } from "@/lib/applicants/list-params";
@@ -48,11 +49,11 @@ async function loadInitial(
 export default async function ApplicantsPage({ searchParams }: Props) {
 	const initial = await loadInitial(await searchParams);
 	return (
-		<div className="flex flex-col gap-5 px-8 pt-7 pb-28">
+		<PageShell>
 			{/* useSearchParams in the view needs a Suspense boundary. */}
 			<Suspense>
 				<ApplicantsView initial={initial} />
 			</Suspense>
-		</div>
+		</PageShell>
 	);
 }

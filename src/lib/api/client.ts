@@ -5,7 +5,11 @@
  */
 
 export class ApiError extends Error {
-	constructor(readonly status: number) {
+	constructor(
+		readonly status: number,
+		/** A hibaválasz JSON-törzse, ha volt (pl. `{ error, details }`). */
+		readonly body?: unknown,
+	) {
 		super(`API request failed with status ${status}`);
 		this.name = "ApiError";
 	}
@@ -33,7 +37,10 @@ export async function apiFetch<T>(
 		redirectToLogin();
 		throw new ApiError(401);
 	}
-	if (!response.ok) throw new ApiError(response.status);
+	if (!response.ok) {
+		const body: unknown = await response.json().catch(() => undefined);
+		throw new ApiError(response.status, body);
+	}
 	return (await response.json()) as T;
 }
 

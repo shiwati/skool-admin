@@ -117,6 +117,7 @@ const createEventSchema = z
 		companyName: optionalField,
 		location: optionalField,
 		description: optionalField,
+		tags: z.array(eventTagSchema).default([]),
 		sheetUrl: z.url().nullish(),
 		ageRange: optionalField,
 		instructor: optionalField,

@@ -139,6 +139,7 @@ describe("POST /api/events", () => {
 				from: new Date("2026-07-01T08:00:00Z"),
 				to: new Date("2026-07-05T16:00:00Z"),
 				companyName: null,
+				tags: [],
 				mentors: [],
 				capacity: 20,
 			},

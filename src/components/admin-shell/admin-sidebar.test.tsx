@@ -62,7 +62,7 @@ describe("AdminSidebar", () => {
 
 	it("renders future screens as disabled, non-navigating items", () => {
 		render(<AdminSidebar />);
-		const programs = screen.getByRole("link", { name: "Programok" });
+		const programs = screen.getByRole("link", { name: "Riportok" });
 		expect(programs).toHaveAttribute("aria-disabled", "true");
 		expect(programs).not.toHaveAttribute("href");
 		expect(programs.tagName).toBe("SPAN");

@@ -12,6 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
 	DropdownMenu,
@@ -117,7 +118,7 @@ export function ApplicantsTable({
 	const colSpan = columns.length + 2;
 
 	return (
-		<div className="overflow-hidden rounded-[14px] border border-border-default bg-white shadow-card">
+		<Card className="overflow-hidden">
 			<div className="overflow-x-auto">
 				<table className="w-full table-fixed border-collapse text-sm">
 					<caption className="sr-only">Jelentkezők</caption>
@@ -359,6 +360,6 @@ export function ApplicantsTable({
 					onPageSize={onPageSize}
 				/>
 			)}
-		</div>
+		</Card>
 	);
 }

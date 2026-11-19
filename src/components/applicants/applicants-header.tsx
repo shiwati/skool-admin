@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, RefreshCw } from "lucide-react";
+import { PageHeader } from "@/components/admin-shell/page-header";
 import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
@@ -21,50 +22,50 @@ export function ApplicantsHeader({
 	onEmailList: () => void;
 }) {
 	return (
-		<div className="flex flex-wrap items-end justify-between gap-4">
-			<div className="flex flex-col gap-1">
-				<span className="font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase">
-					Jelentkezők
-				</span>
-				<h1 className="text-2xl leading-8 font-bold">Jelentkezők</h1>
-				<p className="text-sm text-text-secondary" aria-live="polite">
+		<PageHeader
+			eyebrow="Jelentkezők"
+			title="Jelentkezők"
+			description={
+				<>
 					Google Formból érkező jelentkezések
 					{total !== null && <> · {formatCount(total)} fő</>}
-				</p>
-			</div>
-			<div className="flex flex-wrap items-center gap-2">
-				<TooltipProvider>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							{/* Disabled buttons get no pointer or focus events, so the
+				</>
+			}
+			actions={
+				<>
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								{/* Disabled buttons get no pointer or focus events, so the
 						    wrapper carries the tooltip trigger. */}
-							<span tabIndex={0} className="rounded-full">
-								<Button
-									variant="ghost"
-									disabled
-									aria-describedby="sync-unavailable"
-									className="rounded-full"
-								>
-									<RefreshCw aria-hidden="true" />
-									Szinkronizálás
-								</Button>
-							</span>
-						</TooltipTrigger>
-						<TooltipContent>{SYNC_UNAVAILABLE}</TooltipContent>
-					</Tooltip>
-				</TooltipProvider>
-				<span id="sync-unavailable" className="sr-only">
-					{SYNC_UNAVAILABLE}
-				</span>
-				<Button
-					variant="surface"
-					className="rounded-full"
-					onClick={onEmailList}
-				>
-					<Copy aria-hidden="true" />
-					E-mail lista
-				</Button>
-			</div>
-		</div>
+								<span tabIndex={0} className="rounded-full">
+									<Button
+										variant="ghost"
+										disabled
+										aria-describedby="sync-unavailable"
+										className="rounded-full"
+									>
+										<RefreshCw aria-hidden="true" />
+										Szinkronizálás
+									</Button>
+								</span>
+							</TooltipTrigger>
+							<TooltipContent>{SYNC_UNAVAILABLE}</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
+					<span id="sync-unavailable" className="sr-only">
+						{SYNC_UNAVAILABLE}
+					</span>
+					<Button
+						variant="surface"
+						className="rounded-full"
+						onClick={onEmailList}
+					>
+						<Copy aria-hidden="true" />
+						E-mail lista
+					</Button>
+				</>
+			}
+		/>
 	);
 }
