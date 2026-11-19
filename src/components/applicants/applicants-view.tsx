@@ -18,7 +18,11 @@ import {
 	updateListState,
 	type ListState,
 } from "@/lib/applicants/list-params";
-import type { ApplicantListItem, EventOption } from "@/lib/applicants/types";
+import type {
+	ApplicantListItem,
+	ApplicantsPage,
+	EventOption,
+} from "@/lib/applicants/types";
 import { copyText } from "@/lib/clipboard";
 import { ApplicantsHeader } from "./applicants-header";
 import { ApplicantsTable, type TableData } from "./applicants-table";
@@ -50,7 +54,10 @@ function useEventOptions(): EventOption[] {
 	return events;
 }
 
-export function ApplicantsView() {
+/** A szerveren már lekért első oldal, és a query, amire válaszol. */
+export type InitialApplicants = { apiQuery: string; data: ApplicantsPage };
+
+export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
@@ -60,7 +67,7 @@ export function ApplicantsView() {
 		[searchKey],
 	);
 
-	const applicants = useApplicants(toApiQuery(state).toString());
+	const applicants = useApplicants(toApiQuery(state).toString(), initial);
 	const events = useEventOptions();
 	const [columnSettings, setColumnSettings] = useColumnSettings();
 
