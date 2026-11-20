@@ -6,7 +6,7 @@ import {
 	STATUS_LABELS,
 } from "@/lib/applicants/format";
 import type { ApplicationStatus } from "@/lib/applicants/types";
-import { applicantsHref } from "@/lib/events/links";
+import { eventApplicantsHref } from "@/lib/events/links";
 import type { StatusCounts } from "@/lib/events/list";
 import { cn } from "@/lib/utils";
 
@@ -78,7 +78,7 @@ export function StatusBreakdown({
 				))}
 			</ul>
 			<Link
-				href={applicantsHref(eventId)}
+				href={eventApplicantsHref(eventId)}
 				className="text-sm text-info-fg underline underline-offset-2 hover:text-ink"
 			>
 				Jelentkezők megtekintése

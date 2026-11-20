@@ -19,6 +19,8 @@ type SyncResult = {
 };
 
 const SYNC_FAILED = "A szinkronizálás nem sikerült. Próbáld újra.";
+export const SYNC_HINT =
+	"A szinkronizálás beolvassa a Google Sheetet, és felveszi a legutóbbi szinkronizálás óta beérkezett új jelentkezéseket. A sheetben utólag módosított sorok nem frissülnek.";
 
 function syncMessage(result: SyncResult): string {
 	const parts = [
@@ -76,7 +78,10 @@ export function SheetSourceCard({
 	}
 
 	return (
-		<DetailCard title="Jelentkezők forrása">
+		<DetailCard
+			title="Jelentkezők forrása"
+			subtitle={applicationSheetUrl ? SYNC_HINT : undefined}
+		>
 			{applicationSheetUrl ? (
 				<>
 					<p className="flex min-w-0 items-center gap-1.5 text-sm">

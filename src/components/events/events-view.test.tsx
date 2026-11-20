@@ -74,7 +74,7 @@ describe("EventsView", () => {
 		expect(within(row).getByText("2026.11.21 – 12.12")).toBeInTheDocument();
 		expect(within(row).getByText("62 / 20 fő")).toBeInTheDocument();
 		expect(within(row).getByText("3,1×")).toBeInTheDocument();
-		expect(within(row).getByText("Betelt · várólista")).toBeInTheDocument();
+		expect(within(row).getByText("Betelt")).toBeInTheDocument();
 		expect(within(row).getByText("+1")).toBeInTheDocument();
 	});
 

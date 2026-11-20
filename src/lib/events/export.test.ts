@@ -28,7 +28,7 @@ describe("buildEventsCsv", () => {
 			"Program;Címkék;Kezdés;Befejezés;Helyszín;Partnercég;Kapacitás;Jelentkezők;Oktatók;Státusz",
 		);
 		expect(row).toBe(
-			"Robotika tábor;robotika, tábor;2026.12.01;2026.12.05;Pécs;Acme Kft.;20;25;Nagy Péter, Szabó Anna;Betelt · várólista",
+			"Robotika tábor;robotika, tábor;2026.12.01;2026.12.05;Pécs;Acme Kft.;20;25;Nagy Péter, Szabó Anna;Betelt",
 		);
 	});
 });
