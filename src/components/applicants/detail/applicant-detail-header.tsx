@@ -1,3 +1,4 @@
+import { ALUMNI_LABEL } from "@/lib/applicants/format";
 import type { ReactNode } from "react";
 import {
 	applicantInitials,
@@ -57,7 +58,9 @@ export function ApplicantDetailHeader({
 							)}
 							{tags.alumni && (
 								<li>
-									<Pill className="bg-sage">Alumni</Pill>
+									<Pill className="bg-sage">
+										{ALUMNI_LABEL}
+									</Pill>
 								</li>
 							)}
 						</ul>

@@ -206,6 +206,7 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		id: "history",
 		label: "Előzmény",
 		pickerLabel: "Előzmény (elvégzett programok)",
+		sortKey: "history",
 		// Plain text "N program", or "—" without attended programs.
 		card: (item) => {
 			const label = historyLabel(item.applications);

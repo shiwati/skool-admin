@@ -92,11 +92,23 @@ export function formatDateRange(
 	return `${formatDate(from)} – ${formatDate(to)}`;
 }
 
-/** Alumni: legalább egy „Részt vett” státuszú jelentkezés. */
+/** Ennyi „Részt vett” státuszú jelentkezéstől jár az alumni címke. */
+export const ALUMNI_MIN_ATTENDED = 3;
+
+/** Az alumni címke megjelenített neve (egy helyen, hogy könnyű legyen átnevezni). */
+export const ALUMNI_LABEL = "Veterán";
+
+/** Az alumni címke magyarázata a felületen. */
+export const ALUMNI_DESCRIPTION = `Legalább ${ALUMNI_MIN_ATTENDED} programon „Részt vett” státuszú; a rendszer automatikusan adja.`;
+
+/** Alumni: legalább `ALUMNI_MIN_ATTENDED` „Részt vett” státuszú jelentkezés. */
 export function isAlumni(
 	applications: { status: ApplicationStatus }[],
 ): boolean {
-	return applications.some((a) => a.status === "ATTENDED");
+	return (
+		applications.filter((a) => a.status === "ATTENDED").length >=
+		ALUMNI_MIN_ATTENDED
+	);
 }
 
 /** „N jelentkezés · M elvégzett”. */

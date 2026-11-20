@@ -1,3 +1,4 @@
+import { ALUMNI_DESCRIPTION, ALUMNI_LABEL } from "@/lib/applicants/format";
 import type { ApplicantDetail } from "@/lib/applicants/detail";
 import { applicantTags } from "./applicant-tags";
 import { DetailCard, Pill } from "./detail-card";
@@ -31,7 +32,7 @@ export function TagsCard({
 					)}
 					{tags.alumni && (
 						<li>
-							<Pill className="bg-sage">Alumni</Pill>
+							<Pill className="bg-sage">{ALUMNI_LABEL}</Pill>
 						</li>
 					)}
 				</ul>
@@ -41,6 +42,9 @@ export function TagsCard({
 			<p className="text-sm text-text-tertiary">
 				A 16+ címkét a rendszer a születési év alapján adja és veszi el;
 				kézzel nem módosítható.
+			</p>
+			<p className="text-sm text-text-tertiary">
+				{ALUMNI_LABEL}: {ALUMNI_DESCRIPTION}
 			</p>
 		</DetailCard>
 	);

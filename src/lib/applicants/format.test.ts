@@ -197,8 +197,9 @@ describe("alumni and programs summary", () => {
 		expect(programsSummary([])).toBe("0 jelentkezés · 0 elvégzett");
 	});
 
-	it("flags alumni only with an attended application", () => {
-		expect(isAlumni(apps)).toBe(true);
+	it("flags alumni only with at least three attended applications", () => {
+		expect(isAlumni(apps)).toBe(false);
+		expect(isAlumni([...apps, { status: "ATTENDED" }])).toBe(true);
 		expect(isAlumni([{ status: "ACCEPTED" }])).toBe(false);
 		expect(isAlumni([])).toBe(false);
 	});

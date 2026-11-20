@@ -13,7 +13,7 @@ A jelentkező adatlapjának és szerkesztő űrlapjának (`/applicants/[id]`, `/
 
 ### `GET /api/applicants`
 
-Paraméterek: `page`, `pageSize` (alap 20, max 100), `eventIds` (CSV vagy ismételt), `ageFrom`, `ageTo` (`ageFrom ≤ ageTo`), `hometown`, `newsletter`, `attended` (bool), `q` (szavanként AND; keresés: keresztnév, vezetéknév, e-mail), `sort` (`lastName`|`birthYear`|`hometown`|`createdAt`, alap `lastName`), `order` (alap `asc`).
+Paraméterek: `page`, `pageSize` (alap 20, max 100), `eventIds` (CSV vagy ismételt), `ageFrom`, `ageTo` (`ageFrom ≤ ageTo`), `hometown`, `newsletter`, `historyFrom`, `historyTo` (elvégzett — „Részt vett” — programok száma, tól–ig), `q` (szavanként AND; keresés: keresztnév, vezetéknév, e-mail), `sort` (`lastName`|`birthYear`|`hometown`|`history`|`createdAt`, alap `lastName`), `order` (alap `asc`).
 Válasz: jelentkezők + `applications` (id, status, receivedAt, event{id,name,from}), `receivedAt desc`. A törölt (anonimizált, `deletedAt` nem null) jelentkezők soha nem szerepelnek benne.
 
 ### `POST /api/applicants/delete`

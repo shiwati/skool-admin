@@ -118,7 +118,7 @@ describe("ApplicantsToolbar", () => {
 		);
 	});
 
-	it("sets the hometown, newsletter and attended filters", async () => {
+	it("sets the hometown, newsletter and history filters", async () => {
 		const { onChange } = renderToolbar();
 		await userEvent.click(
 			screen.getByRole("button", { name: /^Település/ }),
@@ -140,12 +140,15 @@ describe("ApplicantsToolbar", () => {
 
 		await userEvent.keyboard("{Escape}");
 		await userEvent.click(
-			screen.getByRole("button", { name: /^Részt vett/ }),
+			screen.getByRole("button", { name: /^Előzmény/ }),
 		);
-		await userEvent.click(
-			await screen.findByRole("radio", { name: "Volt már programon" }),
-		);
-		expect(onChange).toHaveBeenCalledWith({ attended: true });
+		await userEvent.type(await screen.findByLabelText("Minimum"), "2");
+		await userEvent.type(screen.getByLabelText("Maximum"), "5");
+		await userEvent.click(screen.getByRole("button", { name: "Alkalmaz" }));
+		expect(onChange).toHaveBeenCalledWith({
+			historyFrom: 2,
+			historyTo: 5,
+		});
 	});
 
 	it("offers clearing all filters only when some are active", async () => {
@@ -156,7 +159,7 @@ describe("ApplicantsToolbar", () => {
 	});
 
 	it("clears all filters", async () => {
-		const { onClearAll } = renderToolbar({ attended: false });
+		const { onClearAll } = renderToolbar({ historyFrom: 1 });
 		await userEvent.click(
 			screen.getByRole("button", { name: "Szűrők törlése" }),
 		);
