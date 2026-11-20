@@ -62,6 +62,7 @@ export function EventHeader({
 	return (
 		<>
 			<Breadcrumb
+				mobileBack
 				items={[
 					{ label: "Programok", href: "/events" },
 					{ label: event.name },

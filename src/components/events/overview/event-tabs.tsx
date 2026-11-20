@@ -40,7 +40,11 @@ export function EventTabs({
 	const disabled = ["Visszajelzések", "Záró riport"];
 
 	return (
-		<nav aria-label="Program szakaszai" className="overflow-x-auto">
+		<nav
+			aria-label="Program szakaszai"
+			// Mobile: edge-to-edge horizontal scroll (positioned, see docs/frontend.md).
+			className="relative -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0"
+		>
 			{/* A keret a listán van: a fülek `-mb-px` túllógása így nem a
 			    görgethető konténeren belül történik (különben függőleges
 			    görgetősáv jelenne meg). */}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Breadcrumb } from "@/components/admin-shell/breadcrumb";
 import { DetailCard } from "@/components/applicants/detail/detail-card";
 import {
 	HistoryChangeDiff,
@@ -59,40 +59,15 @@ function HistoryHeader({ subject }: { subject: HistorySubject }) {
 	const { list, href } = crumbs(subject);
 	return (
 		<>
-			<nav aria-label="Morzsamenü" className="text-sm">
-				<ol className="flex flex-wrap items-center gap-2">
-					<li>
-						<Link
-							href={list.href}
-							className="font-medium underline-offset-2 hover:underline"
-						>
-							{list.label}
-						</Link>
-					</li>
-					<li aria-hidden="true" className="text-text-tertiary">
-						›
-					</li>
-					<li>
-						<Link
-							href={href}
-							className="font-medium underline-offset-2 hover:underline"
-						>
-							{subject.name}
-						</Link>
-					</li>
-					<li aria-hidden="true" className="text-text-tertiary">
-						›
-					</li>
-					<li>
-						<span
-							aria-current="page"
-							className="text-text-secondary"
-						>
-							Változástörténet
-						</span>
-					</li>
-				</ol>
-			</nav>
+			{/* Mobile: only a "‹ {név}" back link to the record's own page. */}
+			<Breadcrumb
+				mobileBack
+				items={[
+					list,
+					{ label: subject.name, href },
+					{ label: "Változástörténet" },
+				]}
+			/>
 			<h1 className="text-2xl leading-8 font-bold">{subject.name}</h1>
 		</>
 	);
@@ -121,7 +96,7 @@ export default async function HistoryPage({ params }: Props) {
 			<div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
 				<section
 					aria-label="Változások"
-					className="flex min-w-0 flex-col gap-4 rounded-[14px] border border-border-default bg-white p-5 shadow-card"
+					className="flex min-w-0 flex-col gap-4 rounded-[14px] border border-border-default bg-white p-4 shadow-card md:p-5"
 				>
 					{entries.length > 0 && (
 						<p className="text-sm text-text-secondary">

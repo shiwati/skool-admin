@@ -37,7 +37,7 @@ export default async function EventOverviewPage({ params }: Props) {
 
 	return (
 		<>
-			<dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+			<dl className="grid grid-cols-2 gap-2.5 md:gap-4 xl:grid-cols-4">
 				<KpiCard
 					label="Férőhely"
 					value={

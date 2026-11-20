@@ -79,12 +79,16 @@ describe("history page", () => {
 			screen.getByRole("heading", { level: 1, name: "Nagy Luca" }),
 		).toBeInTheDocument();
 		const crumb = screen.getByRole("navigation", { name: "Morzsamenü" });
-		expect(crumb).toHaveTextContent(
-			"Jelentkezők›Nagy Luca›Változástörténet",
+		expect(within(crumb).getByRole("list")).toHaveTextContent(
+			"JelentkezőkNagy LucaVáltozástörténet",
 		);
-		expect(
-			within(crumb).getByRole("link", { name: "Nagy Luca" }),
-		).toHaveAttribute("href", "/applicants/a1");
+		// Trail link (md+) and the mobile "‹ Nagy Luca" back link.
+		const back = within(crumb).getAllByRole("link", { name: "Nagy Luca" });
+		expect(back).toHaveLength(2);
+		for (const link of back) {
+			expect(link).toHaveAttribute("href", "/applicants/a1");
+		}
+		expect(back[0]).toHaveClass("md:hidden");
 		expect(
 			screen.getByRole("heading", { name: "2026. november 3." }),
 		).toBeInTheDocument();
@@ -110,15 +114,17 @@ describe("history page", () => {
 			}),
 		).toBeInTheDocument();
 		const crumb = screen.getByRole("navigation", { name: "Morzsamenü" });
-		expect(crumb).toHaveTextContent(
-			"Programok›Python alapok – ősz›Változástörténet",
+		expect(within(crumb).getByRole("list")).toHaveTextContent(
+			"ProgramokPython alapok – őszVáltozástörténet",
 		);
 		expect(
 			within(crumb).getByRole("link", { name: "Programok" }),
 		).toHaveAttribute("href", "/events");
-		expect(
-			within(crumb).getByRole("link", { name: "Python alapok – ősz" }),
-		).toHaveAttribute("href", "/events/e1");
+		for (const link of within(crumb).getAllByRole("link", {
+			name: "Python alapok – ősz",
+		})) {
+			expect(link).toHaveAttribute("href", "/events/e1");
+		}
 		expect(
 			screen.queryByRole("navigation", { name: "Program szakaszai" }),
 		).not.toBeInTheDocument();
