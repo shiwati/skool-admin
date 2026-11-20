@@ -26,6 +26,7 @@ const item = (id: string, last: string, status = "APPLIED") => ({
 		id: `p-${id}`,
 		firstName: "Anna",
 		lastName: last,
+		email: `${last.toLowerCase()}@example.com`,
 		birthYear: 2010,
 		hometown: "Győr",
 		schoolName: "Teszt Gimi",
@@ -165,5 +166,93 @@ describe("ApplicationsSection", () => {
 			screen.getByRole("button", { name: "Elfogadás mégis" }),
 		);
 		await waitFor(() => expect(refresh).toHaveBeenCalled());
+	});
+
+	it("hides the sync button when the event has no sheet", async () => {
+		renderSection();
+		await screen.findByText("Kiss Anna");
+		expect(
+			screen.queryByRole("button", { name: "Szinkronizálás most" }),
+		).not.toBeInTheDocument();
+	});
+
+	it("syncs the sheet and reloads the list", async () => {
+		const user = userEvent.setup();
+		render(
+			<ApplicationsSection
+				eventId="e1"
+				capacity={20}
+				counts={overviewCounts()}
+				applicationSheetUrl="https://docs.google.com/spreadsheets/d/x"
+			/>,
+		);
+		await screen.findByText("Kiss Anna");
+		fetchMock.mockImplementationOnce(() =>
+			Promise.resolve(
+				new Response(
+					JSON.stringify({
+						created: 2,
+						existing: 5,
+						duplicates: 0,
+						errors: [],
+					}),
+					{ status: 200 },
+				),
+			),
+		);
+		const listCalls = fetchMock.mock.calls.length;
+		await user.click(
+			screen.getByRole("button", { name: "Szinkronizálás most" }),
+		);
+		expect(fetchMock).toHaveBeenCalledWith(
+			"/api/events/e1/sync",
+			expect.objectContaining({ method: "POST" }),
+		);
+		expect(toastSuccess).toHaveBeenCalledWith(
+			"Szinkronizálva: 2 új jelentkezés, 5 már meglévő.",
+		);
+		expect(refresh).toHaveBeenCalled();
+		await waitFor(() =>
+			expect(fetchMock.mock.calls.length).toBeGreaterThan(listCalls + 1),
+		);
+	});
+
+	it("collects the e-mail list for the current status filter", async () => {
+		const user = userEvent.setup();
+		renderSection();
+		await screen.findByText("Kiss Anna");
+		await user.click(screen.getByRole("button", { name: /^Várólista/ }));
+		await user.click(screen.getByRole("button", { name: "E-mail lista" }));
+		expect(await screen.findByRole("textbox")).toHaveValue(
+			"kiss@example.com, nagy@example.com",
+		);
+		expect(fetchMock).toHaveBeenLastCalledWith(
+			expect.stringMatching(
+				/^\/api\/events\/e1\/applicants\?.*status=WAITLISTED.*/,
+			),
+			expect.anything(),
+		);
+		expect(fetchMock).toHaveBeenLastCalledWith(
+			expect.stringContaining("pageSize=100"),
+			expect.anything(),
+		);
+	});
+
+	it("lists only the selected rows' e-mails when rows are selected", async () => {
+		const user = userEvent.setup();
+		renderSection();
+		await screen.findByText("Kiss Anna");
+		await user.click(
+			screen.getByRole("checkbox", { name: "Kiss Anna kijelölése" }),
+		);
+		const calls = fetchMock.mock.calls.length;
+		await user.click(screen.getByRole("button", { name: "E-mail lista" }));
+		expect(await screen.findByRole("textbox")).toHaveValue(
+			"kiss@example.com",
+		);
+		expect(
+			screen.getByText(/A kijelölt jelentkezők e-mail címe/),
+		).toBeInTheDocument();
+		expect(fetchMock.mock.calls.length).toBe(calls);
 	});
 });
