@@ -4,19 +4,25 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
 	applicationCount,
 	applicationFindMany,
+	applicationGroupBy,
 	eventFindMany,
 	eventAggregate,
 	feedbackFindMany,
 } = vi.hoisted(() => ({
 	applicationCount: vi.fn(),
 	applicationFindMany: vi.fn(),
+	applicationGroupBy: vi.fn(),
 	eventFindMany: vi.fn(),
 	eventAggregate: vi.fn(),
 	feedbackFindMany: vi.fn(),
 }));
 vi.mock("@/lib/db", () => ({
 	db: {
-		application: { count: applicationCount, findMany: applicationFindMany },
+		application: {
+			count: applicationCount,
+			findMany: applicationFindMany,
+			groupBy: applicationGroupBy,
+		},
 		event: { findMany: eventFindMany, aggregate: eventAggregate },
 		feedback: { findMany: feedbackFindMany },
 	},
@@ -72,6 +78,10 @@ describe("loadDashboard", () => {
 			])
 			.mockResolvedValueOnce(events);
 		applicationCount.mockResolvedValueOnce(120).mockResolvedValueOnce(100);
+		applicationGroupBy.mockResolvedValue([
+			{ eventId: "a", status: "APPLIED", _count: { _all: 30 } },
+			{ eventId: "a", status: "ACCEPTED", _count: { _all: 20 } },
+		]);
 		const fb = (
 			eventId: string,
 			name: string,
@@ -177,6 +187,15 @@ describe("loadDashboard", () => {
 			["a", "upcoming"],
 			["c", "past"],
 		]);
+	});
+
+	it("breaks the capacity rows down by application status", async () => {
+		const data = await loadDashboard({}, now);
+		expect(data.capacity.find((r) => r.id === "a")?.byStatus).toEqual({
+			APPLIED: 30,
+			ACCEPTED: 20,
+		});
+		expect(data.capacity.find((r) => r.id === "c")?.byStatus).toEqual({});
 	});
 
 	it("builds demographics per application of the period", async () => {

@@ -18,6 +18,7 @@ import {
 	type MonthlyRatio,
 	type ProgramSatisfaction,
 	type Satisfaction,
+	type StatusBreakdown,
 } from "./compute";
 import { firstEventYear } from "./first-year";
 import {
@@ -142,6 +143,23 @@ export async function loadDashboard(
 			}),
 		]);
 
+	const statusRows = rawEvents.length
+		? await db.application.groupBy({
+				by: ["eventId", "status"],
+				where: {
+					...activeApplicant,
+					eventId: { in: rawEvents.map((e) => e.id) },
+				},
+				_count: { _all: true },
+			})
+		: [];
+	const byStatusByEvent = new Map<string, StatusBreakdown>();
+	for (const row of statusRows) {
+		const breakdown = byStatusByEvent.get(row.eventId) ?? {};
+		breakdown[row.status] = row._count._all;
+		byStatusByEvent.set(row.eventId, breakdown);
+	}
+
 	const events: EventStat[] = rawEvents.map((e) => ({
 		id: e.id,
 		name: e.name,
@@ -149,6 +167,7 @@ export async function loadDashboard(
 		to: e.to,
 		capacity: e.capacity,
 		applications: e._count.applications,
+		byStatus: byStatusByEvent.get(e.id) ?? {},
 	}));
 	const startsIn = (range: DateRange) =>
 		events.filter((e) => within(range, e.from));

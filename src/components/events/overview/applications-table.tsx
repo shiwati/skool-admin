@@ -57,13 +57,18 @@ const SKELETON_ROWS = 6;
 type Column = {
 	label: string;
 	sortKey?: ApplicationSortKey;
+	subLabel?: string;
 	className?: string;
 };
 
 const COLUMNS: Column[] = [
 	{ label: "Név", sortKey: "lastName" },
 	{ label: "Kor", sortKey: "birthYear", className: "w-24" },
-	{ label: "Település / iskola", className: "hidden md:table-cell" },
+	{
+		label: "Település",
+		subLabel: "Iskola",
+		className: "hidden md:table-cell",
+	},
 	{ label: "Hírlevél", className: "hidden w-24 md:table-cell" },
 	{ label: "Státusz", sortKey: "status", className: "w-40" },
 ];
@@ -193,6 +198,13 @@ export function ApplicationsTable({
 													/>
 												)}
 											</button>
+										) : column.subLabel ? (
+											<div className="flex flex-col items-start">
+												<span>{column.label}</span>
+												<span className="font-normal">
+													{column.subLabel}
+												</span>
+											</div>
 										) : (
 											column.label
 										)}

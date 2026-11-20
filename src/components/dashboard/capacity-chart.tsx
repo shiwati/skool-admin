@@ -2,11 +2,25 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { formatCount } from "@/lib/applicants/format";
+import {
+	formatCount,
+	STATUS_BADGE_CLASSES,
+	STATUS_LABELS,
+} from "@/lib/applicants/format";
+import type { ApplicationStatus } from "@/lib/applicants/types";
 import { formatRatio, type CapacityRow } from "@/lib/dashboard/compute";
+import { cn } from "@/lib/utils";
 import { SectionHeader } from "./kpi-card";
 import { Segmented } from "./segmented";
 import { StatBadge, ratioTone } from "./stat-badge";
+
+const STATUS_ORDER: ApplicationStatus[] = [
+	"APPLIED",
+	"ACCEPTED",
+	"WAITLISTED",
+	"ATTENDED",
+	"REJECTED",
+];
 
 type Filter = "upcoming" | "past" | "all";
 
@@ -37,11 +51,8 @@ export function CapacityChart({ rows }: { rows: CapacityRow[] }) {
 	const [filter, setFilter] = useState<Filter>("upcoming");
 	const visible =
 		filter === "all" ? rows : rows.filter((r) => r.state === filter);
-	const max = Math.max(
-		1,
-		...visible.map((r) => Math.max(r.capacity, r.applications)),
-	);
-	const pct = (value: number) => `${(value / max) * 100}%`;
+	const pct = (value: number, row: CapacityRow) =>
+		`${(value / Math.max(1, row.capacity, row.applications)) * 100}%`;
 
 	return (
 		<Card className="flex h-full min-w-0 flex-col gap-4 p-5">
@@ -83,13 +94,31 @@ export function CapacityChart({ rows }: { rows: CapacityRow[] }) {
 								className="relative h-5 min-w-30 flex-1 rounded-md bg-surface-subtle"
 							>
 								<span
-									className="absolute inset-y-0 left-0 rounded-md bg-sky"
-									style={{ width: pct(row.applications) }}
-								/>
+									className="absolute inset-y-0 left-0 flex overflow-hidden rounded-md"
+									style={{
+										width: pct(row.applications, row),
+									}}
+								>
+									{STATUS_ORDER.filter(
+										(status) =>
+											(row.byStatus[status] ?? 0) > 0,
+									).map((status) => (
+										<span
+											key={status}
+											className={cn(
+												"h-full border-r border-white last:border-r-0",
+												STATUS_BADGE_CLASSES[status],
+											)}
+											style={{
+												flex: `${row.byStatus[status]} 0 0`,
+											}}
+										/>
+									))}
+								</span>
 								{row.capacity > 0 && (
 									<span
 										className="absolute -inset-y-1 w-[3px] -translate-x-1/2 rounded-sm bg-ink"
-										style={{ left: pct(row.capacity) }}
+										style={{ left: pct(row.capacity, row) }}
 									/>
 								)}
 							</span>
@@ -111,21 +140,34 @@ export function CapacityChart({ rows }: { rows: CapacityRow[] }) {
 				</ul>
 			)}
 
-			<div className="mt-auto flex flex-wrap gap-4 text-xs text-text-secondary">
-				<span className="flex items-center gap-1.5">
-					<span
-						aria-hidden="true"
-						className="size-3 rounded-xs bg-sky"
-					/>
-					Jelentkezők
-				</span>
-				<span className="flex items-center gap-1.5">
-					<span
-						aria-hidden="true"
-						className="h-3 w-[3px] rounded-xs bg-ink"
-					/>
-					Max. létszám
-				</span>
+			<div className="mt-auto flex flex-col gap-2">
+				<p className="font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase">
+					Jelmagyarázat
+				</p>
+				<div className="flex flex-wrap gap-4 text-xs text-text-secondary">
+					{STATUS_ORDER.map((status) => (
+						<span
+							key={status}
+							className="flex items-center gap-1.5"
+						>
+							<span
+								aria-hidden="true"
+								className={cn(
+									"size-3 rounded-xs border border-border-default",
+									STATUS_BADGE_CLASSES[status],
+								)}
+							/>
+							{STATUS_LABELS[status]}
+						</span>
+					))}
+					<span className="flex items-center gap-1.5">
+						<span
+							aria-hidden="true"
+							className="h-3 w-[3px] rounded-xs bg-ink"
+						/>
+						Max. létszám
+					</span>
+				</div>
 			</div>
 		</Card>
 	);
