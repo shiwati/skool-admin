@@ -26,6 +26,7 @@ import {
 } from "@/lib/applicants/list-params";
 import type { EventOption } from "@/lib/applicants/types";
 import { BooleanOptions, FilterChip } from "./filter-chip";
+import { YearChip } from "./year-chip";
 
 export const SEARCH_DEBOUNCE_MS = 300;
 
@@ -44,6 +45,7 @@ type Props = {
 export function activeFilterCount(filters: ListFilters): number {
 	return [
 		filters.eventIds.length > 0,
+		filters.programYear !== undefined,
 		filters.ageFrom !== undefined || filters.ageTo !== undefined,
 		!!filters.hometown,
 		filters.newsletter !== undefined,
@@ -144,6 +146,10 @@ function FilterChips({
 				events={events}
 				selected={filters.eventIds}
 				onChange={(eventIds) => onChange({ eventIds })}
+			/>
+			<YearChip
+				year={filters.programYear}
+				onChange={(programYear) => onChange({ programYear })}
 			/>
 			<AgeChip
 				ageFrom={filters.ageFrom}

@@ -21,7 +21,7 @@ export const feedbackQuerySchema = z.object({
 	q: optionalText.catch(undefined),
 	role: z.enum(["PARTICIPANT", "MENTOR"]).optional().catch(undefined),
 	eventId: optionalText.catch(undefined),
-	/** Naptári év (pl. „2026”): a program kezdete szerint, mint az Áttekintésen. */
+	/** Naptári év (pl. „2026”): a program kezdete szerint. */
 	period: z
 		.string()
 		.regex(/^\d{4}$/)

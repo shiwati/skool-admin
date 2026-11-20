@@ -39,7 +39,7 @@ export default async function EventOverviewPage({ params }: Props) {
 		<>
 			<dl className="grid grid-cols-2 gap-2.5 md:gap-4 xl:grid-cols-4">
 				<KpiCard
-					label="Férőhely"
+					label="Kapacitás"
 					value={
 						event.capacity > 0 ? formatCount(event.capacity) : "—"
 					}

@@ -64,7 +64,7 @@ describe("event overview page", () => {
 	it("shows the KPI cards of an over-subscribed program", async () => {
 		getEventOverview.mockResolvedValue(eventOverview());
 		render(await EventOverviewPage(props()));
-		expect(kpi("Férőhely")).toHaveTextContent("20");
+		expect(kpi("Kapacitás")).toHaveTextContent("20");
 		expect(kpi("Jelentkezett")).toHaveTextContent("62");
 		expect(kpi("Jelentkezett")).toHaveTextContent("3,1×");
 		expect(kpi("Elfogadva")).toHaveTextContent("20/ 20 – betelt");
@@ -84,7 +84,7 @@ describe("event overview page", () => {
 			}),
 		);
 		render(await EventOverviewPage(props()));
-		expect(kpi("Férőhely")).toHaveTextContent("—");
+		expect(kpi("Kapacitás")).toHaveTextContent("—");
 		expect(kpi("Jelentkezett")).not.toHaveTextContent("×");
 		expect(kpi("Elfogadva")).not.toHaveTextContent("/");
 		expect(

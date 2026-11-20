@@ -242,11 +242,11 @@ export function ApplicationsSection({
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>
-							Túlléped a férőhelyet?
+							Túlléped a kapacitást?
 						</AlertDialogTitle>
 						<AlertDialogDescription>
 							A művelet után {formatCount(confirm?.accepted ?? 0)}{" "}
-							elfogadott jelentkező lenne, a program férőhelye{" "}
+							elfogadott jelentkező lenne, a program kapacitása{" "}
 							{formatCount(capacity)}.
 						</AlertDialogDescription>
 					</AlertDialogHeader>

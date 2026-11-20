@@ -83,7 +83,9 @@ describe("ApplicantsView", () => {
 		nav.search = "page=3";
 		render(<ApplicantsView />);
 		await screen.findByRole("row", { name: /Nagy Luca/ });
-		await userEvent.click(screen.getByRole("button", { name: /^Program/ }));
+		await userEvent.click(
+			screen.getByRole("button", { name: /^Program(?! éve)/ }),
+		);
 		await userEvent.click(
 			await screen.findByRole("checkbox", { name: "Robotika tábor" }),
 		);

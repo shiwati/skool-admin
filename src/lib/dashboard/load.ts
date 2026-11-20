@@ -19,6 +19,7 @@ import {
 	type ProgramSatisfaction,
 	type Satisfaction,
 } from "./compute";
+import { firstEventYear } from "./first-year";
 import {
 	periodOptions,
 	resolvePeriod,
@@ -67,7 +68,8 @@ export async function loadDashboard(
 	filters: DashboardFilters = {},
 	now = new Date(),
 ): Promise<DashboardData> {
-	const period = resolvePeriod(filters.period, now);
+	const firstYear = await firstEventYear();
+	const period = resolvePeriod(filters.period, now, firstYear);
 
 	const programs = await db.event.findMany({
 		where: { from: period.range },
@@ -168,7 +170,7 @@ export async function loadDashboard(
 			label: period.label,
 			previousLabel: period.previousLabel,
 		},
-		periodOptions: periodOptions(now),
+		periodOptions: periodOptions(now, firstYear),
 		programs,
 		program,
 		applications: { current, previous },

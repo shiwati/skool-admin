@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { EventsToolbar, yearOptions } from "./events-toolbar";
+import { yearOptions } from "@/components/applicants/year-chip";
+import { EventsToolbar } from "./events-toolbar";
 
 function setup(filters = {}) {
 	const onChange = vi.fn();
@@ -25,11 +26,11 @@ describe("yearOptions", () => {
 });
 
 describe("EventsToolbar", () => {
-	it("sets the year from the Időszak chip", async () => {
+	it("sets the year from the Program éve chip", async () => {
 		const { onChange } = setup();
 		const year = new Date().getFullYear();
 		await userEvent.click(
-			screen.getByRole("button", { name: /^Időszak(?! szűrő)/ }),
+			screen.getByRole("button", { name: /^Program éve(?! szűrő)/ }),
 		);
 		await userEvent.click(
 			screen.getByRole("radio", { name: String(year) }),
@@ -40,7 +41,7 @@ describe("EventsToolbar", () => {
 	it("clears the year with Bármikor", async () => {
 		const { onChange } = setup({ year: 2025 });
 		await userEvent.click(
-			screen.getByRole("button", { name: /^Időszak(?! szűrő)/ }),
+			screen.getByRole("button", { name: /^Program éve(?! szűrő)/ }),
 		);
 		await userEvent.click(screen.getByRole("radio", { name: "Bármikor" }));
 		expect(onChange).toHaveBeenCalledWith({ year: undefined });

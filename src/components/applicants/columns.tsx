@@ -27,6 +27,10 @@ export type ColumnDef = {
 	id: ColumnId;
 	/** Fejléc a táblában. */
 	label: string;
+	/** Második fejlécsor (a rendezés nem erre vonatkozik), pl. a név alatti e-mail. */
+	subLabel?: string;
+	/** Extra osztály a fejléc tartalmán, pl. a cellák monogramjához igazításhoz. */
+	headerClass?: string;
 	/** Felirat az oszlopválasztóban. */
 	pickerLabel: string;
 	/** Nem rejthető el (a "Név / e-mail"). */
@@ -52,7 +56,9 @@ const dash = <span className="text-text-tertiary">{EMPTY}</span>;
 export const COLUMNS: Record<ColumnId, ColumnDef> = {
 	name: {
 		id: "name",
-		label: "Név / e-mail",
+		label: "Név",
+		subLabel: "E-mail",
+		headerClass: "pl-10",
 		pickerLabel: "Név / e-mail",
 		locked: true,
 		sortKey: "name",
@@ -156,7 +162,8 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 	},
 	location: {
 		id: "location",
-		label: "Település / iskola",
+		label: "Település",
+		subLabel: "Iskola",
 		pickerLabel: "Település / iskola",
 		card: (item) => {
 			const parts = [item.hometown, item.schoolName].filter(Boolean);

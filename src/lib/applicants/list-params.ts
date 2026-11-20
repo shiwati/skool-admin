@@ -16,6 +16,7 @@ export type SortOrder = "asc" | "desc";
 export type ListFilters = {
 	q?: string;
 	eventIds: string[];
+	programYear?: number;
 	ageFrom?: number;
 	ageTo?: number;
 	hometown?: string;
@@ -47,6 +48,13 @@ const API_SORT: Record<SortKey, { key: string; invert: boolean }> = {
 };
 
 const text = z.string().trim().min(1).max(200).optional().catch(undefined);
+const year = z.coerce
+	.number()
+	.int()
+	.min(2000)
+	.max(2100)
+	.optional()
+	.catch(undefined);
 const age = z.coerce.number().int().min(0).max(120).optional().catch(undefined);
 const bool = z
 	.enum(["true", "false"])
@@ -108,6 +116,7 @@ export function parseListState(params: URLSearchParams): ListState {
 	return {
 		q: text.parse(get("q")),
 		eventIds,
+		programYear: year.parse(get("programYear")),
 		ageFrom,
 		ageTo,
 		hometown: text.parse(get("hometown")),
@@ -124,6 +133,8 @@ function setFilters(params: URLSearchParams, filters: ListFilters) {
 	if (filters.q) params.set("q", filters.q);
 	if (filters.eventIds.length)
 		params.set("eventIds", filters.eventIds.join(","));
+	if (filters.programYear !== undefined)
+		params.set("programYear", String(filters.programYear));
 	if (filters.ageFrom !== undefined)
 		params.set("ageFrom", String(filters.ageFrom));
 	if (filters.ageTo !== undefined) params.set("ageTo", String(filters.ageTo));
@@ -186,6 +197,7 @@ export function hasActiveFilters(state: ListFilters): boolean {
 	return Boolean(
 		state.q ||
 		state.eventIds.length ||
+		state.programYear !== undefined ||
 		state.ageFrom !== undefined ||
 		state.ageTo !== undefined ||
 		state.hometown ||
@@ -198,6 +210,7 @@ export function clearFilters(state: ListState): ListState {
 	return updateListState(state, {
 		q: undefined,
 		eventIds: [],
+		programYear: undefined,
 		ageFrom: undefined,
 		ageTo: undefined,
 		hometown: undefined,

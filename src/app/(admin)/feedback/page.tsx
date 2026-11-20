@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/admin-shell/page-header";
 import { PageShell } from "@/components/admin-shell/page-shell";
 import { FeedbackView } from "@/components/feedback/feedback-view";
 import { formatCount, formatDateTime } from "@/lib/applicants/format";
+import { firstEventYear } from "@/lib/dashboard/first-year";
 import { periodOptions } from "@/lib/dashboard/period";
 import {
 	feedbackEventOptions,
@@ -19,11 +20,12 @@ export default async function FeedbackPage({
 	searchParams,
 }: PageProps<"/feedback">) {
 	const query = parseFeedbackQuery(await searchParams);
-	const [data, events, lastImport, openItem] = await Promise.all([
+	const [data, events, lastImport, openItem, firstYear] = await Promise.all([
 		listFeedback(query),
 		feedbackEventOptions(),
 		lastFeedbackImport(),
 		query.open ? getFeedback(query.open) : null,
+		firstEventYear(),
 	]);
 
 	return (
@@ -33,7 +35,7 @@ export default async function FeedbackPage({
 				state={query}
 				basePath="/feedback"
 				events={events}
-				periods={periodOptions(new Date())}
+				periods={periodOptions(new Date(), firstYear)}
 				openItem={openItem}
 				header={
 					<PageHeader

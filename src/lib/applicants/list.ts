@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import {
 	ageRangeToBirthYear,
 	booleanParam,
+	budapestYearRange,
 	containsInsensitive,
 	csvList,
 	optionalText,
@@ -19,6 +20,7 @@ export const applicantsQuerySchema = z
 	.object({
 		...paginationSchema,
 		eventIds: csvList(z.string().min(1)),
+		programYear: z.coerce.number().int().min(2000).max(2100).optional(),
 		ageFrom: z.coerce.number().int().min(0).optional(),
 		ageTo: z.coerce.number().int().min(0).optional(),
 		hometown: optionalText,
@@ -50,6 +52,13 @@ export async function listApplicants(query: ApplicantsQuery) {
 	if (query.eventIds) {
 		and.push({
 			applications: { some: { eventId: { in: query.eventIds } } },
+		});
+	}
+	if (query.programYear !== undefined) {
+		and.push({
+			applications: {
+				some: { event: { from: budapestYearRange(query.programYear) } },
+			},
 		});
 	}
 	const birthYear = ageRangeToBirthYear(query.ageFrom, query.ageTo);

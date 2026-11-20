@@ -109,7 +109,9 @@ describe("EventsView", () => {
 				now={now}
 			/>,
 		);
-		await userEvent.click(screen.getByRole("button", { name: /Program/ }));
+		await userEvent.click(
+			screen.getByRole("button", { name: /Program(?! éve)/ }),
+		);
 		expect(nav.replace).toHaveBeenCalledWith("/events?sort=name", {
 			scroll: false,
 		});

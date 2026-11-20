@@ -123,40 +123,60 @@ export function ApplicantsTable({
 										}
 									>
 										{sortKey ? (
-											<button
-												type="button"
-												className="inline-flex items-center gap-1 uppercase hover:text-text-primary"
-												onClick={() =>
-													onSort(
-														sortKey,
-														nextOrder(
-															sortKey,
-															sort,
-															order,
-														),
-													)
-												}
-											>
-												{column.label}
-												{active ? (
-													order === "asc" ? (
-														<ArrowUp
-															aria-hidden="true"
-															className="size-3.5"
-														/>
-													) : (
-														<ArrowDown
-															aria-hidden="true"
-															className="size-3.5"
-														/>
-													)
-												) : (
-													<ArrowUpDown
-														aria-hidden="true"
-														className="size-3.5 opacity-50"
-													/>
+											<div
+												className={cn(
+													"flex flex-col items-start",
+													column.headerClass,
 												)}
-											</button>
+											>
+												<button
+													type="button"
+													aria-label={
+														column.subLabel
+															? `${column.label} / ${column.subLabel.toLowerCase()}`
+															: undefined
+													}
+													className="inline-flex items-center gap-1 uppercase hover:text-text-primary"
+													onClick={() =>
+														onSort(
+															sortKey,
+															nextOrder(
+																sortKey,
+																sort,
+																order,
+															),
+														)
+													}
+												>
+													{column.label}
+													{active ? (
+														order === "asc" ? (
+															<ArrowUp
+																aria-hidden="true"
+																className="size-3.5"
+															/>
+														) : (
+															<ArrowDown
+																aria-hidden="true"
+																className="size-3.5"
+															/>
+														)
+													) : (
+														<ArrowUpDown
+															aria-hidden="true"
+															className="size-3.5 opacity-50"
+														/>
+													)}
+												</button>
+												{column.subLabel && (
+													<span
+														aria-hidden="true"
+														className="font-normal"
+													>
+														{column.subLabel}
+													</span>
+												)}
+											</div>
 										) : (
 											column.label
 										)}
