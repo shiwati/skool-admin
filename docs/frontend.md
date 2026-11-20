@@ -6,6 +6,22 @@
 - shadcn/ui primitívek: `src/components/ui` (új: `npx shadcn@latest add <komponens>`). Téma-tokenek: `src/app/globals.css`.
 - Prettier: **tab** behúzás, rendezett Tailwind osztályok. A felület nyelve magyar.
 
+## Reszponzivitás
+
+A tervek: „Reszponzív nézetek” oldal (tablet 820 px, mobil 390 px). Három sáv, a Tailwind alapértelmezett töréspontjaival (nincs egyedi `--breakpoint-*`):
+
+| Sáv     | Szélesség   | Prefix | Navigáció                           | Listák                                   |
+| ------- | ----------- | ------ | ----------------------------------- | ---------------------------------------- |
+| Mobil   | 360–767 px  | (alap) | felső sáv + alsó navigáció + „Több” | kártyák, szűrők párbeszédablakban        |
+| Tablet  | 768–1279 px | `md:`  | 80 px-es ikonsáv + topbar           | táblázat, vízszintes görgetés a keretben |
+| Desktop | ≥ 1280 px   | `xl:`  | 248 px-es oldalmenü + topbar        | táblázat                                 |
+
+- 360 px alatt nincs vállalás. Az `sm:`/`lg:` nem sáv; csak sávon belüli finomításra használd.
+- **Váltás CSS-sel, nem JS-sel:** ahol a jelölés eltér (táblázat ↔ kártyák, oldalmenü ↔ ikonsáv ↔ alsó navigáció), mindkét változat renderelődik, és `hidden md:block` / `md:hidden` (illetve `xl:`) dönt. Így a szerver elsőre is a jó elrendezést adja. A jsdom nem alkalmaz CSS-t, ezért a tesztek mindkét változatot látják: a lekérdezéseket egy konténerre szűkítsd (`within(...)`), és az osztállyal rögzítsd, melyik változat melyik sávé.
+- **Keret-változók:** az `(admin)` layout beállítja a `--shell-left` (0 / 80 / 248 px) és a `--shell-bottom` (mobilon az alsó navigáció magassága + safe area, különben 0) változót; lebegő elem (tömeges műveleti sáv, mentési sáv, lebegő gomb) ezekből számolja a helyét, fix szélességet ne írj. Mobilon a felső sáv és az alsó navigáció `fixed` (a képernyő széléhez tapad), a mentési sáv teljes szélességben közvetlenül az alsó navigáció fölött ül.
+- **Vízszintes görgetés:** minden `overflow-x-auto` keret legyen `relative` (a `Card` alapból az). Különben a benne lévő abszolút pozíciójú elemek (`sr-only` feliratok, a Radix checkbox rejtett inputja) kilógnak a keretből, és az egész oldalt szélesítik. Biztonsági háló: a layout tartalomoszlopa `overflow-x-clip`.
+- A root layout `viewportFit: "cover"`-t exportál, hogy az alsó navigáció kitérhessen a `env(safe-area-inset-bottom)` elől.
+
 ## Közös elemek
 
 - **`DataTable`** (`src/components/data-table.tsx`): TanStack Table, **kliensoldali** rendezés és lapozás, korlátos adatra. Props: `columns`, `data`, `caption` (képernyőolvasónak). Szerveroldali lapozású listához lásd az `ApplicantsTable` mintáját (`src/components/applicants/`).
@@ -31,27 +47,35 @@
     - **Demográfia:** nincs külön év választó, a fejléc időszakát követi. Életkor (a program kezdő éve − `birthYear`, sávok) és Település (`hometown`, top 8 + Egyéb) fül.
     - **Elégedettség:** üres állapot; később programonkénti feedback-átlag.
     - Az elvégzési arány, a tanulói útvonal, a megye és az iskola szándékosan kimaradt.
+- `/events`: Programok lista (`src/components/events/events-view.tsx`, `events-table.tsx`).
+    - **Navigáció:** mint a Jelentkezőknél, az egész sor (mobilon az egész kártya) a programot nyitja, a „…” menü kivételével; a név valódi link marad (billentyűzet, új lap). Közös logika: `src/lib/row-nav.ts`.
+    - **Oszlopválasztó:** mint a Jelentkezőknél, saját `localStorage` kulccsal (`src/lib/events/column-settings.ts`; oszlopok: `event-columns.tsx`). A „Program” oszlop zárolt; tablettől „Oszlopok” gomb a szűrősor végén, mobilon ikongomb a keresőmező mellett (mobilon csak a láthatóság állítható, a sorrend a nagyobb képernyőn beállított). A mobil kártyán a fejléc (név, címkék, műveletek) fix, alatta minden további látható oszlop egy címkézett sor, a beállított sorrendben.
 - `/events/new`: új program felvétele (`src/components/events/new-event-form.tsx`, séma: `src/lib/events/schema.ts`). Szekciók: alapadatok (név, címkék a fix listából, leírás), időpont és helyszín (`datetime-local` mezők: dátum + óra:perc), kapacitás (létszám ≥ 1, korosztály tól–ig → `ageRange` `"12-18"`), oktató és mentorok. Mentés: `POST /api/events`, siker után átirányítás a `/events/:id`-re. Nincs vázlatmentés, alkalom-lista és záró riport szekció.
 - `/events/[id]`: Program áttekintés (`src/app/(admin)/events/[id]/(overview)/`, komponensek: `src/components/events/overview/`). Az `(overview)` route group az URL-t nem változtatja, de a szerkesztő oldal (`/events/[id]/edit`) így nem kapja meg a közös fejlécet; a `not-found.tsx` mindkettőre vonatkozik.
     - **Adat:** nincs külön olvasó végpont; a Server Component maga kérdez az adatbázisba (`getEventOverview`, `src/lib/events/overview.ts`, `React.cache`-elve, így layout, oldal és `generateMetadata` egy lekérdezéssort használ). A layout és az oldal is hívja a `requireAdmin`-t, mert párhuzamosan renderelődnek. Ismeretlen id → `notFound()`.
-    - **Fejléc és fülek (layout):** morzsamenü, név, címkék, státusz (`eventStatus`, mint a listán), dátum / hely / emberek, „Szerkesztés” és „…” menü (törlés `EventDeleteDialog`-gal). Fülek: Áttekintés, Jelentkezők (a programra szűrt `/applicants` lista, darabszámmal); Visszajelzések, Záró riport, Változástörténet letiltva, amíg nincs képernyőjük.
-    - **Áttekintés:** KPI-k (férőhely, jelentkezett + túljelentkezési szorzó, elfogadva, várólista + új), jelentkezők státusz szerint (halmozott sáv), program adatai, oktatók és mentorok, jelentkezői sheet (`SheetSourceCard`: link és „Szinkronizálás most” → `POST /api/events/[id]/sync`, toast az eredménnyel), legutóbbi 5 változás (`History`, `tableName: "event"`; feliratok: `src/lib/events/history-labels.ts`).
+    - **Fejléc és fülek (layout):** morzsamenü, név, címkék, státusz (`eventStatus`, mint a listán), dátum / hely / emberek, „Szerkesztés” és „…” menü (törlés `EventDeleteDialog`-gal). Fülek: Áttekintés, Jelentkezők (a programra szűrt `/applicants` lista, darabszámmal); Visszajelzések, Záró riport letiltva, amíg nincs képernyőjük. Változástörténet fül nincs: a napló a „Legutóbbi változások” kártya „Teljes napló” linkjéről nyílik, mint a jelentkezőknél.
+    - **Áttekintés:** KPI-k (férőhely, jelentkezett + túljelentkezési szorzó, elfogadva, várólista + új), jelentkezők státusz szerint (halmozott sáv), program adatai, oktatók és mentorok, jelentkezői sheet (`SheetSourceCard`: link és „Szinkronizálás most” → `POST /api/events/[id]/sync`, toast az eredménnyel), legutóbbi 5 változás „Teljes napló” linkkel (`History`, `tableName: "event"`; feliratok: `src/lib/events/history-labels.ts`).
 - `/applicants`: Jelentkezők lista (`src/components/applicants/`), a `GET /api/applicants`-ből, kliensoldalon.
     - **Állapot:** a szűrés, rendezés és lapozás az URL-ben él (`src/lib/applicants/list-params.ts`).
     - **Tábla:** sima `<table>` oszlopkonfigurációval (`columns.tsx`), nem a `DataTable`.
-    - **Oszlopválasztó:** a beállítás `localStorage`-ban mentődik (`column-settings.ts`, `use-column-settings.ts`).
+    - **Oszlopválasztó:** a beállítás `localStorage`-ban mentődik (közös mag: `src/lib/column-settings.ts`, `src/hooks/use-column-settings.ts`, `src/components/column-picker.tsx`; listánkénti konfiguráció: `src/lib/applicants/column-settings.ts`), és a mobil kártyákra is vonatkozik: mobilon ikongomb a „Szűrők” mellett (ott csak a láthatóság állítható, rendezés nincs: a `compact` panelben nincs húzás és fel/le nyíl), a kártyán minden látható oszlop egy címkézett sor (érték: `ColumnDef.card`, hiányában a `cell`), az oszlopok sorrendjében.
     - **Kijelölés és tömeges műveletek:** e-mail másolás és törlés (`POST /api/applicants/delete`), valamint e-mail lista a teljes szűrésről.
     - **Helyőrzők:** a duplikáció-banner funkció nélkül. A Google Sheet szinkron nem itt van, hanem a program oldalán (`/events/[id]`, „Jelentkezők forrása”).
     - **Navigáció:** a sorra kattintva (a checkbox és a „Műveletek” menü kivételével) az adatlap nyílik; a név link is (billentyűzet, új lap).
 - `/applicants/[id]`: Jelentkező adatlap (`src/app/(admin)/applicants/[id]/`, komponensek: `src/components/applicants/detail/`).
     - **Adat:** nincs API-végpont; a Server Component renderelés előtt maga kérdez az adatbázisba (`getApplicantDetail`, `src/lib/applicants/detail.ts`, `React.cache`-elve, így a `generateMetadata` is ugyanazt használja). Előtte maga is hívja a `requireAdmin`-t, mert a layout és az oldal párhuzamosan renderelődik.
     - **404:** ismeretlen vagy törölt (anonimizált) jelentkezőnél `notFound()` → `not-found.tsx`.
-    - **Tartalom:** személyes és szülői adatok, programok, a legfrissebb jelentkezés űrlapválaszai, címkék, változástörténet (`History`, legfrissebb 20). A kliens csak a fejléc-műveleteket kapja (`ApplicantDetailActions`: szerkesztés linkje, törlés; a visszaigazolás letiltva).
+    - **Tartalom:** személyes és szülői adatok, programok, a legfrissebb jelentkezés űrlapválaszai, címkék, „Legutóbbi változások” (`History`, legfrissebb 5, „Teljes napló” linkkel a `/history/[id]` oldalra). A kliens csak a fejléc-műveleteket kapja (`ApplicantDetailActions`: szerkesztés linkje, törlés; a visszaigazolás letiltva).
 - `/applicants/[id]/edit`: Adatlap szerkesztése (`src/app/(admin)/applicants/[id]/edit/`, űrlap: `src/components/applicants/edit/applicant-edit-form.tsx`).
     - **Előtöltés:** a Server Component a `getApplicantForEdit`-tel olvas (csak a szerkeszthető mezők + `updatedAt`), `requireAdmin` után; ismeretlen/törölt jelentkezőnél 404.
     - **Validáció:** közös Zod-séma az űrlapnak és a végpontnak (`src/lib/applicants/edit-schema.ts`); kötelező a név és az e-mail. Beküldés után `FormErrorSummary` („N mező javításra szorul”), a szerver mezőhibái (`details.fieldErrors`) is a mezőkre kerülnek.
     - **Mentési sáv:** csak módosításkor látszik („N nem mentett módosítás”, Elvetés/Mentés; a szám a React Hook Form `dirtyFields`-ből); mentetlen módosításnál a lap bezárása/újratöltése megerősítést kér (`beforeunload`, az alkalmazáson belüli linkeknél nincs figyelmeztetés).
     - **Mentés:** `POST /api/applicants/[id]/edit` a betöltéskori `updatedAt`-tel; siker után toast és vissza az adatlapra. `409` esetén ütközés-figyelmeztetés „Újratöltés” gombbal, a beírt értékek megmaradnak.
+- `/history/[id]`: egy jelentkező **vagy** program teljes változásnaplója (`src/app/(admin)/history/[id]/`, lekérdezés: `src/lib/history/queries.ts`).
+    - **Melyik rekord:** az id-t előbb nem törölt jelentkezőként, aztán programként keresi (`getHistorySubject`, `React.cache`-elve). Ismeretlen id vagy törölt jelentkező → `not-found.tsx`. Az oldal maga is hívja a `requireAdmin`-t.
+    - **Tartalom:** jelentkezőnél a saját és a jelentkezései változásai, programnál a program mezőinek változásai. Legfrissebb elöl, legfeljebb 200 (`HISTORY_PAGE_LIMIT`), budapesti nap szerint csoportosítva („Ma”, „Tegnap”, „2026. november 3.”, `src/lib/history/group.ts`). A feliratok és az értékformázás ugyanazok, mint az előnézeti kártyákon: jelentkezőnél `src/lib/applicants/detail-labels.ts`, programnál `src/lib/events/history-labels.ts` (közös megjelenítés: `src/components/history/history-change.tsx`).
+    - **Fejléc:** jelentkezőnél és programnál ugyanaz: morzsamenü („Jelentkezők › név › Változástörténet” vagy „Programok › név › Változástörténet”, a név a rekord oldalára visz) és a név.
+    - **Belépési pont:** a jelentkező adatlap és a programoldal kártyájának „Teljes napló” linkje. Szűrők és lapozás még nincsenek.
 - Kliensoldali API-hívások: `apiFetch` (`src/lib/api/client.ts`). 401 esetén teljes oldalas átirányítás a `/login`-ra, az aktuális URL-lel mint visszatérési címmel.
 - `error.tsx`, `not-found.tsx`: globális hibaoldalak.
 

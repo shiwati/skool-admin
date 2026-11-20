@@ -1,25 +1,10 @@
 "use client";
 
-import {
-	ArrowDown,
-	ArrowUp,
-	ArrowUpDown,
-	CircleAlert,
-	MoreHorizontal,
-	SearchX,
-	Trash2,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fullName } from "@/lib/applicants/format";
 import type {
@@ -28,9 +13,12 @@ import type {
 	SortOrder,
 } from "@/lib/applicants/list-params";
 import type { ApplicantListItem } from "@/lib/applicants/types";
+import { openRowHref } from "@/lib/row-nav";
 import { cn } from "@/lib/utils";
+import { ApplicantCardList } from "./applicant-card-list";
 import { applicantHref, COLUMNS, type ColumnId } from "./columns";
-import { Pager } from "./pager";
+import { ListEmptyState, ListErrorState } from "./list-state";
+import { Pager } from "@/components/shared/pager";
 
 export type TableData =
 	| { status: "loading" }
@@ -52,19 +40,11 @@ type Props = {
 	onPageSize: (size: PageSize) => void;
 	onToggleRow: (id: string) => void;
 	onToggleAll: (ids: string[], select: boolean) => void;
-	onDeleteRow: (item: ApplicantListItem) => void;
 	onClearFilters: () => void;
 	onReload: () => void;
 };
 
 const SKELETON_ROWS = 6;
-
-/**
- * Clicks on (or inside) these keep their own behaviour instead of opening the
- * detail page. Menu items are portaled, but React events still bubble to the row.
- */
-const ROW_NAV_IGNORE =
-	'a, button, input, label, [role="checkbox"], [role="menuitem"], [role="menu"], [data-row-nav="off"]';
 
 function nextOrder(
 	column: SortKey,
@@ -90,20 +70,13 @@ export function ApplicantsTable({
 	onPageSize,
 	onToggleRow,
 	onToggleAll,
-	onDeleteRow,
 	onClearFilters,
 	onReload,
 }: Props) {
 	const router = useRouter();
 
 	function openRow(event: MouseEvent<HTMLTableRowElement>, id: string) {
-		const target = event.target;
-		if (target instanceof Element && target.closest(ROW_NAV_IGNORE)) return;
-		// Selecting text in a cell is not a click on the row.
-		if (window.getSelection()?.toString()) return;
-		const href = applicantHref(id);
-		if (event.ctrlKey || event.metaKey) window.open(href, "_blank");
-		else router.push(href);
+		openRowHref(event, applicantHref(id), router.push);
 	}
 
 	const items = data.status === "success" ? data.items : [];
@@ -115,12 +88,30 @@ export function ApplicantsTable({
 			: selectedOnPage > 0
 				? "indeterminate"
 				: false;
-	const colSpan = columns.length + 2;
+	const colSpan = columns.length + 1;
 
 	return (
 		<Card className="overflow-hidden">
-			<div className="overflow-x-auto">
-				<table className="w-full table-fixed border-collapse text-sm">
+			{/* Mobile (< md): card list instead of the table (board 03.1 M). */}
+			<ApplicantCardList
+				className="md:hidden"
+				data={data}
+				now={now}
+				columns={columns}
+				filtersActive={filtersActive}
+				onClearFilters={onClearFilters}
+				onReload={onReload}
+			/>
+			<div
+				data-testid="table-frame"
+				className="relative hidden overflow-x-auto md:block"
+			>
+				<table
+					className="w-full table-fixed border-collapse text-sm"
+					// Narrower viewports scroll inside the frame instead of
+					// squeezing the user's columns.
+					style={{ minWidth: `${44 + columns.length * 128}px` }}
+				>
 					<caption className="sr-only">Jelentkezők</caption>
 					<thead className="bg-surface-subtle text-left">
 						<tr className="border-b border-border-default">
@@ -198,9 +189,6 @@ export function ApplicantsTable({
 									</th>
 								);
 							})}
-							<th scope="col" className="w-12 px-2 py-2.5">
-								<span className="sr-only">Műveletek</span>
-							</th>
 						</tr>
 					</thead>
 					<tbody aria-busy={data.status === "loading" || undefined}>
@@ -219,38 +207,13 @@ export function ApplicantsTable({
 											<Skeleton className="h-3.5 w-3/4" />
 										</td>
 									))}
-									<td />
 								</tr>
 							))}
 
 						{data.status === "error" && (
 							<tr>
 								<td colSpan={colSpan} className="px-6 py-12">
-									<div
-										role="alert"
-										className="mx-auto flex max-w-sm flex-col items-center gap-2 text-center"
-									>
-										<span className="flex size-10 items-center justify-center rounded-full bg-error-bg text-error-fg">
-											<CircleAlert
-												aria-hidden="true"
-												className="size-5"
-											/>
-										</span>
-										<h2 className="text-[15px] leading-[22px] font-semibold">
-											Nem sikerült betölteni a listát
-										</h2>
-										<p className="text-xs text-text-secondary">
-											Hálózati hiba, vagy a szerver nem
-											válaszol. Próbáld újra.
-										</p>
-										<Button
-											variant="surface"
-											size="sm"
-											onClick={onReload}
-										>
-											Újratöltés
-										</Button>
-									</div>
+									<ListErrorState onReload={onReload} />
 								</td>
 							</tr>
 						)}
@@ -258,27 +221,10 @@ export function ApplicantsTable({
 						{data.status === "success" && items.length === 0 && (
 							<tr>
 								<td colSpan={colSpan} className="px-6 py-12">
-									<div className="mx-auto flex max-w-sm flex-col items-center gap-2 text-center">
-										<span className="flex size-10 items-center justify-center rounded-full bg-sky-50">
-											<SearchX
-												aria-hidden="true"
-												className="size-5"
-											/>
-										</span>
-										<h2 className="text-[15px] leading-[22px] font-semibold">
-											Nincs a szűrésnek megfelelő
-											jelentkező
-										</h2>
-										{filtersActive && (
-											<Button
-												variant="surface"
-												size="sm"
-												onClick={onClearFilters}
-											>
-												Szűrők törlése
-											</Button>
-										)}
-									</div>
+									<ListEmptyState
+										filtersActive={filtersActive}
+										onClearFilters={onClearFilters}
+									/>
 								</td>
 							</tr>
 						)}
@@ -318,33 +264,6 @@ export function ApplicantsTable({
 											{COLUMNS[id].cell(item, now)}
 										</td>
 									))}
-									<td
-										className="px-2 py-2.5"
-										data-row-nav="off"
-									>
-										<DropdownMenu>
-											<DropdownMenuTrigger
-												aria-label={`Műveletek: ${name}`}
-												className="flex size-8 items-center justify-center rounded-full hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
-											>
-												<MoreHorizontal
-													aria-hidden="true"
-													className="size-[18px]"
-												/>
-											</DropdownMenuTrigger>
-											<DropdownMenuContent align="end">
-												<DropdownMenuItem
-													className="text-error-fg focus:text-error-fg [&_svg]:text-error-fg!"
-													onSelect={() =>
-														onDeleteRow(item)
-													}
-												>
-													<Trash2 aria-hidden="true" />
-													Jelentkező törlése
-												</DropdownMenuItem>
-											</DropdownMenuContent>
-										</DropdownMenu>
-									</td>
 								</tr>
 							);
 						})}

@@ -37,26 +37,30 @@ export default async function EventOverviewPage({ params }: Props) {
 
 	return (
 		<>
-			<dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+			<dl className="grid grid-cols-2 gap-2.5 md:gap-4 xl:grid-cols-4">
 				<KpiCard
 					label="Férőhely"
 					value={
 						event.capacity > 0 ? formatCount(event.capacity) : "—"
 					}
 				/>
-				<KpiCard label="Jelentkezett" value={formatCount(counts.total)}>
-					{ratio !== null && (
-						<span
-							className={cn(
-								"rounded-full px-2 font-mono text-xs leading-5 font-medium",
-								ratioBadgeClass(ratio),
-							)}
-						>
-							<span className="sr-only">Túljelentkezés: </span>
-							{formatRatio(ratio)}
-						</span>
-					)}
-				</KpiCard>
+				<KpiCard
+					label="Jelentkezett"
+					value={formatCount(counts.total)}
+					asideLabel={ratio !== null && "Kereslet"}
+					asideValue={
+						ratio !== null && (
+							<span
+								className={cn(
+									"rounded-full px-2 font-mono text-xs leading-5 font-medium",
+									ratioBadgeClass(ratio),
+								)}
+							>
+								{formatRatio(ratio)}
+							</span>
+						)
+					}
+				/>
 				<KpiCard label="Elfogadva" value={formatCount(counts.ACCEPTED)}>
 					{event.capacity > 0 && (
 						<span className="text-sm text-text-secondary">
@@ -90,9 +94,9 @@ export default async function EventOverviewPage({ params }: Props) {
 					<StatusBreakdown eventId={event.id} counts={counts} />
 					<SheetSourceCard
 						eventId={event.id}
-						sheetUrl={event.sheetUrl}
+						applicationSheetUrl={event.applicationSheetUrl}
 					/>
-					<EventHistoryCard entries={history} />
+					<EventHistoryCard eventId={event.id} entries={history} />
 				</aside>
 			</div>
 		</>

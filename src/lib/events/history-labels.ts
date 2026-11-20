@@ -16,12 +16,18 @@ export const EVENT_HISTORY_FIELD_LABELS: Record<TrackedEventField, string> = {
 	location: "Cím",
 	description: "Rövid leírás",
 	tags: "Címkék",
-	sheetUrl: "Jelentkezők sheetje",
-	feedbackSheetUrl: "Feedbackek sheetje",
+	applicationSheetUrl: "Jelentkezők sheetje",
+	participantFeedbackSheetUrl: "Résztvevői visszajelzések sheetje",
+	mentorFeedbackSheetUrl: "Mentori visszajelzések sheetje",
 	ageRange: "Korosztály",
 	instructor: "Oktató",
 	mentors: "Mentorok",
 	capacity: "Max. tanulói létszám",
+};
+
+/** Nem mezőváltozás, hanem esemény a programon (pl. riport generálása). */
+const EVENT_HISTORY_ACTION_LABELS: Record<string, string> = {
+	reportDocument: "Záró riport (Google Doc)",
 };
 
 /** Ismeretlen mezőnél a technikai név jelenik meg. */
@@ -29,7 +35,9 @@ export function eventHistoryFieldLabel(field: string): string {
 	return (
 		(EVENT_HISTORY_FIELD_LABELS as Record<string, string | undefined>)[
 			field
-		] ?? field
+		] ??
+		EVENT_HISTORY_ACTION_LABELS[field] ??
+		field
 	);
 }
 

@@ -1,11 +1,8 @@
 import {
 	Calendar,
-	Database,
 	FileText,
-	History,
 	LayoutGrid,
 	MessageSquare,
-	RefreshCw,
 	Users,
 	type LucideIcon,
 } from "lucide-react";
@@ -13,32 +10,29 @@ import {
 export type NavItem = {
 	label: string;
 	icon: LucideIcon;
-	/** Hiányzik, ha a képernyő még nem létezik: a menüpont letiltva jelenik meg. */
-	href?: string;
+	href: string;
+	/** Rövidebb felirat az ikonsávhoz és az alsó navigációhoz. */
+	shortLabel?: string;
 };
 
-export type NavGroup = { label: string; items: NavItem[] };
-
-export const navGroups: NavGroup[] = [
+/** A főmenü elemei: az oldalsáv, a tablet ikonsáv és a mobil alsó sáv is ezt használja. */
+export const navItems: NavItem[] = [
+	{ label: "Áttekintés", icon: LayoutGrid, href: "/" },
+	{ label: "Jelentkezők", icon: Users, href: "/applicants" },
+	{ label: "Programok", icon: Calendar, href: "/events" },
 	{
-		label: "Főmenü",
-		items: [
-			{ label: "Áttekintés", icon: LayoutGrid, href: "/" },
-			{ label: "Jelentkezők", icon: Users, href: "/applicants" },
-			{ label: "Programok", icon: Calendar, href: "/events" },
-			{ label: "Visszajelzések", icon: MessageSquare },
-			{ label: "Riportok", icon: FileText },
-		],
+		label: "Visszajelzések",
+		shortLabel: "Visszajelz.",
+		icon: MessageSquare,
+		href: "/feedback",
 	},
-	{
-		label: "Adatok",
-		items: [
-			{ label: "Adatforrások", icon: RefreshCw },
-			{ label: "Adatmigráció", icon: Database },
-			{ label: "Változásnapló", icon: History },
-		],
-	},
+	{ label: "Riportok", icon: FileText, href: "/reports" },
 ];
+
+/** Rövid felirat a keskeny navigációkhoz; a teljes név az akadálymentes név. */
+export function shortLabel(item: NavItem): string {
+	return item.shortLabel ?? item.label;
+}
 
 /** A `/` csak pontos egyezésre aktív, a többi szakasz az alútvonalain is. */
 export function isActive(href: string, pathname: string): boolean {

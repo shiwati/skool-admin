@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { formatCount } from "@/lib/applicants/format";
-import { applicantsHref, eventHref } from "@/lib/events/links";
+import { applicantsHref, eventHref, eventReportHref } from "@/lib/events/links";
+import { eventFeedbackHref } from "@/lib/feedback/format";
 import { cn } from "@/lib/utils";
 
 const tabClass =
@@ -24,10 +25,7 @@ function Count({ children, active }: { children: string; active?: boolean }) {
 	);
 }
 
-/**
- * A program szakaszai. A még nem létező képernyők letiltva jelennek meg
- * (ugyanígy, mint az oldalsáv menüpontjai).
- */
+/** A program szakaszai. */
 export function EventTabs({
 	eventId,
 	applications,
@@ -37,10 +35,15 @@ export function EventTabs({
 }) {
 	const pathname = usePathname();
 	const overviewActive = pathname === eventHref(eventId);
-	const disabled = ["Visszajelzések", "Záró riport", "Változástörténet"];
+	const feedbackActive = pathname === eventFeedbackHref(eventId);
+	const reportActive = pathname === eventReportHref(eventId);
 
 	return (
-		<nav aria-label="Program szakaszai" className="overflow-x-auto">
+		<nav
+			aria-label="Program szakaszai"
+			// Mobile: edge-to-edge horizontal scroll (positioned, see docs/frontend.md).
+			className="relative -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0"
+		>
 			{/* A keret a listán van: a fülek `-mb-px` túllógása így nem a
 			    görgethető konténeren belül történik (különben függőleges
 			    görgetősáv jelenne meg). */}
@@ -72,20 +75,36 @@ export function EventTabs({
 						<Count>{formatCount(applications)}</Count>
 					</Link>
 				</li>
-				{disabled.map((label) => (
-					<li key={label}>
-						<span
-							aria-disabled="true"
-							title="Hamarosan elérhető."
-							className={cn(
-								tabClass,
-								"cursor-not-allowed border-transparent text-text-tertiary",
-							)}
-						>
-							{label}
-						</span>
-					</li>
-				))}
+				<li>
+					<Link
+						href={eventFeedbackHref(eventId)}
+						aria-current={feedbackActive ? "page" : undefined}
+						className={cn(
+							tabClass,
+							"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							feedbackActive
+								? "border-ink text-text-primary"
+								: "border-transparent text-text-secondary hover:text-text-primary",
+						)}
+					>
+						Visszajelzések
+					</Link>
+				</li>
+				<li>
+					<Link
+						href={eventReportHref(eventId)}
+						aria-current={reportActive ? "page" : undefined}
+						className={cn(
+							tabClass,
+							"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							reportActive
+								? "border-ink text-text-primary"
+								: "border-transparent text-text-secondary hover:text-text-primary",
+						)}
+					>
+						Záró riport
+					</Link>
+				</li>
 			</ul>
 		</nav>
 	);

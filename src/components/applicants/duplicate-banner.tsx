@@ -17,7 +17,7 @@ export function DuplicateBanner({
 	return (
 		<div
 			role="status"
-			className="flex flex-wrap items-center gap-3 rounded-[14px] bg-warning-bg px-4 py-3 text-warning-fg"
+			className="flex items-center gap-3 rounded-[14px] bg-warning-bg px-3 py-2.5 text-warning-fg md:flex-wrap md:px-4 md:py-3"
 		>
 			<TriangleAlert
 				aria-hidden="true"
@@ -27,7 +27,8 @@ export function DuplicateBanner({
 				<span className="text-sm font-medium">
 					{formatCount(count)} lehetséges duplikált jelentkezés
 				</span>
-				<span className="text-xs">
+				{/* Mobile: compact single line (board 03.1 M). */}
+				<span className="hidden text-xs md:block">
 					Azonos névvel és e-mail címmel több jelentkező is van.
 					Ellenőrizd őket, mielőtt visszaigazolást küldesz.
 				</span>

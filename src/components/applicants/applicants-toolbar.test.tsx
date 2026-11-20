@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ListFilters } from "@/lib/applicants/list-params";
@@ -146,5 +146,77 @@ describe("ApplicantsToolbar", () => {
 			screen.getByRole("button", { name: "Szűrők törlése" }),
 		);
 		expect(onClearAll).toHaveBeenCalledOnce();
+	});
+});
+
+describe("ApplicantsToolbar on mobile", () => {
+	it("keeps the inline chips and trailing items for tablet and up only", () => {
+		render(
+			<ApplicantsToolbar
+				filters={{ eventIds: [] }}
+				events={events}
+				onChange={vi.fn()}
+				onClearAll={vi.fn()}
+				trailing={<button>Oszlopok</button>}
+			/>,
+		);
+		const inline = screen.getByTestId("inline-filters");
+		expect(inline).toHaveClass("hidden", "md:contents");
+		expect(
+			screen.getByRole("button", { name: "Oszlopok" }).parentElement,
+		).toBe(inline);
+	});
+
+	it("names the active filter count on the Szűrők button", () => {
+		renderToolbar({ newsletter: true, hometown: "Pécs", ageFrom: 12 });
+		const button = screen.getByRole("button", { name: "Szűrők (3 aktív)" });
+		expect(button).toHaveClass("size-11", "md:hidden");
+		expect(button).toHaveTextContent("3");
+	});
+
+	it("opens the filters dialog and applies a filter from it", async () => {
+		const { onChange } = renderToolbar();
+		await userEvent.click(screen.getByRole("button", { name: "Szűrők" }));
+		const dialog = screen.getByRole("dialog", { name: "Szűrők" });
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: /^Hírlevél/ }),
+		);
+		await userEvent.click(
+			await screen.findByRole("radio", { name: "Feliratkozott" }),
+		);
+		expect(onChange).toHaveBeenCalledWith({ newsletter: true });
+	});
+
+	it("offers Szűrők törlése in the dialog when filters are active", async () => {
+		const { onClearAll } = renderToolbar({ newsletter: true });
+		await userEvent.click(
+			screen.getByRole("button", { name: "Szűrők (1 aktív)" }),
+		);
+		const dialog = screen.getByRole("dialog", { name: "Szűrők" });
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Szűrők törlése" }),
+		);
+		expect(onClearAll).toHaveBeenCalledOnce();
+	});
+});
+
+describe("ApplicantsToolbar mobile trailing slot", () => {
+	it("renders the mobile slot after the Szűrők button, hidden from md", () => {
+		render(
+			<ApplicantsToolbar
+				filters={{ eventIds: [] }}
+				events={events}
+				onChange={vi.fn()}
+				onClearAll={vi.fn()}
+				mobileTrailing={<button>Oszlopok</button>}
+			/>,
+		);
+		const slot = screen.getByTestId("mobile-trailing");
+		expect(slot).toHaveClass("md:hidden");
+		const filters = screen.getByRole("button", { name: "Szűrők" });
+		expect(
+			filters.compareDocumentPosition(slot) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
 	});
 });

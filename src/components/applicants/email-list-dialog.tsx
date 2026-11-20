@@ -93,7 +93,7 @@ export function EmailListDialog({
 	async function copy(text: string, count: number) {
 		if (await copyText(text)) {
 			toast.success(
-				`${formatCount(count)} e-mail cím a vágólapra másolva`,
+				`${formatCount(count)} db e-mail cím a vágólapra másolva`,
 			);
 		} else {
 			toast.error(
@@ -158,7 +158,7 @@ export function EmailListDialog({
 								htmlFor={textId}
 								className="text-xs font-medium"
 							>
-								{formatCount(load.count)} e-mail cím
+								{formatCount(load.count)} db e-mail cím
 							</label>
 							<textarea
 								id={textId}

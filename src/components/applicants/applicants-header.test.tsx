@@ -6,27 +6,89 @@ import { DuplicateBanner } from "./duplicate-banner";
 
 describe("ApplicantsHeader", () => {
 	it("shows the heading and the formatted total", () => {
-		render(<ApplicantsHeader total={1248} onEmailList={() => {}} />);
+		render(
+			<ApplicantsHeader
+				total={1248}
+				onEmailList={() => {}}
+				onExport={() => {}}
+			/>,
+		);
 		expect(
 			screen.getByRole("heading", { level: 1, name: "Jelentkezők" }),
 		).toBeInTheDocument();
 		expect(
-			screen.getByText("Google Formból érkező jelentkezések · 1 248 fő"),
+			screen.getByText(/^Összes jelentkező: 1\s248 fő$/),
 		).toBeInTheDocument();
 	});
 
+	it("labels the count as results when filtered", () => {
+		render(
+			<ApplicantsHeader
+				total={12}
+				filtered
+				onEmailList={() => {}}
+				onExport={() => {}}
+			/>,
+		);
+		expect(screen.getByText("Találatok száma: 12 fő")).toBeInTheDocument();
+		expect(screen.queryByText(/Összes jelentkező/)).not.toBeInTheDocument();
+	});
+
 	it("omits the count until data has loaded", () => {
-		render(<ApplicantsHeader total={null} onEmailList={() => {}} />);
-		expect(screen.queryByText(/fő/)).not.toBeInTheDocument();
+		render(
+			<ApplicantsHeader
+				total={null}
+				onEmailList={() => {}}
+				onExport={() => {}}
+			/>,
+		);
+		expect(screen.queryByText(/száma/)).not.toBeInTheDocument();
 	});
 
 	it("opens the e-mail list", async () => {
 		const onEmailList = vi.fn();
-		render(<ApplicantsHeader total={3} onEmailList={onEmailList} />);
+		render(
+			<ApplicantsHeader
+				total={3}
+				onEmailList={onEmailList}
+				onExport={() => {}}
+			/>,
+		);
 		await userEvent.click(
 			screen.getByRole("button", { name: "E-mail lista" }),
 		);
 		expect(onEmailList).toHaveBeenCalledOnce();
+	});
+});
+
+describe("ApplicantsHeader export", () => {
+	it("starts the CSV export", async () => {
+		const onExport = vi.fn();
+		render(
+			<ApplicantsHeader
+				total={3}
+				onEmailList={() => {}}
+				onExport={onExport}
+			/>,
+		);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Exportálás CSV-be" }),
+		);
+		expect(onExport).toHaveBeenCalledOnce();
+	});
+
+	it("disables the button while exporting", () => {
+		render(
+			<ApplicantsHeader
+				total={3}
+				onEmailList={() => {}}
+				onExport={() => {}}
+				exporting
+			/>,
+		);
+		expect(
+			screen.getByRole("button", { name: "Exportálás…" }),
+		).toBeDisabled();
 	});
 });
 
@@ -48,5 +110,57 @@ describe("DuplicateBanner", () => {
 			screen.getByRole("button", { name: "Ellenőrzés" }),
 		);
 		expect(onReview).toHaveBeenCalledOnce();
+	});
+});
+
+describe("ApplicantsHeader on mobile", () => {
+	it("offers the e-mail list in a menu", async () => {
+		const onEmailList = vi.fn();
+		render(
+			<ApplicantsHeader
+				total={3}
+				onEmailList={onEmailList}
+				onExport={() => {}}
+			/>,
+		);
+		const trigger = screen.getByRole("button", {
+			name: "További műveletek",
+		});
+		expect(trigger.parentElement).toHaveClass("md:hidden");
+		await userEvent.click(trigger);
+		await userEvent.click(
+			screen.getByRole("menuitem", { name: "E-mail lista" }),
+		);
+		expect(onEmailList).toHaveBeenCalledOnce();
+	});
+});
+
+describe("ApplicantsHeader export on mobile", () => {
+	it("offers the CSV export in the menu", async () => {
+		const onExport = vi.fn();
+		render(
+			<ApplicantsHeader
+				total={3}
+				onEmailList={() => {}}
+				onExport={onExport}
+			/>,
+		);
+		await userEvent.click(
+			screen.getByRole("button", { name: "További műveletek" }),
+		);
+		await userEvent.click(
+			screen.getByRole("menuitem", { name: "Exportálás CSV-be" }),
+		);
+		expect(onExport).toHaveBeenCalledOnce();
+	});
+});
+
+describe("DuplicateBanner on mobile", () => {
+	it("hides the explanation for a compact single line", () => {
+		render(<DuplicateBanner count={3} onReview={vi.fn()} />);
+		expect(screen.getByText(/Azonos névvel és e-mail címmel/)).toHaveClass(
+			"hidden",
+			"md:block",
+		);
 	});
 });

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useColumnSettings } from "@/hooks/use-column-settings";
 import {
+	APPLICANT_COLUMN_CONFIG,
 	COLUMN_SETTINGS_KEY,
 	visibleColumns,
 } from "@/lib/applicants/column-settings";
@@ -15,7 +16,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 /** Picker + table wired through the real browser-storage hook. */
 function Harness() {
-	const [settings, setSettings] = useColumnSettings();
+	const [settings, setSettings] = useColumnSettings(APPLICANT_COLUMN_CONFIG);
 	const [, rerender] = useState(0);
 	return (
 		<>
@@ -37,7 +38,6 @@ function Harness() {
 				onPageSize={() => {}}
 				onToggleRow={() => {}}
 				onToggleAll={() => {}}
-				onDeleteRow={() => {}}
 				onClearFilters={() => {}}
 				onReload={() => {}}
 			/>
@@ -126,5 +126,38 @@ describe("ColumnPicker", () => {
 		unmount();
 		render(<Harness />);
 		expect(tableHeaders()).not.toContain("Hírlevél");
+	});
+});
+
+describe("ColumnPicker compact (mobile)", () => {
+	it("opens a visibility-only panel from a 44 px icon button", async () => {
+		const onChange = vi.fn();
+		render(
+			<ColumnPicker
+				compact
+				settings={{ order: ["name", "age"], hidden: [] }}
+				onChange={onChange}
+			/>,
+		);
+		const trigger = screen.getByRole("button", { name: "Oszlopok" });
+		expect(trigger).toHaveClass("size-11");
+		await userEvent.click(trigger);
+		const panel = screen.getByRole("dialog", {
+			name: "Oszlopok a listában",
+		});
+		// No reordering on mobile: no arrows, no drag, no drag hint.
+		expect(
+			within(panel).queryByRole("button", { name: /feljebb|lejjebb/ }),
+		).not.toBeInTheDocument();
+		expect(panel.querySelector('[draggable="true"]')).toBeNull();
+		expect(panel).not.toHaveTextContent("Húzással");
+
+		await userEvent.click(
+			within(panel).getByRole("checkbox", { name: /Életkor/ }),
+		);
+		expect(onChange).toHaveBeenCalledWith({
+			order: ["name", "age"],
+			hidden: ["age"],
+		});
 	});
 });

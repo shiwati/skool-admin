@@ -21,7 +21,7 @@ export function BulkActionBar({
 	if (count === 0) return null;
 
 	return (
-		<div className="pointer-events-none fixed inset-x-0 bottom-7 z-40 flex justify-center pl-[248px]">
+		<div className="pointer-events-none fixed right-0 bottom-7 left-[var(--shell-left)] z-40 hidden justify-center px-6 md:flex">
 			<div
 				role="toolbar"
 				aria-label="Tömeges műveletek"

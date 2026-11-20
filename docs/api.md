@@ -37,7 +37,7 @@ Paraméter nincs. Válasz: `{ items: string[] }`, a **fix címkelista** (`EVENT_
 
 ### `POST /api/events` — új program
 
-Törzs (JSON, sémája `createEventSchema` a `src/lib/events/api-schema.ts`-ben): `name` (kötelező), `from`/`to` (dátum, `to >= from`); választható: `tags[]` (csak a fix címkelistából, alap üres), `description`, `companyName`, `location`, `sheetUrl`, `ageRange` (`"12-18"`), `instructor`, `mentors[]`, `capacity` (egész, ≥ 0, alap 0). Üres szöveg `null`-ra normalizálódik. Az űrlap legalább 1 fős létszámot kér, ezt a kliens ellenőrzi.
+Törzs (JSON, sémája `createEventSchema` a `src/lib/events/api-schema.ts`-ben): `name` (kötelező), `from`/`to` (dátum, `to >= from`); választható: `tags[]` (csak a fix címkelistából, alap üres), `description`, `companyName`, `location`, `applicationSheetUrl`, `ageRange` (`"12-18"`), `instructor`, `mentors[]`, `capacity` (egész, ≥ 0, alap 0). Üres szöveg `null`-ra normalizálódik. Az űrlap legalább 1 fős létszámot kér, ezt a kliens ellenőrzi.
 Válasz: `201 { id }`; `400` `{error, details}` (mezőnkénti hibák); `401`.
 
 ### `GET /api/events/[id]`
@@ -46,7 +46,7 @@ Egy program összes mezője. `404`, ha nem létezik; `401`. A szerkesztő oldal 
 
 ### `PATCH /api/events/[id]` — program módosítása
 
-Törzs: a `POST` mezői (`src/lib/events/api-schema.ts`, `updateEventSchema`), mind választható, de legalább egy kell. Csak a megadott mezők változnak; az opcionális szöveges mezők (`description`, `companyName`, `location`, `sheetUrl`, `ageRange`, `instructor`) `null`-lal törölhetők. A `to >= from` ellenőrzés a tárolt értékekkel egyesítve történik.
+Törzs: a `POST` mezői (`src/lib/events/api-schema.ts`, `updateEventSchema`), mind választható, de legalább egy kell. Csak a megadott mezők változnak; az opcionális szöveges mezők (`description`, `companyName`, `location`, `applicationSheetUrl`, `ageRange`, `instructor`) `null`-lal törölhetők. A `to >= from` ellenőrzés a tárolt értékekkel egyesítve történik.
 A tranzakció a ténylegesen megváltozott mezőnként egy `History` sort ír (`tableName: "event"`, `fieldName` a Prisma mezőnév, `oldValue`/`newValue` szövegként; dátum ISO, lista JSON). Ha semmi sem változik, nem ír semmit.
 Válasz: `200 { id }`; `400` `{error, details}`; `401`; `404`.
 
@@ -72,7 +72,7 @@ Egyéb: `GET /api/health` (nyilvános readiness, 200/503), `/api/auth/*` (NextAu
 
 ## `POST /api/events/[id]/sync` — Google Form sheet import
 
-Az esemény `sheetUrl`-jében megadott válasz-sheetet olvassa a **bejelentkezett admin Google-jogosultságával** (`spreadsheets.readonly` scope; ha hiányzik: `403 REAUTH_REQUIRED`, újra be kell jelentkezni). A gid nélküli linknél az első munkalapot veszi.
+Az esemény `applicationSheetUrl`-jében megadott válasz-sheetet olvassa a **bejelentkezett admin Google-jogosultságával** (`spreadsheets.readonly` scope; a bejelentkezés a riportokhoz `drive.file`-t is kér; ha hiányzik: `403 REAUTH_REQUIRED`, újra be kell jelentkezni). A gid nélküli linknél az első munkalapot veszi.
 
 - Oszlop ↔ mező párosítás fejléc-kulcsszavak alapján: `src/lib/sheet-import/mapping.ts` (kötelező: vezetéknév, utónév, e-mail). Ismeretlen oszlopok (pl. kézi „1. oszlop”) kimaradnak, a válasz `unmappedHeaders`-ben listázza őket.
 - Minden új válasz **új** `Applicant` + `Application`. Újraszinkronnál az `Application.sourceKey` (időbélyeg + e-mail, eseményen belül egyedi) miatt semmi nem jön létre kétszer, és semmi nem íródik felül.
@@ -90,3 +90,21 @@ Query: `skip` (≥ 0, alapértelmezés 0; a „Kihagyás most” lépteti, a vé
 ## `POST /api/applicants/duplicates/dismiss` — „nem duplikáció”
 
 Body: `{ "applicantIds": ["…", "…"] }` (két különböző id). A pár rendezve (`applicantAId < applicantBId`) a `DuplicateDismissal` táblába kerül, a `History`-ba `duplicate_dismissed` sor. A döntés **párra** szól: ha később egy harmadik, azonos kulcsú jelentkező érkezik, az bármelyikükkel új párt alkot és megjelenik. A `duplicateFlag` nem változik. Hibák: 400, 401, 404 (ismeretlen vagy törölt), 409 (eltérő `duplicateKey`).
+
+## `POST /api/events/[id]/feedback/sync` — visszajelző sheetek importja
+
+Az esemény `participantFeedbackSheetUrl` és `mentorFeedbackSheetUrl` sheetjeit olvassa (csak a megadottakat) a bejelentkezett admin Google-jogosultságával, ugyanúgy, mint a jelentkezői sync. Csak az új válaszokat veszi fel, ismételhető. Az oszlopokat a fejléc kulcsszavai alapján ismeri fel (`src/lib/feedback/questions.ts`).
+
+- `200`: `{ PARTICIPANT?: Result, MENTOR?: Result }`, ahol `Result = { created, existing, errors: { row, reason }[], unmappedHeaders }`.
+- `422 SHEET_URL_INVALID`: egyik sheet sincs megadva, vagy valamelyik link érvénytelen.
+- `422 SHEET_HEADERS_MISSING`: `{ role, missing[] }` – kötelező oszlop hiányzik (időbélyeg; résztvevőnél a mentor- és az oktatóértékelés, mentornál az összértékelés).
+- `422 SHEET_NOT_ACCESSIBLE`, `403 REAUTH_REQUIRED`: mint a jelentkezői syncnél.
+
+A lista nem API-n megy: a `/feedback` oldal és a program „Visszajelzések” füle (`/events/[id]/feedback`) szerveren olvas (`src/lib/feedback/list.ts`), a szűrők (`q`, `role`, `eventId`, `page`, `open`) az URL-ben vannak.
+
+## Záró riport (`/api/events/[id]/report…`)
+
+A program „Záró riport” füle (`/events/[id]/report`) és a `/reports` lista szerveren olvas (`src/lib/reports/load.ts`, `list.ts`). A tartalom sémája `src/lib/reports/content.ts` (közreműködők, max. 8 idézet, ebből max. 2 kiemelt, kikapcsolt mutatók). A riport névsort nem tartalmaz: résztvevőkből csak darabszám, az idézeteknél csak a szerep.
+
+- `PUT /api/events/[id]/report` — `{ content }` mentése (`EventReport`, eseményenként egy). `200 { ok }`, `400` validációs hiba, `404`.
+- `POST /api/events/[id]/report/documents` — `{ content }` mentése, majd **mindig új** Google Doc a bejelentkezett admin saját Drive-jába (HTML-sablon → Drive konverzió, `src/lib/reports/render.ts`; `drive.file` scope). Naplózza: `EventReportDocument` + `History` (`tableName: "event"`, `fieldName: "reportDocument"`). `201 { id, title, docUrl, createdAt }`, `403 REAUTH_REQUIRED` (hiányzó scope: újra be kell jelentkezni), `502` Google-hiba.

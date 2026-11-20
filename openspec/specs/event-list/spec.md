@@ -23,7 +23,7 @@ The system SHALL serve the programs screen at `/events` to signed-in admins. The
 
 ### Requirement: Event phase
 
-Every event SHALL be in exactly one phase at a given moment. An event SHALL be "closed" when its end (`to`) is in the past. It SHALL be "active" when it has not ended and has a registration sheet (`sheetUrl`). It SHALL be "planned" when it has not ended and has no registration sheet.
+Every event SHALL be in exactly one phase at a given moment. An event SHALL be "closed" when its end (`to`) is in the past. It SHALL be "active" when it has not ended and has a registration sheet (`applicationSheetUrl`). It SHALL be "planned" when it has not ended and has no registration sheet.
 
 #### Scenario: Ended event
 
@@ -33,19 +33,19 @@ Every event SHALL be in exactly one phase at a given moment. An event SHALL be "
 
 #### Scenario: Upcoming event with a sheet
 
-- **GIVEN** an event that starts next week and has a `sheetUrl`
+- **GIVEN** an event that starts next week and has a `applicationSheetUrl`
 - **WHEN** its phase is determined
 - **THEN** it is "active"
 
 #### Scenario: Upcoming event without a sheet
 
-- **GIVEN** an event that starts next month and has no `sheetUrl`
+- **GIVEN** an event that starts next month and has no `applicationSheetUrl`
 - **WHEN** its phase is determined
 - **THEN** it is "planned"
 
 #### Scenario: Running event
 
-- **GIVEN** an event that started yesterday, ends next week and has a `sheetUrl`
+- **GIVEN** an event that started yesterday, ends next week and has a `applicationSheetUrl`
 - **WHEN** its phase is determined
 - **THEN** it is "active"
 
@@ -301,7 +301,7 @@ When no program matches, the table SHALL show an empty state instead of rows. If
 #### Scenario: Planned events only
 
 - **WHEN** an admin calls `GET /api/events?phase=planned`
-- **THEN** only events that have not ended and have no `sheetUrl` are returned
+- **THEN** only events that have not ended and have no `applicationSheetUrl` are returned
 
 #### Scenario: Unknown phase
 
@@ -316,3 +316,40 @@ When no program matches, the table SHALL show an empty state instead of rows. If
 
 - **WHEN** an admin calls `GET /api/events?place=debrecen`
 - **THEN** events located in "Debrecen, Példa tér 5." are returned
+
+### Requirement: Tablet programs layout
+
+From 768 px to 1279 px, the programs page SHALL keep the table. The table SHALL scroll horizontally inside its frame instead of widening the page. The phase tabs SHALL scroll horizontally when they do not fit. The header actions, search and filter chips SHALL wrap onto new lines.
+
+#### Scenario: Programs at tablet width
+
+- **WHEN** `/events` is shown at 820 px
+- **THEN** the page has no horizontal scroll and the table can be scrolled sideways within its frame
+
+### Requirement: Mobile program cards
+
+Below 768 px, programs SHALL be shown as cards instead of the table, in the same order and with the same paging. Each card SHALL show:
+
+- the program name with its colour dot, linking to the program page
+- the date cell content
+- the location and partner
+- the demand ("<applications> / <capacity> fő" with the ratio badge)
+- the instructors line
+- the display status
+
+The row actions SHALL remain available from a "Műveletek: <program name>" button on the card. The empty states SHALL be shown as on desktop.
+
+#### Scenario: Program card
+
+- **GIVEN** a program with capacity 20 and 62 applications
+- **WHEN** `/events` is shown at 390 px
+- **THEN** its card shows "62 / 20 fő" with the "3,1×" badge, and tapping the name opens the program page
+
+### Requirement: Mobile new-program action
+
+Below 768 px, "Új program" SHALL be a floating button in the bottom-right corner above the bottom navigation, and SHALL link to `/events/new`. The search field SHALL take the full width, the filter chips SHALL be a horizontally scrollable row, and the phase tabs SHALL scroll horizontally.
+
+#### Scenario: Creating a program from a phone
+
+- **WHEN** the user taps the floating "Új program" button at 390 px
+- **THEN** `/events/new` opens

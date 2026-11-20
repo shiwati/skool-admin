@@ -14,6 +14,10 @@ A repó tudásbázisa magyarul. A `CLAUDE.md` csak a legfontosabbakat tartalmazz
 | [workflow.md](workflow.md)                     | Parancsok, hookok, OpenSpec, env                       | Környezet, CI, folyamat         |
 | [gaps-and-decisions.md](gaps-and-decisions.md) | Eltérések, nyitott kérdések, döntési napló             | Mielőtt a kódra támaszkodsz     |
 
+## Tervek (még nincs megvalósítva)
+
+- [plans/report-google-doc-template.md](plans/report-google-doc-template.md) – a záró riport Google Doc sablonból (másolás + helyőrzők), a mostani HTML-konverzió helyett.
+
 ## Karbantartás
 
 - Kódváltozás után frissítsd az érintett fájlt; ne duplikálj kódot, csak a „miért” és a „hol” kerüljön ide.

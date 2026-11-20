@@ -52,7 +52,7 @@ function applyServerErrors(
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
 	return (
-		<Card className="p-6">
+		<Card className="p-4 md:p-6">
 			<section aria-label={title} className="flex flex-col gap-4">
 				<h2 className="text-base font-bold">{title}</h2>
 				{children}
@@ -239,7 +239,7 @@ export function ApplicantEditForm({
 			>
 				<div className="flex min-w-0 flex-col gap-5">
 					<Section title="Személyes adatok">
-						<div className="grid gap-4 sm:grid-cols-2">
+						<div className="grid gap-4 md:grid-cols-2">
 							{text("lastName", {
 								required: true,
 								autoComplete: "family-name",
@@ -267,7 +267,7 @@ export function ApplicantEditForm({
 						</div>
 					</Section>
 					<Section title="Szülő / gondviselő">
-						<div className="grid gap-4 sm:grid-cols-2">
+						<div className="grid gap-4 md:grid-cols-2">
 							{text("parentLastName")}
 							{text("parentFirstName")}
 							{text("parentMothersName")}
@@ -336,7 +336,7 @@ export function ApplicantEditForm({
 					<div
 						role="region"
 						aria-label="Mentés"
-						className="fixed right-8 bottom-6 left-[calc(248px+2rem)] z-40 flex items-center gap-3 rounded-full bg-ink py-2 pr-2 pl-5 text-white shadow-overlay"
+						className="fixed right-0 bottom-[var(--shell-bottom)] left-0 z-40 flex items-center gap-3 rounded-none bg-ink py-2 pr-2 pl-5 text-white shadow-overlay md:right-6 md:bottom-6 md:left-[calc(var(--shell-left)+1.5rem)] md:rounded-full xl:right-8 xl:left-[calc(var(--shell-left)+2rem)]"
 					>
 						<span
 							aria-hidden="true"

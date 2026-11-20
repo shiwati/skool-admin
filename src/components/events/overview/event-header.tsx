@@ -18,7 +18,7 @@ type HeaderEvent = Pick<
 	| "to"
 	| "companyName"
 	| "location"
-	| "sheetUrl"
+	| "applicationSheetUrl"
 	| "capacity"
 	| "tags"
 	| "instructor"
@@ -62,6 +62,7 @@ export function EventHeader({
 	return (
 		<>
 			<Breadcrumb
+				mobileBack
 				items={[
 					{ label: "Programok", href: "/events" },
 					{ label: event.name },

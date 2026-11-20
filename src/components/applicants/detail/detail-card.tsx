@@ -46,9 +46,13 @@ export type KeyValue = { key: string; value: ReactNode };
 /** Kulcs–érték lista; hiányzó (null/üres) értéknél „—”. */
 export function KeyValueList({ items }: { items: KeyValue[] }) {
 	return (
-		<dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+		// Mobile: one column with dividers (board 04.1 M); two columns from md.
+		<dl className="grid grid-cols-1 divide-y divide-border-default text-sm md:grid-cols-2 md:gap-x-6 md:gap-y-3 md:divide-y-0">
 			{items.map(({ key, value }) => (
-				<div key={key} className="flex min-w-0 flex-col gap-0.5">
+				<div
+					key={key}
+					className="flex min-w-0 flex-col gap-0.5 py-2.5 first:pt-0 last:pb-0 md:py-0"
+				>
 					<dt className="text-text-tertiary">{key}</dt>
 					<dd className="min-w-0 font-medium break-words">
 						{value === null ||

@@ -49,10 +49,10 @@ function isWebUrl(value: string): boolean {
 
 export function SheetSourceCard({
 	eventId,
-	sheetUrl,
+	applicationSheetUrl,
 }: {
 	eventId: string;
-	sheetUrl: string | null;
+	applicationSheetUrl: string | null;
 }) {
 	const router = useRouter();
 	const [pending, setPending] = useState(false);
@@ -77,12 +77,12 @@ export function SheetSourceCard({
 
 	return (
 		<DetailCard title="Jelentkezők forrása">
-			{sheetUrl ? (
+			{applicationSheetUrl ? (
 				<>
 					<p className="flex min-w-0 items-center gap-1.5 text-sm">
-						{isWebUrl(sheetUrl) ? (
+						{isWebUrl(applicationSheetUrl) ? (
 							<a
-								href={sheetUrl}
+								href={applicationSheetUrl}
 								target="_blank"
 								rel="noopener noreferrer"
 								className="flex min-w-0 items-center gap-1.5 text-info-fg underline underline-offset-2 hover:text-ink"
@@ -97,7 +97,9 @@ export function SheetSourceCard({
 								<span className="sr-only">(új lapon)</span>
 							</a>
 						) : (
-							<span className="truncate">{sheetUrl}</span>
+							<span className="truncate">
+								{applicationSheetUrl}
+							</span>
 						)}
 					</p>
 					<Button

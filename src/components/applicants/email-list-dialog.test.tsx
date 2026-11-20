@@ -52,7 +52,7 @@ describe("EmailListDialog", () => {
 		);
 
 		const box = await screen.findByRole("textbox", {
-			name: "101 e-mail cím",
+			name: "101 db e-mail cím",
 		});
 		const text = (box as HTMLTextAreaElement).value;
 		expect(text.startsWith("user0@x.hu, user1@x.hu")).toBe(true);
@@ -67,7 +67,7 @@ describe("EmailListDialog", () => {
 		await userEvent.click(screen.getByRole("button", { name: "Másolás" }));
 		expect(writeText).toHaveBeenCalledWith(text);
 		expect(toast.success).toHaveBeenCalledWith(
-			"101 e-mail cím a vágólapra másolva",
+			"101 db e-mail cím a vágólapra másolva",
 		);
 	});
 
@@ -132,7 +132,7 @@ describe("EmailListDialog", () => {
 			await screen.findByRole("button", { name: "Újrapróbálás" }),
 		);
 		expect(
-			await screen.findByRole("textbox", { name: "1 e-mail cím" }),
+			await screen.findByRole("textbox", { name: "1 db e-mail cím" }),
 		).toHaveValue("a@x.hu");
 	});
 });

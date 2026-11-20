@@ -23,7 +23,7 @@ describe("SheetSourceCard", () => {
 	});
 
 	it("points to the edit page when no sheet is set", () => {
-		render(<SheetSourceCard eventId="e1" sheetUrl={null} />);
+		render(<SheetSourceCard eventId="e1" applicationSheetUrl={null} />);
 		expect(
 			screen.getByRole("link", { name: "Megadás a szerkesztésnél" }),
 		).toHaveAttribute("href", "/events/e1/edit");
@@ -33,7 +33,7 @@ describe("SheetSourceCard", () => {
 	});
 
 	it("links the sheet in a new tab", () => {
-		render(<SheetSourceCard eventId="e1" sheetUrl={SHEET} />);
+		render(<SheetSourceCard eventId="e1" applicationSheetUrl={SHEET} />);
 		const link = screen.getByRole("link", {
 			name: /Google Sheet megnyitása/,
 		});
@@ -43,7 +43,12 @@ describe("SheetSourceCard", () => {
 	});
 
 	it("does not turn a non-web URL into a link", () => {
-		render(<SheetSourceCard eventId="e1" sheetUrl="javascript:alert(1)" />);
+		render(
+			<SheetSourceCard
+				eventId="e1"
+				applicationSheetUrl="javascript:alert(1)"
+			/>,
+		);
 		expect(screen.queryByRole("link")).not.toBeInTheDocument();
 		expect(screen.getByText("javascript:alert(1)")).toBeInTheDocument();
 	});
@@ -57,7 +62,7 @@ describe("SheetSourceCard", () => {
 				errors: [],
 			}),
 		);
-		render(<SheetSourceCard eventId="e1" sheetUrl={SHEET} />);
+		render(<SheetSourceCard eventId="e1" applicationSheetUrl={SHEET} />);
 		await userEvent.click(
 			screen.getByRole("button", { name: "Szinkronizálás most" }),
 		);
@@ -81,7 +86,7 @@ describe("SheetSourceCard", () => {
 				403,
 			),
 		);
-		render(<SheetSourceCard eventId="e1" sheetUrl={SHEET} />);
+		render(<SheetSourceCard eventId="e1" applicationSheetUrl={SHEET} />);
 		await userEvent.click(
 			screen.getByRole("button", { name: "Szinkronizálás most" }),
 		);
@@ -96,7 +101,7 @@ describe("SheetSourceCard", () => {
 		fetchMock.mockResolvedValue(
 			jsonResponse({ error: "Internal Server Error" }, 500),
 		);
-		render(<SheetSourceCard eventId="e1" sheetUrl={SHEET} />);
+		render(<SheetSourceCard eventId="e1" applicationSheetUrl={SHEET} />);
 		await userEvent.click(
 			screen.getByRole("button", { name: "Szinkronizálás most" }),
 		);

@@ -47,7 +47,7 @@ describe("POST /api/events/[id]/sync", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 		getSession.mockResolvedValue({ user: { id: "u1" } });
-		findEvent.mockResolvedValue({ id: "e1", sheetUrl: SHEET });
+		findEvent.mockResolvedValue({ id: "e1", applicationSheetUrl: SHEET });
 		getToken.mockResolvedValue("token");
 		fetchSheet.mockResolvedValue({ timeZone: "Europe/Budapest", rows: [] });
 		importRows.mockResolvedValue({
@@ -71,7 +71,7 @@ describe("POST /api/events/[id]/sync", () => {
 	});
 
 	it("requires a valid sheet URL", async () => {
-		findEvent.mockResolvedValue({ id: "e1", sheetUrl: null });
+		findEvent.mockResolvedValue({ id: "e1", applicationSheetUrl: null });
 		const res = await call();
 		expect(res.status).toBe(422);
 		expect((await res.json()).code).toBe("SHEET_URL_INVALID");

@@ -312,7 +312,7 @@ export function DuplicateReviewDialog({
 								maradjon meg.
 							</p>
 						)}
-						<div className="overflow-x-auto rounded-xl border border-border-default">
+						<div className="relative overflow-x-auto rounded-xl border border-border-default">
 							<table className="w-full border-collapse text-xs">
 								<thead>
 									<tr className="border-b border-border-default">

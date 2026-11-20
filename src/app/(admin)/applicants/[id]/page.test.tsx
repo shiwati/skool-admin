@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { detailApplicant } from "@/components/applicants/detail/test-fixtures";
 
@@ -50,13 +50,41 @@ describe("applicant detail page", () => {
 			screen.getByRole("heading", { level: 1, name: "Nagy Luca" }),
 		).toBeInTheDocument();
 		const crumb = screen.getByRole("navigation", { name: "Morzsamenü" });
-		expect(crumb).toHaveTextContent("Jelentkezők›Nagy Luca");
-		expect(
-			screen.getByRole("link", { name: "Jelentkezők" }),
-		).toHaveAttribute("href", "/applicants");
+		const trail = within(crumb).getByRole("list");
+		expect(trail).toHaveClass("hidden", "md:flex");
+		expect(trail).toHaveTextContent("JelentkezőkNagy Luca");
+		// Mobile back link "‹ Jelentkezők" (md:hidden) plus the trail link.
+		const links = within(crumb).getAllByRole("link", {
+			name: "Jelentkezők",
+		});
+		expect(links).toHaveLength(2);
+		for (const link of links) {
+			expect(link).toHaveAttribute("href", "/applicants");
+		}
+		expect(links[0]).toHaveClass("md:hidden");
 		expect(
 			screen.getByRole("heading", { name: "Programok" }),
 		).toBeInTheDocument();
+	});
+
+	it("stacks the cards in one column below xl, with tags and history last", async () => {
+		getApplicantDetail.mockResolvedValue(detailApplicant());
+		render(await ApplicantDetailPage(props("a1")));
+		const order = screen
+			.getAllByRole("heading", { level: 2 })
+			.map((h) => h.textContent);
+		expect(order).toEqual([
+			"Személyes adatok",
+			"Szülő / gondviselő",
+			"Programok",
+			"Jelentkezési űrlap válaszai",
+			"Címkék",
+			"Legutóbbi változások",
+		]);
+		expect(screen.getByTestId("detail-actions")).toHaveClass(
+			"w-full",
+			"xl:w-auto",
+		);
 	});
 
 	it("uses the applicant's name as the page title", async () => {

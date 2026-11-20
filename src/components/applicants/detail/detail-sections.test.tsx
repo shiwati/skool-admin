@@ -187,6 +187,7 @@ describe("HistoryCard", () => {
 	it("shows a status change of an application (spec scenario)", () => {
 		render(
 			<HistoryCard
+				applicantId="a1"
 				entries={[
 					{
 						id: "h1",
@@ -211,6 +212,7 @@ describe("HistoryCard", () => {
 	it("attributes changes without a user to Rendszer and skips empty values", () => {
 		render(
 			<HistoryCard
+				applicantId="a1"
 				entries={[
 					{
 						id: "h2",
@@ -229,10 +231,53 @@ describe("HistoryCard", () => {
 		expect(item).not.toHaveTextContent("→");
 	});
 
+	it("links to the full history page", () => {
+		render(<HistoryCard applicantId="a 1" entries={[]} />);
+		expect(
+			screen.getByRole("heading", { name: "Legutóbbi változások" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("link", { name: "Teljes napló" }),
+		).toHaveAttribute("href", "/history/a%201");
+	});
+
 	it("says when there are no changes", () => {
-		render(<HistoryCard entries={[]} />);
+		render(<HistoryCard applicantId="a1" entries={[]} />);
 		expect(
 			screen.getByText("Még nincs rögzített változás"),
 		).toBeInTheDocument();
+	});
+});
+
+describe("ProgramsTable on mobile (04.1 M)", () => {
+	it("shows a list with one row per application and keeps the table for md+", () => {
+		render(
+			<ProgramsTable
+				applications={[
+					detailApplication(),
+					detailApplication({ id: "b", status: "ATTENDED" }),
+					detailApplication({ id: "c", status: "WAITLISTED" }),
+				]}
+			/>,
+		);
+		const list = screen.getByRole("list", { name: "Programok" });
+		expect(list).toHaveClass("md:hidden");
+		const rows = within(list).getAllByRole("listitem");
+		expect(rows).toHaveLength(3);
+		expect(rows[0]).toHaveTextContent("Python alapok – ősz");
+		expect(rows[0]).toHaveTextContent("2026.11.21 – 2026.12.12");
+		expect(rows[0]).toHaveTextContent("Elfogadva");
+		expect(screen.getByTestId("programs-table-frame")).toHaveClass(
+			"hidden",
+			"md:block",
+		);
+	});
+});
+
+describe("KeyValueList on mobile", () => {
+	it("uses one column with dividers, two columns from md", () => {
+		render(<ParentDataCard applicant={detailApplicant()} />);
+		const dl = screen.getAllByRole("term")[0].closest("dl");
+		expect(dl).toHaveClass("grid-cols-1", "divide-y", "md:grid-cols-2");
 	});
 });

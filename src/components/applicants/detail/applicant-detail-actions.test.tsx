@@ -23,10 +23,7 @@ describe("ApplicantDetailActions", () => {
 	async function openDelete() {
 		render(<ApplicantDetailActions id="a1" name="Nagy Luca" />);
 		await userEvent.click(
-			screen.getByRole("button", { name: "További műveletek" }),
-		);
-		await userEvent.click(
-			screen.getByRole("menuitem", { name: "Jelentkező törlése" }),
+			screen.getByRole("button", { name: "Profil törlése" }),
 		);
 		await userEvent.click(
 			screen.getByRole("checkbox", {
@@ -35,25 +32,30 @@ describe("ApplicantDetailActions", () => {
 		);
 	}
 
-	it("keeps confirmation disabled and links edit to the editor", () => {
+	it("links edit to the editor and has no confirmation button", () => {
 		render(<ApplicantDetailActions id="a1" name="Nagy Luca" />);
-		const confirm = screen.getByRole("button", {
-			name: /Visszaigazolás küldése/,
-		});
-		expect(confirm).toBeDisabled();
-		expect(confirm).toHaveAccessibleDescription("Hamarosan elérhető.");
+		expect(
+			screen.queryByRole("button", { name: /Visszaigazolás küldése/ }),
+		).not.toBeInTheDocument();
 		expect(
 			screen.getByRole("link", { name: /Szerkesztés/ }),
 		).toHaveAttribute("href", "/applicants/a1/edit");
 	});
 
+	it("shows the delete label in a tooltip on hover", async () => {
+		render(<ApplicantDetailActions id="a1" name="Nagy Luca" />);
+		await userEvent.hover(
+			screen.getByRole("button", { name: "Profil törlése" }),
+		);
+		expect(await screen.findByRole("tooltip")).toHaveTextContent(
+			"Profil törlése",
+		);
+	});
+
 	it("opens the deletion confirmation naming the applicant", async () => {
 		render(<ApplicantDetailActions id="a1" name="Nagy Luca" />);
 		await userEvent.click(
-			screen.getByRole("button", { name: "További műveletek" }),
-		);
-		await userEvent.click(
-			screen.getByRole("menuitem", { name: "Jelentkező törlése" }),
+			screen.getByRole("button", { name: "Profil törlése" }),
 		);
 		expect(screen.getByRole("alertdialog")).toHaveTextContent(
 			"Törlöd Nagy Luca adatait?",

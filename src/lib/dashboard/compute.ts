@@ -295,3 +295,116 @@ export function formatSignedPercent(value: number): string {
 	const sign = rounded > 0 ? "+" : rounded < 0 ? "−" : "±";
 	return `${sign}${Math.abs(rounded)}%`;
 }
+
+export type FeedbackRoleKey = "PARTICIPANT" | "MENTOR";
+
+/** Egy visszajelzés a dashboard szemszögéből. */
+export type FeedbackStat = {
+	eventId: string;
+	eventName: string;
+	eventFrom: Date;
+	role: FeedbackRoleKey;
+	overallScore: number | null;
+	recommend: string | null;
+};
+
+/** Átlag (1–5) és az átlagba számító kitöltések száma; üresen `average: null`. */
+export type ScoreSummary = { average: number | null; count: number };
+
+export type RecommendSummary = {
+	yes: number;
+	maybe: number;
+	no: number;
+	total: number;
+};
+
+export type RoleSatisfaction = {
+	score: ScoreSummary;
+	recommend: RecommendSummary;
+	/** Összes kitöltés (pontszámtól függetlenül). */
+	responses: number;
+};
+
+export type Satisfaction = Record<FeedbackRoleKey, RoleSatisfaction>;
+
+export type ProgramSatisfaction = {
+	id: string;
+	name: string;
+	participant: ScoreSummary;
+	mentor: ScoreSummary;
+};
+
+function scoreSummary(rows: FeedbackStat[]): ScoreSummary {
+	let sum = 0;
+	let count = 0;
+	for (const row of rows) {
+		if (row.overallScore === null) continue;
+		sum += row.overallScore;
+		count += 1;
+	}
+	return { average: count ? sum / count : null, count };
+}
+
+function recommendSummary(rows: FeedbackStat[]): RecommendSummary {
+	const out = { yes: 0, maybe: 0, no: 0, total: 0 };
+	for (const row of rows) {
+		if (
+			row.recommend === "yes" ||
+			row.recommend === "maybe" ||
+			row.recommend === "no"
+		) {
+			out[row.recommend] += 1;
+			out.total += 1;
+		}
+	}
+	return out;
+}
+
+/** Szerepkörönkénti elégedettség (résztvevő / mentor külön). */
+export function satisfactionByRole(rows: FeedbackStat[]): Satisfaction {
+	const of = (role: FeedbackRoleKey): RoleSatisfaction => {
+		const own = rows.filter((r) => r.role === role);
+		return {
+			score: scoreSummary(own),
+			recommend: recommendSummary(own),
+			responses: own.length,
+		};
+	};
+	return { PARTICIPANT: of("PARTICIPANT"), MENTOR: of("MENTOR") };
+}
+
+/**
+ * Programonkénti átlag szerepkörönként. A sorrend: résztvevői átlag szerint
+ * csökkenő, pontszám nélküliek a végén, egyezésnél név szerint.
+ */
+export function programSatisfaction(
+	rows: FeedbackStat[],
+): ProgramSatisfaction[] {
+	const byEvent = new Map<string, FeedbackStat[]>();
+	for (const row of rows) {
+		const list = byEvent.get(row.eventId);
+		if (list) list.push(row);
+		else byEvent.set(row.eventId, [row]);
+	}
+	const result = [...byEvent.values()].map((list) => ({
+		id: list[0].eventId,
+		name: list[0].eventName,
+		participant: scoreSummary(list.filter((r) => r.role === "PARTICIPANT")),
+		mentor: scoreSummary(list.filter((r) => r.role === "MENTOR")),
+	}));
+	const key = (p: ProgramSatisfaction) =>
+		p.participant.average ?? p.mentor.average ?? -1;
+	return result.sort(
+		(a, b) => key(b) - key(a) || a.name.localeCompare(b.name, "hu"),
+	);
+}
+
+/** 4.63 → "4,6" */
+export function formatScore(score: number): string {
+	return ratioFormat.format(score);
+}
+
+/** Egész százalék a teljeshez képest (0, ha nincs teljes). */
+export function share(part: number, total: number): number {
+	return total ? Math.round((part / total) * 100) : 0;
+}

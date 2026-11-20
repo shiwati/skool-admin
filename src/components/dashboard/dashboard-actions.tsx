@@ -33,7 +33,7 @@ function FilterMenu({
 			<DropdownMenuTrigger asChild>
 				<Button
 					variant="surface"
-					className="h-10 max-w-64 rounded-[10px]"
+					className="h-10 max-w-64 shrink-0 rounded-[10px]"
 					aria-label={`${label}: ${current}`}
 				>
 					<span className="truncate">{current}</span>
@@ -42,15 +42,19 @@ function FilterMenu({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
 				align="end"
-				className="max-h-80 overflow-y-auto"
+				// Hosszú programnév se lógjon ki: korlátos szélesség, sortörés.
+				className="max-h-80 w-max max-w-[min(24rem,calc(100vw-2rem))] overflow-y-auto"
 			>
 				<DropdownMenuRadioGroup value={value} onValueChange={onChange}>
 					{options.map((option) => (
 						<DropdownMenuRadioItem
 							key={option.value}
 							value={option.value}
+							className="items-start [&>span:first-child]:top-2.5"
 						>
-							{option.label}
+							<span className="min-w-0 break-words">
+								{option.label}
+							</span>
 						</DropdownMenuRadioItem>
 					))}
 				</DropdownMenuRadioGroup>

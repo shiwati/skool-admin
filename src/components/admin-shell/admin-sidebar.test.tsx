@@ -9,7 +9,7 @@ import { AdminSidebar } from "./admin-sidebar";
 describe("AdminSidebar", () => {
 	beforeEach(() => usePathname.mockReturnValue("/applicants"));
 
-	it("lists the menu items in order under the two groups", () => {
+	it("lists the menu items in order under the group", () => {
 		render(<AdminSidebar />);
 		const nav = screen.getByRole("navigation", { name: "Főmenü" });
 		const labels = within(nav)
@@ -21,11 +21,7 @@ describe("AdminSidebar", () => {
 			"Programok",
 			"Visszajelzések",
 			"Riportok",
-			"Adatforrások",
-			"Adatmigráció",
-			"Változásnapló",
 		]);
-		expect(within(nav).getByText("Adatok")).toBeInTheDocument();
 		expect(within(nav).getByText("admin")).toBeInTheDocument();
 	});
 
@@ -64,11 +60,11 @@ describe("AdminSidebar", () => {
 		).not.toHaveAttribute("aria-current");
 	});
 
-	it("renders future screens as disabled, non-navigating items", () => {
+	it("links the reports screen", () => {
 		render(<AdminSidebar />);
-		const programs = screen.getByRole("link", { name: "Riportok" });
-		expect(programs).toHaveAttribute("aria-disabled", "true");
-		expect(programs).not.toHaveAttribute("href");
-		expect(programs.tagName).toBe("SPAN");
+		expect(screen.getByRole("link", { name: "Riportok" })).toHaveAttribute(
+			"href",
+			"/reports",
+		);
 	});
 });

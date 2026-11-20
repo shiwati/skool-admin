@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { EventHeader } from "./event-header";
 import { overviewEvent } from "./test-fixtures";
@@ -16,13 +16,17 @@ describe("EventHeader", () => {
 				now={NOW}
 			/>,
 		);
-		expect(
-			screen.getByRole("navigation", { name: "Morzsamenü" }),
-		).toHaveTextContent("ProgramokPython alapok – ősz");
-		expect(screen.getByRole("link", { name: "Programok" })).toHaveAttribute(
-			"href",
-			"/events",
+		const crumb = screen.getByRole("navigation", { name: "Morzsamenü" });
+		expect(within(crumb).getByRole("list")).toHaveTextContent(
+			"ProgramokPython alapok – ősz",
 		);
+		// Trail link (md+) and the mobile "‹ Programok" back link.
+		const links = within(crumb).getAllByRole("link", { name: "Programok" });
+		expect(links).toHaveLength(2);
+		for (const link of links) {
+			expect(link).toHaveAttribute("href", "/events");
+		}
+		expect(links[0]).toHaveClass("md:hidden");
 		expect(
 			screen.getByRole("heading", {
 				level: 1,

@@ -1,28 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatCount } from "@/lib/applicants/format";
 import { PAGE_SIZES, type PageSize } from "@/lib/applicants/list-params";
+import { pageNumbers } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
-
-/** Megjelenítendő oldalszámok, a kihagyásokat `null` jelöli: 1 … 4 5 6 … 50. */
-export function pageNumbers(
-	page: number,
-	pageCount: number,
-): (number | null)[] {
-	if (pageCount <= 7)
-		return Array.from({ length: pageCount }, (_, i) => i + 1);
-	const pages = new Set([1, pageCount, page - 1, page, page + 1]);
-	const sorted = [...pages]
-		.filter((p) => p >= 1 && p <= pageCount)
-		.sort((a, b) => a - b);
-	const result: (number | null)[] = [];
-	for (const [i, p] of sorted.entries()) {
-		if (i > 0 && p - sorted[i - 1] > 1) result.push(null);
-		result.push(p);
-	}
-	return result;
-}
 
 const pageButton =
 	"flex h-8 min-w-8 items-center justify-center rounded-full px-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40";
@@ -55,19 +37,25 @@ export function Pager({
 			</span>
 			<label className="flex items-center gap-2 text-xs text-text-secondary">
 				Sorok / oldal
-				<select
-					value={pageSize}
-					onChange={(e) =>
-						onPageSize(Number(e.target.value) as PageSize)
-					}
-					className="h-8 rounded-full border border-border-strong bg-white px-3 text-xs text-text-primary"
-				>
-					{PAGE_SIZES.map((size) => (
-						<option key={size} value={size}>
-							{size}
-						</option>
-					))}
-				</select>
+				<span className="relative">
+					<select
+						value={pageSize}
+						onChange={(e) =>
+							onPageSize(Number(e.target.value) as PageSize)
+						}
+						className="h-8 appearance-none rounded-full border border-border-strong bg-white pr-8 pl-3 text-xs text-text-primary"
+					>
+						{PAGE_SIZES.map((size) => (
+							<option key={size} value={size}>
+								{size}
+							</option>
+						))}
+					</select>
+					<ChevronDown
+						aria-hidden="true"
+						className="pointer-events-none absolute top-1/2 right-3 size-3.5 -translate-y-1/2 text-text-secondary"
+					/>
+				</span>
 			</label>
 			<nav aria-label="Lapozás" className="flex items-center gap-1">
 				<button

@@ -7,7 +7,7 @@ import {
 	visibleColumns,
 } from "@/lib/applicants/column-settings";
 import { ApplicantsTable } from "./applicants-table";
-import { pageNumbers } from "./pager";
+import { pageNumbers } from "@/lib/pagination";
 import { applicant, boroka } from "./test-fixtures";
 
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -24,7 +24,6 @@ function renderTable(
 		onPageSize: vi.fn(),
 		onToggleRow: vi.fn(),
 		onToggleAll: vi.fn(),
-		onDeleteRow: vi.fn(),
 		onClearFilters: vi.fn(),
 		onReload: vi.fn(),
 	};
@@ -62,7 +61,6 @@ describe("ApplicantsTable", () => {
 			"Hírlevél",
 			"Előzmény",
 			"Jelentkezett",
-			"Műveletek",
 		]);
 	});
 
@@ -130,11 +128,12 @@ describe("ApplicantsTable", () => {
 			data: { status: "success", items: [], total: 0 },
 			filtersActive: true,
 		});
+		const table = within(screen.getByRole("table"));
 		expect(
-			screen.getByText("Nincs a szűrésnek megfelelő jelentkező"),
+			table.getByText("Nincs a szűrésnek megfelelő jelentkező"),
 		).toBeInTheDocument();
 		await userEvent.click(
-			screen.getByRole("button", { name: "Szűrők törlése" }),
+			table.getByRole("button", { name: "Szűrők törlése" }),
 		);
 		expect(onClearFilters).toHaveBeenCalledOnce();
 	});
@@ -150,23 +149,19 @@ describe("ApplicantsTable", () => {
 
 	it("shows the error state without details and retries", async () => {
 		const { onReload } = renderTable({ data: { status: "error" } });
-		expect(screen.getByRole("alert")).toHaveTextContent(
+		const table = within(screen.getByRole("table"));
+		expect(table.getByRole("alert")).toHaveTextContent(
 			"Nem sikerült betölteni a listát",
 		);
 		await userEvent.click(
-			screen.getByRole("button", { name: "Újratöltés" }),
+			table.getByRole("button", { name: "Újratöltés" }),
 		);
 		expect(onReload).toHaveBeenCalledOnce();
 	});
 
 	it("renders hidden columns only when enabled", () => {
 		renderTable({ columns: ["name", "phone"] });
-		expect(headers()).toEqual([
-			"",
-			"Név / e-mail",
-			"Telefonszám",
-			"Műveletek",
-		]);
+		expect(headers()).toEqual(["", "Név / e-mail", "Telefonszám"]);
 		expect(
 			screen.getByRole("row", { name: /Nagy Luca/ }),
 		).toHaveTextContent("+36 30 123 4567");
@@ -200,15 +195,11 @@ describe("ApplicantsTable", () => {
 		expect(onToggleAll).toHaveBeenCalledWith(["a1", "a2"], false);
 	});
 
-	it("offers deletion from the row actions menu", async () => {
-		const { onDeleteRow } = renderTable();
-		await userEvent.click(
-			screen.getByRole("button", { name: "Műveletek: Kiss Boróka" }),
-		);
-		await userEvent.click(
-			await screen.findByRole("menuitem", { name: "Jelentkező törlése" }),
-		);
-		expect(onDeleteRow).toHaveBeenCalledWith(boroka);
+	it("has no per-row actions menu", () => {
+		renderTable();
+		expect(
+			screen.queryByRole("button", { name: /Műveletek/ }),
+		).not.toBeInTheDocument();
 	});
 });
 
@@ -275,19 +266,12 @@ describe("ApplicantsTable row navigation", () => {
 		).toHaveAttribute("href", "/applicants/a2");
 	});
 
-	it("does not navigate from the checkbox or the row menu", async () => {
-		const { onToggleRow, onDeleteRow } = renderTable();
+	it("does not navigate from the checkbox", async () => {
+		const { onToggleRow } = renderTable();
 		await userEvent.click(
 			screen.getByRole("checkbox", { name: "Nagy Luca kijelölése" }),
 		);
 		expect(onToggleRow).toHaveBeenCalledWith("a1");
-		await userEvent.click(
-			screen.getByRole("button", { name: "Műveletek: Nagy Luca" }),
-		);
-		await userEvent.click(
-			screen.getByRole("menuitem", { name: "Jelentkező törlése" }),
-		);
-		expect(onDeleteRow).toHaveBeenCalled();
 		expect(router.push).not.toHaveBeenCalled();
 	});
 
@@ -295,5 +279,19 @@ describe("ApplicantsTable row navigation", () => {
 		renderTable({ data: { status: "loading" } });
 		await userEvent.click(screen.getAllByTestId("skeleton-row")[0]);
 		expect(router.push).not.toHaveBeenCalled();
+	});
+});
+
+describe("ApplicantsTable responsive variants", () => {
+	it("renders the table for tablet/desktop and the card list for mobile", () => {
+		renderTable();
+		expect(screen.getByTestId("table-frame")).toHaveClass(
+			"hidden",
+			"md:block",
+			"overflow-x-auto",
+		);
+		expect(screen.getByRole("list", { name: "Jelentkezők" })).toHaveClass(
+			"md:hidden",
+		);
 	});
 });

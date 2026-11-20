@@ -26,21 +26,28 @@ describe("EventTabs", () => {
 		expect(link).not.toHaveAttribute("aria-current");
 	});
 
-	it("shows the screens that do not exist yet as disabled, not as links", () => {
+	it("links the report tab and marks it current on its page", () => {
+		usePathname.mockReturnValue("/events/e1/report");
 		render(<EventTabs eventId="e1" applications={0} />);
-		for (const name of [
-			"Visszajelzések",
-			"Záró riport",
-			"Változástörténet",
-		]) {
-			expect(screen.getByText(name)).toHaveAttribute(
-				"aria-disabled",
-				"true",
-			);
-			expect(
-				screen.queryByRole("link", { name }),
-			).not.toBeInTheDocument();
-		}
+		const link = screen.getByRole("link", { name: "Záró riport" });
+		expect(link).toHaveAttribute("href", "/events/e1/report");
+		expect(link).toHaveAttribute("aria-current", "page");
+	});
+
+	it("has no change history tab (the log opens from „Teljes napló”)", () => {
+		render(<EventTabs eventId="e1" applications={0} />);
+		expect(screen.queryByText("Változástörténet")).not.toBeInTheDocument();
+	});
+
+	it("links the feedback tab and marks it current on its page", () => {
+		usePathname.mockReturnValue("/events/e1/feedback");
+		render(<EventTabs eventId="e1" applications={0} />);
+		const link = screen.getByRole("link", { name: "Visszajelzések" });
+		expect(link).toHaveAttribute("href", "/events/e1/feedback");
+		expect(link).toHaveAttribute("aria-current", "page");
+		expect(
+			screen.getByRole("link", { name: "Áttekintés" }),
+		).not.toHaveAttribute("aria-current");
 	});
 
 	it("is not current on another path", () => {

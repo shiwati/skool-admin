@@ -134,5 +134,8 @@ describe("event overview page", () => {
 		expect(card.getByText("18")).toBeInTheDocument();
 		expect(card.getByText("20")).toBeInTheDocument();
 		expect(card.getByText("2026.11.19 10:12")).toBeInTheDocument();
+		expect(
+			card.getByRole("link", { name: "Teljes napló" }),
+		).toHaveAttribute("href", "/history/e1");
 	});
 });

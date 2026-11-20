@@ -4,9 +4,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EventListItem } from "./events-table";
 import { EventsView } from "./events-view";
 
-const nav = vi.hoisted(() => ({ replace: vi.fn(), search: "" }));
+const nav = vi.hoisted(() => ({
+	replace: vi.fn(),
+	push: vi.fn(),
+	search: "",
+}));
 vi.mock("next/navigation", () => ({
-	useRouter: () => ({ replace: nav.replace }),
+	useRouter: () => ({ replace: nav.replace, push: nav.push }),
 	usePathname: () => "/events",
 	useSearchParams: () => new URLSearchParams(nav.search),
 }));
@@ -21,7 +25,7 @@ function event(overrides: Partial<EventListItem> = {}): EventListItem {
 		to: "2026-12-12T15:00:00.000Z",
 		companyName: "Sigma Technology",
 		location: "Budapest",
-		sheetUrl: "https://docs.google.com/spreadsheets/d/x",
+		applicationSheetUrl: "https://docs.google.com/spreadsheets/d/x",
 		instructor: "Kiss Bence",
 		mentors: ["Szabó Petra", "Tóth Anna"],
 		tags: ["programozás"],
@@ -37,6 +41,7 @@ describe("EventsView", () => {
 	beforeEach(() => {
 		nav.search = "";
 		nav.replace.mockReset();
+		nav.push.mockReset();
 	});
 
 	it("renders the header, tabs and a row", () => {
@@ -49,15 +54,18 @@ describe("EventsView", () => {
 			/>,
 		);
 		expect(
-			screen.getByRole("heading", { name: "Programok és események" }),
+			screen.getByRole("heading", { name: "Programok" }),
 		).toBeInTheDocument();
-		expect(screen.getByText(/15 program/)).toBeInTheDocument();
+		expect(screen.queryByText(/Találatok száma/)).not.toBeInTheDocument();
 		expect(
-			screen.getByRole("tab", { name: /^Összes\s*15$/ }),
-		).toHaveAttribute("aria-selected", "true");
-		expect(
-			screen.getByRole("link", { name: "Új program" }),
-		).toHaveAttribute("href", "/events/new");
+			screen.getByRole("link", { name: /^Összes\s*15$/ }),
+		).toHaveAttribute("aria-current", "page");
+		// Header button (md+) and the mobile floating button.
+		const newLinks = screen.getAllByRole("link", { name: "Új program" });
+		expect(newLinks).toHaveLength(2);
+		for (const link of newLinks) {
+			expect(link).toHaveAttribute("href", "/events/new");
+		}
 
 		const row = screen.getAllByRole("row")[1];
 		expect(
@@ -70,10 +78,23 @@ describe("EventsView", () => {
 		expect(within(row).getByText("+1")).toBeInTheDocument();
 	});
 
+	it("shows the result count only while a filter is active", () => {
+		nav.search = "place=Budapest";
+		render(
+			<EventsView
+				items={[event()]}
+				total={7}
+				counts={counts}
+				now={now}
+			/>,
+		);
+		expect(screen.getByText("Találatok száma: 7 db")).toBeInTheDocument();
+	});
+
 	it("switches tab through the URL and resets the page", async () => {
 		nav.search = "page=2";
 		render(<EventsView items={[]} total={0} counts={counts} now={now} />);
-		await userEvent.click(screen.getByRole("tab", { name: /^Lezárt/ }));
+		await userEvent.click(screen.getByRole("link", { name: /^Múltbeli/ }));
 		expect(nav.replace).toHaveBeenCalledWith("/events?tab=closed", {
 			scroll: false,
 		});
@@ -98,7 +119,9 @@ describe("EventsView", () => {
 		nav.search = "q=nincs";
 		render(<EventsView items={[]} total={0} counts={counts} now={now} />);
 		expect(
-			screen.getByText("Nincs a szűrésnek megfelelő program"),
+			within(screen.getByRole("table")).getByText(
+				"Nincs a szűrésnek megfelelő program",
+			),
 		).toBeInTheDocument();
 		await userEvent.click(
 			screen.getAllByRole("button", { name: "Szűrők törlése" })[0],
@@ -165,7 +188,9 @@ describe("EventsView", () => {
 		nav.search = "tab=planned";
 		render(<EventsView items={[]} total={0} counts={counts} now={now} />);
 		expect(
-			screen.getByText("Ebben a szakaszban nincs program"),
+			within(screen.getByRole("table")).getByText(
+				"Ebben a szakaszban nincs program",
+			),
 		).toBeInTheDocument();
 		expect(
 			screen.queryByRole("button", { name: "Szűrők törlése" }),
@@ -194,7 +219,114 @@ describe("EventsView", () => {
 			/>,
 		);
 		expect(
-			screen.getByText(/1–1 \/ 1 tervezett program/),
+			screen.getByText(/1–1 \/ 1 jövőbeli program/),
 		).toBeInTheDocument();
+	});
+});
+
+describe("EventsView on mobile (05.1 M)", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		nav.search = "";
+	});
+
+	it("shows program cards with demand and a name link (spec scenario)", () => {
+		render(
+			<EventsView
+				items={[event()]}
+				total={1}
+				counts={counts}
+				now={now}
+			/>,
+		);
+		const list = screen.getByRole("list", { name: "Programok" });
+		expect(list).toHaveClass("md:hidden");
+		const card = within(list).getByRole("listitem");
+		expect(card).toHaveTextContent("62 / 20 fő");
+		expect(card).toHaveTextContent("3,1×");
+		expect(card).toHaveTextContent("Budapest");
+		expect(card).toHaveTextContent("Sigma Technology");
+		expect(
+			within(card).getByRole("link", { name: "Python alapok – ősz" }),
+		).toHaveAttribute("href", "/events/e1");
+		expect(screen.getByTestId("events-table-frame")).toHaveClass(
+			"hidden",
+			"md:block",
+		);
+	});
+
+	it("keeps the row actions on the card", async () => {
+		render(
+			<EventsView
+				items={[event()]}
+				total={1}
+				counts={counts}
+				now={now}
+			/>,
+		);
+		const card = within(
+			screen.getByRole("list", { name: "Programok" }),
+		).getByRole("listitem");
+		await userEvent.click(
+			within(card).getByRole("button", {
+				name: "Műveletek: Python alapok – ősz",
+			}),
+		);
+		expect(
+			screen.getByRole("menuitem", { name: "Jelentkezők megtekintése" }),
+		).toHaveAttribute("href", "/applicants?eventIds=e1");
+	});
+
+	it("offers a floating Új program button and scrollable tabs and chips", () => {
+		render(
+			<EventsView
+				items={[event()]}
+				total={1}
+				counts={counts}
+				now={now}
+			/>,
+		);
+		const fab = screen.getByTestId("new-event-fab");
+		expect(fab).toHaveAttribute("href", "/events/new");
+		expect(fab).toHaveClass("fixed", "md:hidden");
+		expect(
+			screen.getByRole("navigation", {
+				name: "Programok szakasz szerint",
+			}),
+		).toHaveClass("overflow-x-auto");
+		expect(screen.getByTestId("event-filter-chips")).toHaveClass(
+			"overflow-x-auto",
+			"md:contents",
+		);
+	});
+	it("opens the program from anywhere on the row or the card", async () => {
+		render(
+			<EventsView
+				items={[event()]}
+				total={1}
+				counts={counts}
+				now={now}
+			/>,
+		);
+		const row = screen.getAllByRole("row")[1];
+		expect(row).toHaveClass("cursor-pointer");
+		await userEvent.click(within(row).getByText("62 / 20 fő"));
+		expect(nav.push).toHaveBeenCalledWith("/events/e1");
+
+		// The actions menu keeps its own behaviour.
+		nav.push.mockReset();
+		await userEvent.click(
+			within(row).getByRole("button", {
+				name: "Műveletek: Python alapok – ősz",
+			}),
+		);
+		expect(nav.push).not.toHaveBeenCalled();
+		await userEvent.keyboard("{Escape}");
+
+		const card = within(
+			screen.getByRole("list", { name: "Programok" }),
+		).getByText("Budapest");
+		await userEvent.click(card);
+		expect(nav.push).toHaveBeenCalledWith("/events/e1");
 	});
 });

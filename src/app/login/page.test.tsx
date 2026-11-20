@@ -125,3 +125,28 @@ describe("LoginPage", () => {
 		expect(redirect).toHaveBeenCalledWith("/");
 	});
 });
+
+describe("LoginPage responsive layout", () => {
+	beforeEach(() => getAdminSession.mockResolvedValue(null));
+
+	it("stacks below desktop and hides the module chips on mobile", async () => {
+		const { container } = render(
+			await LoginPage({ searchParams: Promise.resolve({}) }),
+		);
+		expect(container.firstElementChild).toHaveClass(
+			"flex-col",
+			"xl:flex-row",
+		);
+		expect(screen.getByRole("list", { name: "Modulok" })).toHaveClass(
+			"hidden",
+			"md:flex",
+		);
+		const footers = screen.getAllByText(
+			/© 2026 Skool Technológiai Alapítvány/,
+		);
+		expect(footers.map((f) => f.className)).toEqual([
+			expect.stringContaining("xl:block"),
+			expect.stringContaining("xl:hidden"),
+		]);
+	});
+});

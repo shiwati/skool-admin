@@ -22,22 +22,27 @@ export function ApplicantDetailHeader({
 	const latest = applicant.applications[0] ?? null;
 	const tags = applicantTags(applicant, now);
 	return (
-		<div className="flex flex-wrap items-center justify-between gap-4">
-			<div className="flex min-w-[320px] flex-1 items-center gap-4">
+		// Mobile: centred (board 04.1 M). Below xl the actions take their own
+		// full-width row (board 04.1 T).
+		<div
+			data-testid="detail-header"
+			className="flex flex-wrap items-center justify-between gap-4"
+		>
+			<div className="flex min-w-0 flex-1 basis-full flex-col items-center gap-2 text-center md:basis-auto md:flex-row md:gap-4 md:text-left">
 				<span
 					aria-hidden="true"
-					className="flex size-14 shrink-0 items-center justify-center rounded-full bg-lavender text-lg font-semibold"
+					className="flex size-16 shrink-0 items-center justify-center rounded-full bg-lavender text-xl font-semibold md:size-14 md:text-lg"
 				>
 					{applicantInitials(applicant)}
 				</span>
-				<div className="flex flex-col gap-1.5">
-					<div className="flex flex-wrap items-center gap-2">
+				<div className="flex min-w-0 flex-col items-center gap-1.5 md:items-start">
+					<div className="flex flex-col flex-wrap items-center gap-2 md:flex-row">
 						<h1 className="text-2xl leading-8 font-bold">
 							{fullName(applicant)}
 						</h1>
 						<ul
 							aria-label="Státusz és címkék"
-							className="flex flex-wrap gap-2"
+							className="flex flex-wrap justify-center gap-2"
 						>
 							{latest && (
 								<li>

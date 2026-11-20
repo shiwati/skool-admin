@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Azeret_Mono, Poppins } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -20,6 +20,14 @@ const azeretMono = Azeret_Mono({
 export const metadata: Metadata = {
 	title: { default: "SKOOL Menedzsment", template: "%s | SKOOL Menedzsment" },
 	description: "A Skool belső admin felülete",
+};
+
+// `viewport-fit=cover` lets the mobile bottom navigation pad itself with
+// `env(safe-area-inset-bottom)` on phones with a home indicator.
+export const viewport: Viewport = {
+	width: "device-width",
+	initialScale: 1,
+	viewportFit: "cover",
 };
 
 export default function RootLayout({
