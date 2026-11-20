@@ -44,7 +44,7 @@ export function CapacityChart({ rows }: { rows: CapacityRow[] }) {
 	const pct = (value: number) => `${(value / max) * 100}%`;
 
 	return (
-		<Card className="flex min-w-0 flex-col gap-4 p-5">
+		<Card className="flex h-full min-w-0 flex-col gap-4 p-5">
 			<SectionHeader
 				title="Kapacitás vs. jelentkezők programonként"
 				subtitle="A kiválasztott időszakban induló programok · a fekete jel a maximális létszám"
@@ -63,7 +63,7 @@ export function CapacityChart({ rows }: { rows: CapacityRow[] }) {
 					{EMPTY_TEXT[filter]}
 				</p>
 			) : (
-				<ul className="flex flex-col gap-3">
+				<ul className="flex min-h-52 flex-1 flex-col gap-3">
 					{visible.map((row, index) => (
 						<li
 							key={row.id}
@@ -111,7 +111,7 @@ export function CapacityChart({ rows }: { rows: CapacityRow[] }) {
 				</ul>
 			)}
 
-			<div className="flex flex-wrap gap-4 text-xs text-text-secondary">
+			<div className="mt-auto flex flex-wrap gap-4 text-xs text-text-secondary">
 				<span className="flex items-center gap-1.5">
 					<span
 						aria-hidden="true"
