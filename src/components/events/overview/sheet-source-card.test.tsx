@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { jsonResponse } from "@/components/applicants/test-fixtures";
-import { SheetSourceCard } from "./sheet-source-card";
+import { SheetSourceCard, SYNC_HINT } from "./sheet-source-card";
 
 const { router, toast } = vi.hoisted(() => ({
 	router: { replace: vi.fn(), refresh: vi.fn(), push: vi.fn() },
@@ -30,6 +30,12 @@ describe("SheetSourceCard", () => {
 		expect(
 			screen.queryByRole("button", { name: "Szinkronizálás most" }),
 		).not.toBeInTheDocument();
+		expect(screen.queryByText(SYNC_HINT)).not.toBeInTheDocument();
+	});
+
+	it("explains what the sync does under the title", () => {
+		render(<SheetSourceCard eventId="e1" applicationSheetUrl={SHEET} />);
+		expect(screen.getByText(SYNC_HINT)).toBeInTheDocument();
 	});
 
 	it("links the sheet in a new tab", () => {
