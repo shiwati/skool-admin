@@ -8,6 +8,7 @@ import {
 } from "@/lib/google/token";
 import { logger } from "@/lib/logger";
 import { getAdminSession } from "@/lib/session";
+import { readApplicationMapping } from "@/lib/sheet-mapping/schema";
 import { importSheetRows, SheetHeaderError } from "@/lib/sheet-import/import";
 
 export const runtime = "nodejs";
@@ -30,7 +31,11 @@ export async function POST(
 	try {
 		const event = await db.event.findUnique({
 			where: { id },
-			select: { id: true, applicationSheetUrl: true },
+			select: {
+				id: true,
+				applicationSheetUrl: true,
+				applicationSheetMapping: true,
+			},
 		});
 		if (!event) return jsonResponse({ error: "Event not found" }, 404);
 
@@ -54,6 +59,9 @@ export async function POST(
 			rows: sheet.rows,
 			timeZone: sheet.timeZone,
 			userId,
+			headerMapping: readApplicationMapping(
+				event.applicationSheetMapping,
+			),
 		});
 
 		logger.info({

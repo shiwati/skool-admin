@@ -19,6 +19,10 @@ export const EVENT_HISTORY_FIELD_LABELS: Record<TrackedEventField, string> = {
 	applicationSheetUrl: "Jelentkezők sheetje",
 	participantFeedbackSheetUrl: "Résztvevői visszajelzések sheetje",
 	mentorFeedbackSheetUrl: "Mentori visszajelzések sheetje",
+	applicationSheetMapping: "Jelentkezők sheetjének mező-megfeleltetése",
+	participantFeedbackSheetMapping:
+		"Résztvevői visszajelzések mező-megfeleltetése",
+	mentorFeedbackSheetMapping: "Mentori visszajelzések mező-megfeleltetése",
 	ageRange: "Korosztály",
 	instructor: "Oktató",
 	mentors: "Mentorok",
@@ -68,5 +72,6 @@ export function eventHistoryValue(
 		return list ? list.join(", ") : value;
 	}
 	if (field === "ageRange") return formatAgeRange(value);
+	if (field.endsWith("SheetMapping")) return "Egyéni megfeleltetés";
 	return value;
 }

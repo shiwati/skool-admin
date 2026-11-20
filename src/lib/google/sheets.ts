@@ -46,6 +46,7 @@ async function call<T>(url: string, accessToken: string): Promise<T> {
 export async function fetchSheet(
 	ref: SheetRef,
 	accessToken: string,
+	options: { headerOnly?: boolean } = {},
 ): Promise<SheetData> {
 	const meta = await call<{
 		properties: { timeZone: string };
@@ -63,7 +64,7 @@ export async function fetchSheet(
 	}
 
 	const range = encodeURIComponent(
-		`'${tab.properties.title.replaceAll("'", "''")}'`,
+		`'${tab.properties.title.replaceAll("'", "''")}'${options.headerOnly ? "!1:1" : ""}`,
 	);
 	const values = await call<{ values?: SheetCell[][] }>(
 		`${API}/${ref.spreadsheetId}/values/${range}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER`,

@@ -78,7 +78,7 @@ Egyéb: `GET /api/health` (nyilvános readiness, 200/503), `/api/auth/*` (NextAu
 
 Az esemény `applicationSheetUrl`-jében megadott válasz-sheetet olvassa a **bejelentkezett admin Google-jogosultságával** (`spreadsheets.readonly` scope; a bejelentkezés a riportokhoz `drive.file`-t is kér; ha hiányzik: `403 REAUTH_REQUIRED`, újra be kell jelentkezni). A gid nélküli linknél az első munkalapot veszi.
 
-- Oszlop ↔ mező párosítás fejléc-kulcsszavak alapján: `src/lib/sheet-import/mapping.ts` (kötelező: vezetéknév, utónév, e-mail). Ismeretlen oszlopok (pl. kézi „1. oszlop”) kimaradnak, a válasz `unmappedHeaders`-ben listázza őket.
+- Oszlop ↔ mező párosítás: ha az eseménynek van mentett `applicationSheetMapping`-je (mező → **pontos** fejléc, kis-/nagybetű és szóköz-eltérés nem számít), az dönt; ha `null`, a fejléc-kulcsszavak alapján: `src/lib/sheet-import/mapping.ts` (kötelező: vezetéknév, utónév, e-mail; ha a mentett fejléc hiányzik a sheetből, `SHEET_HEADERS_MISSING`). Ismeretlen oszlopok (pl. kézi „1. oszlop”) kimaradnak, a válasz `unmappedHeaders`-ben listázza őket.
 - Minden új válasz **új** `Applicant` + `Application`. Újraszinkronnál az `Application.sourceKey` (időbélyeg + e-mail, eseményen belül egyedi) miatt semmi nem jön létre kétszer, és semmi nem íródik felül.
 - Duplikátum: azonos `Applicant.duplicateKey` (normalizált név + e-mail) → minden érintett jelentkező `duplicateFlag = true`. Az eldöntésük a duplikáció-ellenőrzés képernyőn történik (merge vagy „nem duplikáció”), lásd lent.
 - Válasz: `{ created, existing, duplicates, errors: [{ row, reason }], unmappedHeaders }`.
@@ -97,7 +97,11 @@ Body: `{ "applicantIds": ["…", "…"] }` (két különböző id). A pár rende
 
 ## `POST /api/events/[id]/feedback/sync` — visszajelző sheetek importja
 
-Az esemény `participantFeedbackSheetUrl` és `mentorFeedbackSheetUrl` sheetjeit olvassa (csak a megadottakat) a bejelentkezett admin Google-jogosultságával, ugyanúgy, mint a jelentkezői sync. Csak az új válaszokat veszi fel, ismételhető. Az oszlopokat a fejléc kulcsszavai alapján ismeri fel (`src/lib/feedback/questions.ts`).
+Az esemény `participantFeedbackSheetUrl` és `mentorFeedbackSheetUrl` sheetjeit olvassa (csak a megadottakat) a bejelentkezett admin Google-jogosultságával, ugyanúgy, mint a jelentkezői sync. Csak az új válaszokat veszi fel, ismételhető. Az oszlopokat a mentett `participantFeedbackSheetMapping` / `mentorFeedbackSheetMapping` (`{ columns: kérdéskulcs|timestamp → pontos fejléc, custom: [{ label, kind, header }] }`) szerint, ennek hiányában a fejléc kulcsszavai alapján ismeri fel (`src/lib/feedback/questions.ts`). Az egyéni kérdések válasza `answers["custom:<label>"]` alá kerül (a részletnézet „Egyéni kérdések” szakaszában látszik, statisztikába nem számít).
+
+### `POST /api/sheets/headers`
+
+Törzs: `{ url }`. A sheet első sorát (fejléceit) adja vissza `{ headers: string[] }` alakban, a bejelentkezett admin Google-hozzáférésével; az esemény-szerkesztő „Mező-megfeleltetés” lenyílója használja (`src/components/events/sheet-mapping-editor.tsx`). A mentett megfeleltetés sémái: `src/lib/sheet-mapping/schema.ts`.
 
 - `200`: `{ PARTICIPANT?: Result, MENTOR?: Result }`, ahol `Result = { created, existing, errors: { row, reason }[], unmappedHeaders }`.
 - `422 SHEET_URL_INVALID`: egyik sheet sincs megadva, vagy valamelyik link érvénytelen.

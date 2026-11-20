@@ -15,6 +15,7 @@ import { EMPTY, formatDateTime } from "@/lib/applicants/format";
 import { formatScore, respondentLabel } from "@/lib/feedback/format";
 import type { FeedbackListItem } from "@/lib/feedback/list";
 import {
+	CUSTOM_KEY_PREFIX,
 	QUESTIONS,
 	RECOMMEND_LABELS,
 	ROLE_LABELS,
@@ -98,6 +99,19 @@ function answerRows(item: FeedbackListItem, section: Question["section"]) {
 		});
 }
 
+/** Az eventenként felvett (egyéni) kérdések válaszai; a felirat a kulcsban van. */
+function customRows(item: FeedbackListItem) {
+	return Object.entries(item.answers)
+		.filter(([key]) => key.startsWith(CUSTOM_KEY_PREFIX))
+		.map(([key, value]) => (
+			<TextRow
+				key={key}
+				label={key.slice(CUSTOM_KEY_PREFIX.length)}
+				value={String(value)}
+			/>
+		));
+}
+
 /**
  * A kiválasztott visszajelzés minden válasza (terv: F02). A nyitott állapot
  * az URL `open` paramétere, így a bezárás és a lapozás is navigáció.
@@ -120,6 +134,7 @@ export function FeedbackDrawer({
 	const statements = answerRows(item, "statement");
 	const texts = answerRows(item, "text");
 	const profile = answerRows(item, "profile");
+	const custom = customRows(item);
 
 	return (
 		<Dialog
@@ -207,6 +222,9 @@ export function FeedbackDrawer({
 						)}
 						{texts.length > 0 && (
 							<Section title="Szöveges válaszok">{texts}</Section>
+						)}
+						{custom.length > 0 && (
+							<Section title="Egyéni kérdések">{custom}</Section>
 						)}
 						{statements.length > 0 && (
 							<Section title="Állítások (1 = egyáltalán nem, 5 = teljesen egyetért)">

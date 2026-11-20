@@ -339,6 +339,47 @@ export const QUESTIONS: Record<FeedbackRoleKey, Question[]> = {
 	MENTOR: MENTOR_QUESTIONS,
 };
 
+/** Az időbélyeg oszlop kulcsa a mentett megfeleltetésben. */
+export const TIMESTAMP_KEY = "timestamp";
+
+/** Eventenként felvett kérdés; a válasz `custom:<felirat>` kulcs alá kerül. */
+export type CustomQuestion = {
+	label: string;
+	kind: "scale" | "text" | "choice";
+	/** A sheet pontos fejléce. */
+	header: string;
+};
+
+export const CUSTOM_KIND_LABELS: Record<CustomQuestion["kind"], string> = {
+	scale: "1–5 skála",
+	text: "Szöveg",
+	choice: "Választós",
+};
+
+export const CUSTOM_KEY_PREFIX = "custom:";
+
+export const customQuestionKey = (label: string) =>
+	`${CUSTOM_KEY_PREFIX}${label.trim()}`;
+
+/**
+ * Eventenként mentett megfeleltetés: kérdéskulcs (vagy `timestamp`) → a sheet
+ * pontos fejléce, plusz egyéni kérdések. `null` = alapértelmezett.
+ */
+export type FeedbackSheetMapping = {
+	columns: Record<string, string>;
+	custom: CustomQuestion[];
+};
+
+export function toQuestion(custom: CustomQuestion): Question {
+	return {
+		key: customQuestionKey(custom.label),
+		label: custom.label.trim(),
+		kind: custom.kind,
+		section: "text",
+		match: () => false,
+	};
+}
+
 export const ROLE_LABELS: Record<FeedbackRoleKey, string> = {
 	PARTICIPANT: "Résztvevő",
 	MENTOR: "Mentor",

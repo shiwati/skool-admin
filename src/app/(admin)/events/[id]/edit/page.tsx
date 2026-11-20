@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EventForm } from "@/components/events/event-form";
 import { getEvent } from "@/lib/events/queries";
+import {
+	readApplicationMapping,
+	readFeedbackMapping,
+} from "@/lib/sheet-mapping/schema";
 
 export const metadata: Metadata = { title: "Program szerkesztése" };
 
@@ -30,6 +34,17 @@ export default async function EditEventPage({
 				applicationSheetUrl: event.applicationSheetUrl,
 				participantFeedbackSheetUrl: event.participantFeedbackSheetUrl,
 				mentorFeedbackSheetUrl: event.mentorFeedbackSheetUrl,
+				applicationSheetMapping: readApplicationMapping(
+					event.applicationSheetMapping,
+				),
+				participantFeedbackSheetMapping: readFeedbackMapping(
+					"PARTICIPANT",
+					event.participantFeedbackSheetMapping,
+				),
+				mentorFeedbackSheetMapping: readFeedbackMapping(
+					"MENTOR",
+					event.mentorFeedbackSheetMapping,
+				),
 				instructor: event.instructor,
 				mentors: event.mentors,
 			}}

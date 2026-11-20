@@ -3,7 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { SheetCell } from "@/lib/google/sheets";
 import { mapFeedbackHeaders, parseFeedbackRow } from "./parse";
-import type { FeedbackRoleKey } from "./questions";
+import type { FeedbackRoleKey, FeedbackSheetMapping } from "./questions";
 
 export type FeedbackImportResult = {
 	created: number;
@@ -33,10 +33,12 @@ export async function importFeedbackRows(options: {
 	role: FeedbackRoleKey;
 	rows: SheetCell[][];
 	timeZone: string;
+	/** Az event mentett megfeleltetése; `null` = alapértelmezett. */
+	headerMapping?: FeedbackSheetMapping | null;
 }): Promise<FeedbackImportResult> {
-	const { eventId, role, rows, timeZone } = options;
+	const { eventId, role, rows, timeZone, headerMapping } = options;
 	const [headers = [], ...data] = rows;
-	const mapping = mapFeedbackHeaders(role, headers);
+	const mapping = mapFeedbackHeaders(role, headers, headerMapping);
 	if (mapping.missingRequired.length) {
 		throw new FeedbackHeaderError(role, mapping.missingRequired);
 	}
