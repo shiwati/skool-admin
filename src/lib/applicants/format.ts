@@ -177,3 +177,26 @@ export function parentLabel(a: ApplicantListItem): {
 		.join(" ");
 	return { name: name || null, email: a.parentEmail };
 }
+
+/**
+ * Magyar telefonszám megjelenítése `+36 30 123 4567` alakban (mobil/vidék:
+ * +36 xx xxx xxxx, Budapest: +36 1 xxx xxxx). Ismeretlen vagy külföldi szám
+ * változatlanul marad.
+ */
+export function formatPhone(value: string): string {
+	const trimmed = value.trim();
+	const digits = trimmed.replace(/\D/g, "");
+	let national: string | null = null;
+	if (/^\+\s*36/.test(trimmed)) national = digits.slice(2);
+	else if (/^0036/.test(trimmed)) national = digits.slice(4);
+	else if (/^06/.test(trimmed)) national = digits.slice(2);
+	if (national === null || !/^\d+$/.test(national)) return value;
+	if (national.startsWith("1")) {
+		if (national.length !== 8) return value;
+		return `+36 1 ${national.slice(1, 4)} ${national.slice(4)}`;
+	}
+	if (national.length === 9 || national.length === 8) {
+		return `+36 ${national.slice(0, 2)} ${national.slice(2, 5)} ${national.slice(5)}`;
+	}
+	return value;
+}

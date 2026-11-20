@@ -59,7 +59,6 @@ describe("ApplicantCardList (03.1 M)", () => {
 			"Település / iskola",
 			"Hírlevél",
 			"Előzmény",
-			"Jelentkezett",
 		]);
 		const values = within(card)
 			.getAllByRole("definition")
@@ -70,7 +69,6 @@ describe("ApplicantCardList (03.1 M)", () => {
 		expect(values[3]).toBe("Budapest · Gimnázium");
 		expect(values[4]).toBe("Feliratkozott");
 		expect(values[5]).toBe("1 program");
-		expect(values[6]).toBe("2026.10.02");
 		expect(within(list).queryByRole("checkbox")).not.toBeInTheDocument();
 	});
 

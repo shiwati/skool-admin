@@ -6,6 +6,7 @@ import {
 	applicantInitials,
 	EMPTY,
 	formatDate,
+	formatPhone,
 	fullName,
 	historyLabel,
 	isOver16,
@@ -269,7 +270,9 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		widthClass: "w-[140px]",
 		cell: (item) =>
 			item.phoneNumber ? (
-				<span className="font-mono text-xs">{item.phoneNumber}</span>
+				<span className="font-mono text-xs">
+					{formatPhone(item.phoneNumber)}
+				</span>
 			) : (
 				dash
 			),

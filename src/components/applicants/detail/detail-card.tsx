@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { EMPTY } from "@/lib/applicants/format";
+import { EMPTY, formatPhone } from "@/lib/applicants/format";
 import { cn } from "@/lib/utils";
 
 /** Az adatlap kártyája (DS.2 card). */
@@ -112,7 +112,7 @@ export function phoneLink(value: string | null): ReactNode {
 			className="underline-offset-2 hover:underline"
 			href={`tel:${value.replace(/[^\d+]/g, "")}`}
 		>
-			{value}
+			{formatPhone(value)}
 		</a>
 	);
 }

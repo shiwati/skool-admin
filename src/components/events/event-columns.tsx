@@ -1,5 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { EMPTY, formatCount } from "@/lib/applicants/format";
 import { AVATAR_CLASSES, tagClass } from "@/lib/events/colors";
 import type { EventColumnId } from "@/lib/events/column-settings";
@@ -53,12 +59,21 @@ export const EVENT_COLUMNS: Record<EventColumnId, EventColumnDef> = {
 		sortKey: "name",
 		cell: (item) => (
 			<div className="flex min-w-0 flex-col gap-1">
-				<Link
-					href={eventHref(item.id)}
-					className="truncate font-medium hover:underline"
-				>
-					{item.name}
-				</Link>
+				<TooltipProvider delayDuration={300}>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Link
+								href={eventHref(item.id)}
+								className="truncate font-medium hover:underline"
+							>
+								{item.name}
+							</Link>
+						</TooltipTrigger>
+						<TooltipContent className="max-w-xs break-words">
+							{item.name}
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 				<EventTags tags={item.tags} />
 			</div>
 		),
