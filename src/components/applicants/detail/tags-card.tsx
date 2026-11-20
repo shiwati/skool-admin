@@ -18,9 +18,7 @@ export function TagsCard({
 				<ul aria-label="Címkék" className="flex flex-wrap gap-2">
 					{tags.over16 && (
 						<li>
-							<Pill className="bg-info-bg text-info-fg">
-								16+ · automatikus
-							</Pill>
+							<Pill className="bg-info-bg text-info-fg">16+</Pill>
 						</li>
 					)}
 					{tags.newsletter && (
