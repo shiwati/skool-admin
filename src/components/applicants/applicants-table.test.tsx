@@ -49,11 +49,11 @@ describe("ApplicantsTable", () => {
 	it("shows the default columns in order", () => {
 		renderTable();
 		expect(headers()).toEqual([
-			"Név / e-mail",
+			"NévE-mail",
 			"Életkor",
 			"Program",
 			"Státusz",
-			"Település / iskola",
+			"TelepülésIskola",
 			"Hírlevél",
 			"Előzmény",
 			"Jelentkezett",
@@ -157,7 +157,7 @@ describe("ApplicantsTable", () => {
 
 	it("renders hidden columns only when enabled", () => {
 		renderTable({ columns: ["name", "phone"] });
-		expect(headers()).toEqual(["Név / e-mail", "Telefonszám"]);
+		expect(headers()).toEqual(["NévE-mail", "Telefonszám"]);
 		expect(
 			screen.getByRole("row", { name: /Nagy Luca/ }),
 		).toHaveTextContent("+36 30 123 4567");

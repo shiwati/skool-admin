@@ -39,6 +39,12 @@ describe("parseListState", () => {
 		expect(state.q).toBeUndefined();
 	});
 
+	it("reads the program year and ignores an invalid one", () => {
+		expect(parse("programYear=2025").programYear).toBe(2025);
+		expect(parse("programYear=abc").programYear).toBeUndefined();
+		expect(parse("programYear=1800").programYear).toBeUndefined();
+	});
+
 	it("drops an inverted age range", () => {
 		const state = parse("ageFrom=15&ageTo=10");
 		expect(state.ageFrom).toBeUndefined();

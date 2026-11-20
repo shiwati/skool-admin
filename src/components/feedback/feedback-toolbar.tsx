@@ -156,7 +156,7 @@ export function FeedbackToolbar({
 						))}
 					</fieldset>
 					<p className="mt-2 px-2 text-xs text-text-tertiary">
-						A program kezdete szerint, mint az Áttekintésen.
+						A program kezdete szerint.
 					</p>
 				</FilterChip>
 			)}

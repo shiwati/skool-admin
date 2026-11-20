@@ -85,13 +85,13 @@ describe("ColumnPicker", () => {
 		const panel = await openPicker();
 		const before = tableHeaders();
 		expect(before.indexOf("Hírlevél")).toBe(
-			before.indexOf("Település / iskola") + 1,
+			before.indexOf("TelepülésIskola") + 1,
 		);
 		within(panel).getByRole("button", { name: "Hírlevél feljebb" }).focus();
 		await userEvent.keyboard("{Enter}");
 		const after = tableHeaders();
 		expect(after.indexOf("Hírlevél")).toBe(
-			after.indexOf("Település / iskola") - 1,
+			after.indexOf("TelepülésIskola") - 1,
 		);
 	});
 

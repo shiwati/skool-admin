@@ -156,7 +156,7 @@ describe("ApplicationsSection", () => {
 		);
 		await user.click(screen.getByRole("button", { name: "Elfogadva" }));
 		expect(
-			await screen.findByText("Túlléped a férőhelyet?"),
+			await screen.findByText("Túlléped a kapacitást?"),
 		).toBeInTheDocument();
 		expect(
 			fetchMock.mock.calls.some(([, init]) => init?.method === "POST"),

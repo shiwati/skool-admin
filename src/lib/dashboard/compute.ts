@@ -75,7 +75,7 @@ export type CapacityRow = {
 	name: string;
 	capacity: number;
 	applications: number;
-	/** Jelentkezések / férőhely; `null`, ha nincs megadva kapacitás. */
+	/** Jelentkezők / kapacitás; `null`, ha nincs megadva kapacitás. */
 	ratio: number | null;
 	/** Múltbeli: már véget ért; jövőbeli: még nem ért véget (a most zajló is). */
 	state: "upcoming" | "past";

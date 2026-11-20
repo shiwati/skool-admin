@@ -55,7 +55,7 @@ describe("GET /api/applicants", () => {
 	it("builds filters, sorting and pagination", async () => {
 		count.mockResolvedValue(42);
 		const res = await call(
-			"?eventIds=e1,e2&hometown=Pécs&newsletter=true&attended=false&q=kiss%20p&page=3&pageSize=10&sort=birthYear&order=desc",
+			"?eventIds=e1,e2&programYear=2025&hometown=Pécs&newsletter=true&attended=false&q=kiss%20p&page=3&pageSize=10&sort=birthYear&order=desc",
 		);
 		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual({
@@ -74,6 +74,18 @@ describe("GET /api/applicants", () => {
 		expect(args.where.AND).toEqual([
 			{ deletedAt: null },
 			{ applications: { some: { eventId: { in: ["e1", "e2"] } } } },
+			{
+				applications: {
+					some: {
+						event: {
+							from: {
+								gte: new Date("2024-12-31T23:00:00.000Z"),
+								lt: new Date("2025-12-31T23:00:00.000Z"),
+							},
+						},
+					},
+				},
+			},
 			{ hometown: { contains: "Pécs", mode: "insensitive" } },
 			{ newsletter: true },
 			{ NOT: { applications: { some: { status: "ATTENDED" } } } },

@@ -57,11 +57,24 @@ describe("ApplicantsToolbar", () => {
 
 	it("filters by program and shows the selected program on the chip", async () => {
 		const { onChange } = renderToolbar();
-		await userEvent.click(screen.getByRole("button", { name: /^Program/ }));
+		await userEvent.click(
+			screen.getByRole("button", { name: /^Program(?! éve)/ }),
+		);
 		await userEvent.click(
 			await screen.findByRole("checkbox", { name: "Robotika tábor" }),
 		);
 		expect(onChange).toHaveBeenCalledWith({ eventIds: ["e2"] });
+	});
+
+	it("filters by the year of the program start", async () => {
+		const { onChange } = renderToolbar();
+		await userEvent.click(
+			screen.getByRole("button", { name: /^Program éve/ }),
+		);
+		await userEvent.click(
+			await screen.findByRole("radio", { name: "2025" }),
+		);
+		expect(onChange).toHaveBeenCalledWith({ programYear: 2025 });
 	});
 
 	it("shows active values and removes a single filter", async () => {

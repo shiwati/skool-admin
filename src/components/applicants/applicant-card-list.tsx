@@ -72,7 +72,9 @@ function ApplicantCard({
 								className="grid grid-cols-[112px_minmax(0,1fr)] items-baseline gap-x-3"
 							>
 								<dt className="text-text-tertiary">
-									{COLUMNS[id].label}
+									{COLUMNS[id].subLabel
+										? `${COLUMNS[id].label} / ${COLUMNS[id].subLabel.toLowerCase()}`
+										: COLUMNS[id].label}
 								</dt>
 								<dd className="min-w-0 break-words">
 									{cardValue(id, item, now)}
