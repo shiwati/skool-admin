@@ -7,7 +7,7 @@ import { pageNumbers } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 
 const pageButton =
-	"flex h-8 min-w-8 items-center justify-center rounded-full px-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40";
+	"flex h-8 min-w-8 items-center justify-center rounded-full px-2 font-mono text-xs disabled:pointer-events-none disabled:opacity-40";
 
 export function Pager({
 	total,

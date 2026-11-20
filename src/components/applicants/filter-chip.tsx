@@ -44,7 +44,7 @@ export function FilterChip({
 			)}
 		>
 			<Popover open={open} onOpenChange={onOpenChange}>
-				<PopoverTrigger className="flex h-full items-center gap-1 rounded-full pr-2 pl-3 focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none">
+				<PopoverTrigger className="flex h-full items-center gap-1 rounded-full pr-2 pl-3">
 					<span className="font-medium">{label}</span>
 					{active && (
 						<span className="max-w-40 truncate">: {value}</span>
@@ -63,7 +63,7 @@ export function FilterChip({
 					type="button"
 					aria-label={`${label} szűrő törlése`}
 					onClick={onClear}
-					className="mr-1 flex size-6 items-center justify-center rounded-full hover:bg-white focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+					className="mr-1 flex size-6 items-center justify-center rounded-full hover:bg-white"
 				>
 					<X aria-hidden="true" className="size-3.5" />
 				</button>

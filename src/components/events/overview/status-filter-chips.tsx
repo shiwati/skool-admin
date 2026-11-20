@@ -18,7 +18,7 @@ const ORDER: ApplicationStatus[] = [
 ];
 
 const chip =
-	"inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none";
+	"inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm";
 
 export function StatusFilterChips({
 	counts,

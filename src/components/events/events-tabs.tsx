@@ -51,7 +51,7 @@ export function EventsTabs({
 									if (!selected) onChange(id);
 								}}
 								className={cn(
-									"flex min-h-11 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none focus-visible:ring-inset",
+									"flex min-h-11 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap",
 									selected
 										? "border-ink text-text-primary"
 										: "border-transparent text-text-secondary hover:text-text-primary",

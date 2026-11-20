@@ -55,7 +55,7 @@ export const EVENT_COLUMNS: Record<EventColumnId, EventColumnDef> = {
 			<div className="flex min-w-0 flex-col gap-1">
 				<Link
 					href={eventHref(item.id)}
-					className="truncate font-medium hover:underline focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+					className="truncate font-medium hover:underline"
 				>
 					{item.name}
 				</Link>

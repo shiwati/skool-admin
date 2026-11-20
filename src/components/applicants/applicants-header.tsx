@@ -39,7 +39,7 @@ export function ApplicantsHeader({
 				<DropdownMenu>
 					<DropdownMenuTrigger
 						aria-label="További műveletek"
-						className="flex size-11 items-center justify-center rounded-full border border-border-default bg-white focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+						className="flex size-11 items-center justify-center rounded-full border border-border-default bg-white"
 					>
 						<MoreHorizontal
 							aria-hidden="true"

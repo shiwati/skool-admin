@@ -161,7 +161,7 @@ export function ApplicationsTable({
 										{sortKey ? (
 											<button
 												type="button"
-												className="inline-flex items-center gap-1 uppercase hover:text-text-primary focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+												className="inline-flex items-center gap-1 uppercase hover:text-text-primary"
 												onClick={() =>
 													onSort(
 														sortKey,
@@ -287,7 +287,7 @@ export function ApplicationsTable({
 									<td className="px-3 py-2.5 font-medium">
 										<Link
 											href={`/applicants/${applicant.id}`}
-											className="hover:underline focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+											className="hover:underline"
 										>
 											{fullName(applicant)}
 										</Link>

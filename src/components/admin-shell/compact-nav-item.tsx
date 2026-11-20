@@ -51,11 +51,7 @@ export function CompactNavItem({
 			aria-label={name}
 			aria-current={active ? "page" : undefined}
 			onClick={onNavigate}
-			className={cn(
-				base,
-				"rounded-lg focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
-				active && "font-semibold",
-			)}
+			className={cn(base, "rounded-lg", active && "font-semibold")}
 		>
 			{content}
 		</Link>

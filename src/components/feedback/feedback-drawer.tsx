@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { RecommendBadge } from "./recommend-badge";
 
 const iconButton =
-	"flex size-8 items-center justify-center rounded-full border border-border-default hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none aria-disabled:pointer-events-none aria-disabled:opacity-40";
+	"flex size-8 items-center justify-center rounded-full border border-border-default hover:bg-surface-subtle aria-disabled:pointer-events-none aria-disabled:opacity-40";
 
 function ScaleRow({ question, value }: { question: Question; value: number }) {
 	return (

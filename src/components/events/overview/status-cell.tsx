@@ -37,7 +37,7 @@ export function StatusCell({
 				disabled={disabled}
 				aria-label={`${name} státusza: ${STATUS_LABELS[status]}. Módosítás`}
 				className={cn(
-					"inline-flex items-center gap-1 rounded-full py-0 pr-1.5 pl-2.5 text-xs leading-6 font-medium whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none disabled:opacity-60",
+					"inline-flex items-center gap-1 rounded-full py-0 pr-1.5 pl-2.5 text-xs leading-6 font-medium whitespace-nowrap disabled:opacity-60",
 					STATUS_BADGE_CLASSES[status],
 				)}
 			>

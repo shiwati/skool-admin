@@ -125,7 +125,7 @@ export function ApplicantsTable({
 										{sortKey ? (
 											<button
 												type="button"
-												className="inline-flex items-center gap-1 uppercase hover:text-text-primary focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+												className="inline-flex items-center gap-1 uppercase hover:text-text-primary"
 												onClick={() =>
 													onSort(
 														sortKey,

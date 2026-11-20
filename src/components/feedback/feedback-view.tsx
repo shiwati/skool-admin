@@ -28,7 +28,7 @@ import { FeedbackToolbar } from "./feedback-toolbar";
 import { RecommendBadge } from "./recommend-badge";
 
 const pageLink =
-	"flex h-8 min-w-8 items-center justify-center rounded-full px-2 font-mono text-xs focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none";
+	"flex h-8 min-w-8 items-center justify-center rounded-full px-2 font-mono text-xs";
 const headCell =
 	"px-3 py-2.5 font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase";
 
@@ -128,7 +128,7 @@ function Row({
 				<Link
 					href={href}
 					scroll={false}
-					className="font-medium underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+					className="font-medium underline-offset-2 hover:underline"
 				>
 					{respondentLabel(item.role, item.answers)}
 				</Link>
@@ -193,7 +193,7 @@ function FeedbackCard({
 		<Link
 			href={href}
 			scroll={false}
-			className="flex min-h-11 flex-col gap-2 px-4 py-3.5 hover:bg-surface-subtle/60 focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none focus-visible:ring-inset"
+			className="flex min-h-11 flex-col gap-2 px-4 py-3.5 hover:bg-surface-subtle/60"
 		>
 			<span className="flex items-baseline gap-2">
 				<span className="min-w-0 flex-1 truncate font-medium">

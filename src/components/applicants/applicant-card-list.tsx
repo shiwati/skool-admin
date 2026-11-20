@@ -35,7 +35,7 @@ function ApplicantCard({
 	return (
 		<Link
 			href={applicantHref(item.id)}
-			className="flex min-h-11 gap-3 px-4 py-3.5 hover:bg-canvas focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none focus-visible:ring-inset"
+			className="flex min-h-11 gap-3 px-4 py-3.5 hover:bg-canvas"
 		>
 			<span
 				aria-hidden="true"

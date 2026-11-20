@@ -51,7 +51,7 @@ export function TagInput({
 	return (
 		<div
 			className={cn(
-				"flex min-h-10 flex-wrap items-center gap-1.5 rounded-lg border border-border-strong bg-white px-2 py-1.5 transition-[color,box-shadow] focus-within:border-ink focus-within:ring-[3px] focus-within:ring-sky/70 has-[[aria-invalid=true]]:border-error-fg",
+				"flex min-h-10 flex-wrap items-center gap-1.5 rounded-lg border border-border-strong bg-white px-2 py-1.5 transition-[color,box-shadow] focus-within:border-ink has-[[aria-invalid=true]]:border-error-fg has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-coral",
 				className,
 			)}
 		>

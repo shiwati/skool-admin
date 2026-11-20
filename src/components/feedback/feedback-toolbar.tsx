@@ -89,7 +89,7 @@ export function FeedbackToolbar({
 					go({ q: q.trim() || undefined });
 				}}
 			>
-				<label className="flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary focus-within:ring-2 focus-within:ring-ink md:h-8 md:w-72">
+				<label className="flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-coral md:h-8 md:w-72">
 					<Search aria-hidden="true" className="size-4" />
 					<input
 						type="search"

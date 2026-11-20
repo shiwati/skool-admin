@@ -136,7 +136,7 @@ function ProgramName({ row }: { row: ReportListItem }) {
 		<div className="flex min-w-0 flex-col gap-0.5">
 			<Link
 				href={eventHref(row.eventId)}
-				className="truncate font-medium hover:underline focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+				className="truncate font-medium hover:underline"
 			>
 				{row.name}
 			</Link>

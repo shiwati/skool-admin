@@ -106,7 +106,7 @@ export function MobileFiltersDialog({
 		<Dialog>
 			<DialogTrigger
 				aria-label={count > 0 ? `Szűrők (${count} aktív)` : "Szűrők"}
-				className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-border-strong bg-white focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none md:hidden"
+				className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-border-strong bg-white md:hidden"
 			>
 				<SlidersHorizontal aria-hidden="true" className="size-[18px]" />
 				{count > 0 && (
@@ -236,7 +236,7 @@ export function SearchField({
 	}, [draft]);
 
 	return (
-		<label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary focus-within:ring-2 focus-within:ring-ink md:h-8 md:w-64 md:flex-none">
+		<label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-coral md:h-8 md:w-64 md:flex-none">
 			<Search aria-hidden="true" className="size-4" />
 			<input
 				type="search"

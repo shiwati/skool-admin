@@ -332,7 +332,7 @@ export function ReportEditor({
 															!quote.highlighted,
 													})
 												}
-												className="rounded p-1 focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+												className="rounded p-1 disabled:cursor-not-allowed disabled:opacity-40"
 											>
 												<Star
 													aria-hidden="true"
