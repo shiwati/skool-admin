@@ -4,7 +4,6 @@ import {
 	ageFromBirthYear,
 	attendedCount,
 	formatDate,
-	fullName,
 	latestApplication,
 	parentLabel,
 	STATUS_LABELS,
@@ -18,11 +17,13 @@ type ExportColumn = {
 
 /**
  * A táblázat oszlopainak CSV-megfelelője. A kétsoros cellák (név + e-mail,
- * település + iskola, szülő neve + e-mail) két CSV-oszlopra bomlanak.
+ * település + iskola, szülő neve + e-mail) több CSV-oszlopra bomlanak; a
+ * jelentkező neve külön vezeték- és keresztnévként.
  */
 export const EXPORT_COLUMNS: Record<ColumnId, ExportColumn[]> = {
 	name: [
-		{ header: "Név", value: (item) => fullName(item) },
+		{ header: "Vezetéknév", value: (item) => item.lastName },
+		{ header: "Keresztnév", value: (item) => item.firstName },
 		{ header: "E-mail", value: (item) => item.email ?? "" },
 	],
 	age: [
