@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/admin-shell/page-header";
 import { PageShell } from "@/components/admin-shell/page-shell";
-import { ReportsTable } from "@/components/reports/reports-table";
+import { ReportsFilter } from "@/components/reports/reports-filter";
 import { formatCount } from "@/lib/applicants/format";
 import {
 	filterReports,
@@ -80,7 +80,7 @@ export default async function ReportsPage({
 						: "Nincs megjeleníthető program."}
 				</p>
 			) : (
-				<ReportsTable rows={rows} />
+				<ReportsFilter rows={rows} />
 			)}
 		</PageShell>
 	);

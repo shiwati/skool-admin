@@ -5,7 +5,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { logger } from "../src/lib/logger";
 import { dataFileSchema } from "../src/lib/seed-data-schema";
-import { dashboardDemoData } from "../src/lib/seed-demo-data";
+import { dashboardDemoData, sampleFeedback } from "../src/lib/seed-demo-data";
 import { duplicateKey } from "../src/lib/sheet-import/mapping";
 import { assertLocalDatabase } from "../src/lib/seed-guard";
 import { formatValidationErrors } from "../src/lib/validation";
@@ -59,10 +59,28 @@ async function seed() {
 		return;
 	}
 	const { events, applicants, applications } = parsed.data;
+	// Visszajelzés: a generált demóeseményekhez, és ha nem a local.json-t
+	// töltjük, a mintafájl lezárt eseményeihez is (valódi adathoz soha).
+	const fileEventIds = new Set(
+		(fileData.events ?? []).map((e: { id: string }) => e.id),
+	);
+	const sample =
+		dataFile === localFile
+			? null
+			: sampleFeedback(
+					events.filter((e) => fileEventIds.has(e.id)),
+					applications,
+				);
+	const feedback = [...(demo?.feedback ?? []), ...(sample?.feedback ?? [])];
+	const feedbackSheets = [
+		...(demo?.feedbackSheets ?? []),
+		...(sample?.feedbackSheets ?? []),
+	];
 
 	await prisma.$transaction(
 		async (tx) => {
 			if (reset) {
+				await tx.feedback.deleteMany();
 				await tx.application.deleteMany();
 				await tx.applicant.deleteMany();
 				await tx.event.deleteMany();
@@ -105,6 +123,19 @@ async function seed() {
 					update: data,
 				});
 			}
+			if (feedback.length > 0) {
+				for (const { eventId, ...urls } of feedbackSheets) {
+					await tx.event.update({
+						where: { id: eventId },
+						data: urls,
+					});
+				}
+				// Régi (pl. kevesebb választ tartalmazó) demó-visszajelzések helyett.
+				await tx.feedback.deleteMany({
+					where: { id: { startsWith: "demo_feedback_" } },
+				});
+				await tx.feedback.createMany({ data: feedback });
+			}
 		},
 		// A demóadat több ezer sor: az alapértelmezett 5 s-os limit kevés.
 		{ timeout: 120_000 },
@@ -118,6 +149,7 @@ async function seed() {
 			events: events.length,
 			applicants: applicants.length,
 			applications: applications.length,
+			feedback: feedback.length,
 		},
 		"Seed data loaded",
 	);
