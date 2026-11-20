@@ -36,9 +36,12 @@ describe("ReportsTable", () => {
 			within(first)
 				.getAllByRole("term")
 				.map((dt) => dt.textContent),
-		).toEqual(["Lezárva", "Riport állapota", "Utolsó generálás"]);
+		).toEqual(["Lezárva", "Riport", "Generálva"]);
 		expect(first).toHaveTextContent("Docs kész (2)");
-		expect(first).toHaveTextContent(/Kiss Anna · /);
+		expect(first).toHaveTextContent("Kiss Anna");
+		expect(
+			within(first).getByRole("link", { name: "Python alapok – ősz" }),
+		).toHaveAttribute("href", "/events/e1");
 		expect(
 			within(first).getByRole("link", { name: "Riport megnyitása" }),
 		).toHaveAttribute("href", expect.stringContaining("e1"));
@@ -54,6 +57,7 @@ describe("ReportsTable", () => {
 		const frame = screen.getByTestId("reports-table-frame");
 		expect(frame).toHaveClass("relative", "hidden", "md:block");
 		const table = within(frame).getByRole("table", { name: "Riportok" });
+		expect(table).toHaveClass("table-fixed");
 		expect(
 			within(table)
 				.getAllByRole("columnheader")

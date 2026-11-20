@@ -1,17 +1,27 @@
 import Link from "next/link";
-import { EMPTY, formatDate, formatDateTime } from "@/lib/applicants/format";
-import { eventReportHref } from "@/lib/events/links";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+	EMPTY,
+	formatDate,
+	formatDateTime,
+	programColorClass,
+} from "@/lib/applicants/format";
+import { eventHref, eventReportHref } from "@/lib/events/links";
 import type { ReportListItem } from "@/lib/reports/list";
 import { cn } from "@/lib/utils";
 
+const headClass =
+	"px-3 py-2.5 font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase";
+
 /**
- * A Riportok lista: tablettől táblázat, mobilon (< md) kártyák, mint a
- * Jelentkezők oldalon. Mindkettő ugyanazokat a cellákat használja.
+ * A Riportok lista, a Programok táblázat mintájára: tablettől táblázat,
+ * mobilon (< md) kártyák. Mindkettő ugyanazokat a cellákat használja.
  */
 export function ReportsTable({ rows }: { rows: ReportListItem[] }) {
 	return (
-		<div className="overflow-hidden rounded-[14px] border border-border-default bg-white shadow-card">
-			{/* Mobile: one card per program. */}
+		<Card className="overflow-hidden">
+			{/* Mobile: one card per program (like the program cards). */}
 			<ul
 				aria-label="Riportok"
 				className="divide-y divide-border-default md:hidden"
@@ -26,55 +36,55 @@ export function ReportsTable({ rows }: { rows: ReportListItem[] }) {
 				data-testid="reports-table-frame"
 				className="relative hidden overflow-x-auto md:block"
 			>
-				<table className="w-full min-w-[720px] text-sm">
+				<table className="w-full min-w-[760px] table-fixed border-collapse text-sm">
 					<caption className="sr-only">Riportok</caption>
-					<thead>
-						<tr className="border-b border-border-default text-left text-text-tertiary">
-							<th scope="col" className="px-4 py-3 font-medium">
+					<thead className="bg-surface-subtle text-left">
+						<tr className="border-b border-border-default">
+							<th scope="col" className={headClass}>
 								Program
 							</th>
 							<th
 								scope="col"
-								className="w-36 px-4 py-3 font-medium"
+								className={cn(headClass, "w-[120px]")}
 							>
 								Lezárva
 							</th>
 							<th
 								scope="col"
-								className="w-40 px-4 py-3 font-medium"
+								className={cn(headClass, "w-[170px]")}
 							>
 								Riport állapota
 							</th>
 							<th
 								scope="col"
-								className="w-56 px-4 py-3 font-medium"
+								className={cn(headClass, "w-[190px]")}
 							>
 								Utolsó generálás
 							</th>
-							<th
-								scope="col"
-								className="w-48 px-4 py-3 text-right font-medium"
-							>
-								Művelet
+							<th scope="col" className="w-[170px] px-3 py-2.5">
+								<span className="sr-only">Művelet</span>
 							</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-border-default">
+					<tbody>
 						{rows.map((row) => (
-							<tr key={row.eventId}>
-								<td className="px-4 py-3">
+							<tr
+								key={row.eventId}
+								className="border-b border-border-default last:border-0 hover:bg-canvas"
+							>
+								<td className="px-3 py-2.5 align-middle">
 									<ProgramName row={row} />
 								</td>
-								<td className="px-4 py-3 font-mono text-text-secondary">
-									{formatDate(row.to)}
+								<td className="px-3 py-2.5 align-middle">
+									<ClosedDate row={row} />
 								</td>
-								<td className="px-4 py-3">
+								<td className="px-3 py-2.5 align-middle">
 									<ReportStatus row={row} />
 								</td>
-								<td className="px-4 py-3 text-text-secondary">
-									{lastGenerated(row)}
+								<td className="px-3 py-2.5 align-middle">
+									<LastGenerated row={row} />
 								</td>
-								<td className="px-4 py-3 text-right">
+								<td className="px-3 py-2.5 text-right align-middle">
 									<ReportAction row={row} />
 								</td>
 							</tr>
@@ -82,27 +92,36 @@ export function ReportsTable({ rows }: { rows: ReportListItem[] }) {
 					</tbody>
 				</table>
 			</div>
-		</div>
+		</Card>
 	);
 }
 
-/** Mobil kártya: név és partner, címkézett sorok, alul teljes szélességű gomb. */
+/** Mobil kártya (mint a programkártya): név, címkézett sorok, alul gomb. */
 function ReportCard({ row }: { row: ReportListItem }) {
 	return (
-		<div className="flex flex-col gap-3 px-4 py-3.5">
-			<ProgramName row={row} />
-			<dl className="grid grid-cols-[112px_minmax(0,1fr)] gap-x-2 gap-y-1.5 text-sm">
+		<div className="flex flex-col gap-2.5 px-4 py-3.5">
+			<div className="flex items-start gap-2">
+				<span
+					aria-hidden="true"
+					className={cn(
+						"mt-1.5 size-2 shrink-0 rounded-full",
+						programColorClass(row.eventId),
+					)}
+				/>
+				<ProgramName row={row} />
+			</div>
+			<dl className="grid grid-cols-[88px_minmax(0,1fr)] gap-x-2 gap-y-1.5 text-sm">
 				<dt className="text-text-tertiary">Lezárva</dt>
-				<dd className="font-mono text-xs leading-5 text-text-secondary">
-					{formatDate(row.to)}
+				<dd>
+					<ClosedDate row={row} />
 				</dd>
-				<dt className="text-text-tertiary">Riport állapota</dt>
+				<dt className="text-text-tertiary">Riport</dt>
 				<dd>
 					<ReportStatus row={row} />
 				</dd>
-				<dt className="text-text-tertiary">Utolsó generálás</dt>
-				<dd className="break-words text-text-secondary">
-					{lastGenerated(row)}
+				<dt className="text-text-tertiary">Generálva</dt>
+				<dd className="min-w-0">
+					<LastGenerated row={row} />
 				</dd>
 			</dl>
 			<ReportAction row={row} className="h-11 w-full justify-center" />
@@ -112,10 +131,15 @@ function ReportCard({ row }: { row: ReportListItem }) {
 
 function ProgramName({ row }: { row: ReportListItem }) {
 	return (
-		<div className="min-w-0">
-			<span className="font-medium">{row.name}</span>
+		<div className="flex min-w-0 flex-col gap-0.5">
+			<Link
+				href={eventHref(row.eventId)}
+				className="truncate font-medium hover:underline focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+			>
+				{row.name}
+			</Link>
 			{row.companyName && (
-				<span className="block text-text-tertiary">
+				<span className="truncate text-xs text-text-tertiary">
 					{row.companyName}
 				</span>
 			)}
@@ -123,27 +147,46 @@ function ProgramName({ row }: { row: ReportListItem }) {
 	);
 }
 
-function ReportStatus({ row }: { row: ReportListItem }) {
+function ClosedDate({ row }: { row: ReportListItem }) {
 	return (
-		<span
-			className={cn(
-				"inline-flex rounded-full px-2.5 text-xs leading-6 font-medium whitespace-nowrap",
-				row.documents > 0
-					? "bg-info-bg text-info-fg"
-					: "bg-surface-subtle text-text-secondary",
-			)}
-		>
-			{row.documents > 0
-				? `Docs kész (${row.documents})`
-				: "Nincs elkészítve"}
+		<span className="font-mono text-xs leading-5">
+			{formatDate(row.to)}
 		</span>
 	);
 }
 
-function lastGenerated(row: ReportListItem): string {
-	return row.lastGeneratedAt
-		? `${row.lastGeneratedBy ?? EMPTY} · ${formatDateTime(row.lastGeneratedAt)}`
-		: EMPTY;
+function ReportStatus({ row }: { row: ReportListItem }) {
+	const ready = row.documents > 0;
+	return (
+		<span
+			className={cn(
+				"inline-flex items-center gap-1.5 rounded-full px-2 text-xs leading-5 font-medium whitespace-nowrap",
+				ready
+					? "bg-info-bg text-info-fg"
+					: "bg-surface-subtle text-text-secondary",
+			)}
+		>
+			<span
+				aria-hidden="true"
+				className="size-1.5 rounded-full bg-current"
+			/>
+			{ready ? `Docs kész (${row.documents})` : "Nincs elkészítve"}
+		</span>
+	);
+}
+
+function LastGenerated({ row }: { row: ReportListItem }) {
+	if (!row.lastGeneratedAt) {
+		return <span className="text-text-tertiary">{EMPTY}</span>;
+	}
+	return (
+		<div className="min-w-0 text-xs">
+			<div className="truncate">{row.lastGeneratedBy ?? EMPTY}</div>
+			<div className="truncate font-mono text-text-tertiary">
+				{formatDateTime(row.lastGeneratedAt)}
+			</div>
+		</div>
+	);
 }
 
 function ReportAction({
@@ -153,18 +196,17 @@ function ReportAction({
 	row: ReportListItem;
 	className?: string;
 }) {
+	const ready = row.documents > 0;
 	return (
-		<Link
-			href={eventReportHref(row.eventId)}
-			className={cn(
-				"inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
-				row.documents > 0
-					? "border-border-strong bg-white hover:bg-surface-subtle"
-					: "border-primary bg-primary text-primary-foreground hover:bg-primary-hover",
-				className,
-			)}
+		<Button
+			asChild
+			size="sm"
+			variant={ready ? "surface" : "default"}
+			className={className}
 		>
-			{row.documents > 0 ? "Riport megnyitása" : "Riport készítése"}
-		</Link>
+			<Link href={eventReportHref(row.eventId)}>
+				{ready ? "Riport megnyitása" : "Riport készítése"}
+			</Link>
+		</Button>
 	);
 }
