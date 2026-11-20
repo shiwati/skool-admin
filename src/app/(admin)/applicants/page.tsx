@@ -6,7 +6,7 @@ import { applicantsQuerySchema, listApplicants } from "@/lib/applicants/list";
 import { parseListState, toApiQuery } from "@/lib/applicants/list-params";
 import type { ApplicantsPage as ApplicantsPageData } from "@/lib/applicants/types";
 import { logger } from "@/lib/logger";
-import { programYears } from "@/components/applicants/year-chip";
+import { programYears } from "@/lib/events/program-years";
 import { eventYearBounds } from "@/lib/dashboard/first-year";
 import {
 	ApplicantsView,

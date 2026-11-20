@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { PageShell } from "@/components/admin-shell/page-shell";
 import { EventsView } from "@/components/events/events-view";
 import type { EventListItem } from "@/components/events/events-table";
-import { programYears } from "@/components/applicants/year-chip";
+import { programYears } from "@/lib/events/program-years";
 import { eventYearBounds } from "@/lib/dashboard/first-year";
 import {
 	countEventsByPhase,
