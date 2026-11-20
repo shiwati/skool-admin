@@ -92,6 +92,13 @@ export function formatDateRange(
 	return `${formatDate(from)} – ${formatDate(to)}`;
 }
 
+/** Automatikus/jelölő címkék (16+, Hírlevél, Veterán) színei – egy helyen, minden felület ezt használja. */
+export const TAG_BADGE_CLASSES = {
+	over16: "bg-info-bg text-info-fg",
+	newsletter: "bg-success-bg text-success-fg",
+	alumni: "bg-sage",
+} as const;
+
 /** Ennyi „Részt vett” státuszú jelentkezéstől jár az alumni címke. */
 export const ALUMNI_MIN_ATTENDED = 3;
 
