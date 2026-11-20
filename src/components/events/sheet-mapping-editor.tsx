@@ -191,7 +191,7 @@ export function SheetMappingEditor({
 				aria-expanded={open}
 				aria-controls={`${id}-panel`}
 				onClick={() => setOpen((o) => !o)}
-				className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-sm font-medium hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+				className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-sm font-medium hover:bg-surface-subtle"
 			>
 				<ChevronDown
 					aria-hidden="true"
