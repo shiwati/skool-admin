@@ -4,7 +4,7 @@ import { PageShell } from "@/components/admin-shell/page-shell";
 import { CapacityChart } from "@/components/dashboard/capacity-chart";
 import { DashboardActions } from "@/components/dashboard/dashboard-actions";
 import { DemographicsCard } from "@/components/dashboard/demographics-card";
-import { KpiCard } from "@/components/dashboard/kpi-card";
+import { KpiCard, KpiGrid } from "@/components/dashboard/kpi-card";
 import { OversubscriptionTrend } from "@/components/dashboard/oversubscription-trend";
 import { SatisfactionCard } from "@/components/dashboard/satisfaction-card";
 import type { Tone } from "@/components/dashboard/stat-badge";
@@ -89,10 +89,15 @@ export default async function DashboardPage({ searchParams }: Props) {
 				eyebrow="Áttekintés"
 				title={`${greeting(now)}, ${name}!`}
 				description={`${data.period.label} · ${data.program?.name ?? "összes program"} · összevetés: ${data.period.previousLabel}`}
-				actions={<DashboardActions data={data} />}
+				actions={
+					// Mobile: one horizontally scrollable row below the title.
+					<div className="relative -mx-4 flex w-[calc(100%+2rem)] gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:w-auto md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
+						<DashboardActions data={data} />
+					</div>
+				}
 			/>
 
-			<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+			<KpiGrid>
 				<KpiCard label="Összes jelentkező" {...applicationsKpi(data)} />
 				<KpiCard
 					label="Átlagos túljelentkezés"
@@ -103,8 +108,9 @@ export default async function DashboardPage({ searchParams }: Props) {
 					value="—"
 					badge="hamarosan"
 					note="feedback formok alapján"
+					wide
 				/>
-			</div>
+			</KpiGrid>
 
 			<div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
 				<CapacityChart rows={data.capacity} />

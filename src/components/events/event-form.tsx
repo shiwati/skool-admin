@@ -113,12 +113,12 @@ function FormSection({
 	children: ReactNode;
 }) {
 	return (
-		<Card className="scroll-mt-6 p-6">
+		<Card className="scroll-mt-6 p-4 md:p-6">
 			<section aria-labelledby={`${id}-title`} id={id}>
 				<h2 id={`${id}-title`} className="mb-4 text-base font-bold">
 					{index} · {title}
 				</h2>
-				<div className="grid gap-4 sm:grid-cols-2">{children}</div>
+				<div className="grid gap-4 md:grid-cols-2">{children}</div>
 			</section>
 		</Card>
 	);
@@ -249,10 +249,10 @@ export function EventForm(props: EventFormProps) {
 				onSubmit={onSubmit}
 				aria-label={editing ? "Program szerkesztése" : "Új program"}
 			>
-				<div className="grid items-start gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
+				<div className="grid items-start gap-6 xl:grid-cols-[200px_minmax(0,1fr)]">
 					<nav
 						aria-label="Szakaszok"
-						className="sticky top-6 hidden flex-col gap-0.5 lg:flex"
+						className="sticky top-6 hidden flex-col gap-0.5 xl:flex"
 					>
 						{SECTIONS.map((section, index) => {
 							const count = section.fields.filter(
@@ -291,7 +291,7 @@ export function EventForm(props: EventFormProps) {
 								label="Program neve"
 								required
 								error={message("name")}
-								className="sm:col-span-2"
+								className="md:col-span-2"
 							>
 								{(field) => (
 									<Input
@@ -307,7 +307,7 @@ export function EventForm(props: EventFormProps) {
 								id={inputId("tags")}
 								label="Címkék"
 								error={message("tags")}
-								className="sm:col-span-2"
+								className="md:col-span-2"
 							>
 								{(field) => (
 									<Controller
@@ -331,7 +331,7 @@ export function EventForm(props: EventFormProps) {
 								id={inputId("description")}
 								label="Rövid leírás"
 								error={message("description")}
-								className="sm:col-span-2"
+								className="md:col-span-2"
 							>
 								{(field) => (
 									<Textarea
@@ -420,7 +420,7 @@ export function EventForm(props: EventFormProps) {
 								label="Max. tanulói létszám"
 								required
 								error={message("capacity")}
-								className="sm:col-span-2"
+								className="md:col-span-2"
 							>
 								{(field) => (
 									<Input
@@ -472,7 +472,7 @@ export function EventForm(props: EventFormProps) {
 								label="Jelentkezők sheetje"
 								hint="A jelentkezők Google Sheetjének linkje; a másolt link gid része jelöli a lapot."
 								error={message("sheetUrl")}
-								className="sm:col-span-2"
+								className="md:col-span-2"
 							>
 								{(field) => (
 									<Input
@@ -496,7 +496,7 @@ export function EventForm(props: EventFormProps) {
 								id={inputId("instructor")}
 								label="Oktató"
 								error={message("instructor")}
-								className="sm:col-span-2"
+								className="md:col-span-2"
 							>
 								{(field) => (
 									<Input
@@ -512,7 +512,7 @@ export function EventForm(props: EventFormProps) {
 								label="Mentorok"
 								hint="Enterrel vagy vesszővel adhatsz hozzá nevet."
 								error={message("mentors")}
-								className="sm:col-span-2"
+								className="md:col-span-2"
 							>
 								{(field) => (
 									<Controller
@@ -565,14 +565,14 @@ export function EventForm(props: EventFormProps) {
 							<Button
 								asChild
 								variant="surface"
-								className="h-11 px-6 font-mono text-[13px]"
+								className="h-11 flex-1 px-6 font-mono text-[13px] md:flex-none"
 							>
 								<Link href="/events">Mégse</Link>
 							</Button>
 							<Button
 								type="submit"
 								disabled={isSubmitting || saved}
-								className="h-11 px-6 font-mono text-[13px]"
+								className="h-11 flex-1 px-6 font-mono text-[13px] md:flex-none"
 							>
 								{editing
 									? "Változtatások mentése"

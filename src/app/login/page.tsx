@@ -57,33 +57,41 @@ export default async function LoginPage({
 	const domain = `@${env.AUTH_ALLOWED_DOMAIN}`;
 
 	return (
-		<div className="flex min-h-screen flex-wrap bg-canvas text-text-primary">
+		// Desktop (xl): brand panel and sign-in side by side. Below: stacked,
+		// brand band on top (boards 01.1 T / 01.1 M).
+		<div className="flex min-h-screen flex-col bg-canvas text-text-primary xl:flex-row">
 			<section
 				aria-label="Skool admin"
-				className="flex min-w-0 flex-[1_1_520px] flex-col gap-6 bg-sky px-6 py-10 sm:px-16 sm:py-12"
+				className="flex min-w-0 flex-col gap-3.5 bg-sky px-6 pt-7 pb-8 md:gap-5 md:px-14 md:pt-10 md:pb-12 xl:flex-[1_1_520px] xl:gap-6 xl:px-16 xl:py-12"
 			>
-				<div className="flex items-center gap-3.5 self-start">
+				<div className="flex items-center gap-2.5 self-start md:gap-3.5">
 					<Image
 						src="/brand/skool-logo.png"
 						alt="Skool"
 						width={161}
 						height={52}
 						priority
-						className="h-[52px] w-auto"
+						className="h-9 w-auto md:h-12 xl:h-[52px]"
 					/>
 					<span className="rounded-full bg-ink px-2.5 py-0.5 font-mono text-[11px] leading-4 font-semibold tracking-[0.04em] text-white uppercase">
 						admin
 					</span>
 				</div>
-				<div className="min-h-10 flex-1" aria-hidden="true" />
-				<h1 className="max-w-[500px] text-[40px] leading-[46px] font-black sm:text-5xl sm:leading-[54px]">
+				<div
+					className="h-7 md:h-16 xl:h-auto xl:min-h-10 xl:flex-1"
+					aria-hidden="true"
+				/>
+				<h1 className="max-w-[520px] text-[32px] leading-[38px] font-black md:text-[44px] md:leading-[50px] xl:text-5xl xl:leading-[54px]">
 					SKOOL Menedzsment
 				</h1>
-				<p className="max-w-[500px] font-mono text-xs leading-4">
+				<p className="max-w-[520px] font-mono text-xs leading-4">
 					Minden, ami SKOOL, jelentkezők, programok, visszajelzések és
 					záró riportok – egy helyen.
 				</p>
-				<ul className="flex flex-wrap gap-2" aria-label="Modulok">
+				<ul
+					className="hidden flex-wrap gap-2 md:flex"
+					aria-label="Modulok"
+				>
 					{modules.map(({ label, icon: Icon, className }) => (
 						<li
 							key={label}
@@ -98,14 +106,15 @@ export default async function LoginPage({
 						</li>
 					))}
 				</ul>
-				<div className="h-8" aria-hidden="true" />
-				<p className="font-mono text-xs leading-4">
+				<div className="hidden h-8 xl:block" aria-hidden="true" />
+				<p className="hidden font-mono text-xs leading-4 xl:block">
 					© 2026 Skool Technológiai Alapítvány · belső használatra
 				</p>
 			</section>
 
-			<main className="flex min-w-0 flex-[999_1_560px] items-center justify-center px-4 py-12 sm:px-6">
-				<div className="flex w-[440px] max-w-full flex-col gap-5 rounded-[20px] border border-border-default bg-white p-6 shadow-card sm:p-9">
+			<main className="flex min-w-0 flex-1 flex-col items-stretch gap-6 px-4 pt-6 pb-6 md:items-center md:px-6 md:pt-14 md:pb-10 xl:flex-[999_1_560px] xl:justify-center xl:py-12">
+				<div className="flex w-full flex-col gap-5 rounded-[18px] border border-border-default bg-white p-6 shadow-card md:w-[480px] md:rounded-[20px] md:p-9 xl:w-[440px]">
+					{" "}
 					<p className="font-mono text-[11px] leading-4 font-semibold tracking-[0.04em] text-text-tertiary uppercase">
 						Bejelentkezés
 					</p>
@@ -120,7 +129,6 @@ export default async function LoginPage({
 							nincs szükség.
 						</p>
 					</div>
-
 					{state === "denied" && (
 						<Banner title="Ez a fiók nem jogosult">
 							{account ? `A ${account} fiók` : "Ez a Google-fiók"}{" "}
@@ -134,7 +142,6 @@ export default async function LoginPage({
 							Próbáld újra.
 						</Banner>
 					)}
-
 					<GoogleSignInButton
 						label={
 							state === "denied"
@@ -143,9 +150,7 @@ export default async function LoginPage({
 						}
 						callbackUrl={callbackUrl}
 					/>
-
 					<hr className="border-border-default" />
-
 					<p className="flex items-start gap-2.5 text-xs leading-4 text-text-tertiary">
 						<Lock
 							className="size-4 shrink-0"
@@ -159,6 +164,11 @@ export default async function LoginPage({
 						</span>
 					</p>
 				</div>
+				{/* Stacked layouts show the footer under the card; desktop shows it in the brand panel. */}
+				<div className="flex-1 xl:hidden" aria-hidden="true" />
+				<p className="text-center font-mono text-xs leading-4 text-text-tertiary xl:hidden">
+					© 2026 Skool Technológiai Alapítvány · belső használatra
+				</p>
 			</main>
 		</div>
 	);

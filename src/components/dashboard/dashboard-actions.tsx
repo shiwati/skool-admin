@@ -33,7 +33,7 @@ function FilterMenu({
 			<DropdownMenuTrigger asChild>
 				<Button
 					variant="surface"
-					className="h-10 max-w-64 rounded-[10px]"
+					className="h-10 max-w-64 shrink-0 rounded-[10px]"
 					aria-label={`${label}: ${current}`}
 				>
 					<span className="truncate">{current}</span>

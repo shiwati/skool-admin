@@ -80,7 +80,7 @@ describe("ApplicantsView", () => {
 	it("writes filter changes to the URL and returns to page 1", async () => {
 		nav.search = "page=3";
 		render(<ApplicantsView />);
-		await screen.findByText("Nagy Luca");
+		await screen.findByRole("row", { name: /Nagy Luca/ });
 		await userEvent.click(screen.getByRole("button", { name: /^Program/ }));
 		await userEvent.click(
 			await screen.findByRole("checkbox", { name: "Robotika tábor" }),
@@ -93,7 +93,7 @@ describe("ApplicantsView", () => {
 
 	it("writes sorting to the URL", async () => {
 		render(<ApplicantsView />);
-		await screen.findByText("Nagy Luca");
+		await screen.findByRole("row", { name: /Nagy Luca/ });
 		await userEvent.click(
 			screen.getByRole("button", { name: /Név \/ e-mail/ }),
 		);
@@ -105,7 +105,7 @@ describe("ApplicantsView", () => {
 
 	it("selects rows, copies their e-mails and clears on result change", async () => {
 		const { rerender } = render(<ApplicantsView />);
-		await screen.findByText("Nagy Luca");
+		await screen.findByRole("row", { name: /Nagy Luca/ });
 		expect(
 			screen.queryByRole("toolbar", { name: "Tömeges műveletek" }),
 		).not.toBeInTheDocument();
@@ -137,7 +137,7 @@ describe("ApplicantsView", () => {
 
 	it("clears the selection from the toolbar", async () => {
 		render(<ApplicantsView />);
-		await screen.findByText("Nagy Luca");
+		await screen.findByRole("row", { name: /Nagy Luca/ });
 		await userEvent.click(
 			screen.getByRole("checkbox", { name: "Kiss Boróka kijelölése" }),
 		);
@@ -151,7 +151,7 @@ describe("ApplicantsView", () => {
 
 	it("deletes the selection and reloads the list", async () => {
 		render(<ApplicantsView />);
-		await screen.findByText("Nagy Luca");
+		await screen.findByRole("row", { name: /Nagy Luca/ });
 		await userEvent.click(
 			screen.getByRole("checkbox", { name: "Kiss Boróka kijelölése" }),
 		);

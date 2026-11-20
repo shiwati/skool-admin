@@ -47,7 +47,8 @@ export function EventsTabs({
 		<div
 			role="tablist"
 			aria-label="Programok szakasz szerint"
-			className="flex gap-1 border-b border-border-default"
+			// Scrolls sideways when the tabs do not fit (tablet and mobile).
+			className="relative -mx-4 flex gap-1 overflow-x-auto border-b border-border-default px-4 md:mx-0 md:px-0"
 		>
 			{EVENT_TABS.map((id, index) => {
 				const selected = id === tab;
@@ -65,7 +66,7 @@ export function EventsTabs({
 						onClick={() => !selected && onChange(id)}
 						onKeyDown={(e) => handleKeyDown(e, index)}
 						className={cn(
-							"-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							"-mb-px flex min-h-11 shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
 							selected
 								? "border-ink text-text-primary"
 								: "border-transparent text-text-secondary hover:text-text-primary",

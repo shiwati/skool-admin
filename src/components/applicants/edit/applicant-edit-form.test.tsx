@@ -178,3 +178,36 @@ describe("ApplicantEditForm", () => {
 		expect(field(/^Település/)).toHaveValue("Pécs");
 	});
 });
+
+describe("ApplicantEditForm save bar placement", () => {
+	it("is attached full width right above the mobile bottom nav, floating from md", async () => {
+		renderForm();
+		await userEvent.type(field(/^Iskola/), "X");
+		expect(saveBar()).toHaveClass(
+			"left-0",
+			"right-0",
+			"bottom-[var(--shell-bottom)]",
+			"rounded-none",
+			"md:left-[calc(var(--shell-left)+1.5rem)]",
+			"md:rounded-full",
+		);
+	});
+});
+
+describe("ApplicantEditForm responsive layout", () => {
+	it("stacks fields on mobile and puts the side cards after the form fields", () => {
+		renderForm();
+		const personal = screen.getByRole("region", {
+			name: "Személyes adatok",
+		});
+		expect(personal.querySelector(".grid")).toHaveClass("md:grid-cols-2");
+		const aside = screen.getByRole("complementary", { name: "Tudnivalók" });
+		expect(
+			personal.compareDocumentPosition(aside) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(aside.parentElement).toHaveClass(
+			"xl:grid-cols-[minmax(0,1fr)_340px]",
+		);
+	});
+});

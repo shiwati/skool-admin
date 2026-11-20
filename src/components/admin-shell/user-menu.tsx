@@ -7,9 +7,12 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { initials } from "@/lib/initials";
+import { cn } from "@/lib/utils";
 
 export type ShellUser = {
 	name: string | null;
@@ -17,7 +20,17 @@ export type ShellUser = {
 	image: string | null;
 };
 
-export function UserMenu({ user }: { user: ShellUser }) {
+/**
+ * `compact` (mobil felső sáv): a gomb csak az avatar (44 px-es célfelület),
+ * a név és az e-mail a menü tetején jelenik meg.
+ */
+export function UserMenu({
+	user,
+	compact = false,
+}: {
+	user: ShellUser;
+	compact?: boolean;
+}) {
 	const [pending, setPending] = useState(false);
 	const displayName = user.name ?? user.email ?? "Admin";
 
@@ -25,7 +38,10 @@ export function UserMenu({ user }: { user: ShellUser }) {
 		<DropdownMenu>
 			<DropdownMenuTrigger
 				aria-label="Felhasználói menü"
-				className="flex items-center gap-2.5 rounded-full text-left focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+				className={cn(
+					"flex items-center gap-2.5 rounded-full text-left focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+					compact && "size-11 justify-center",
+				)}
 			>
 				{user.image ? (
 					// Google profile pictures come from an external host; a plain
@@ -45,19 +61,38 @@ export function UserMenu({ user }: { user: ShellUser }) {
 						{initials(displayName)}
 					</span>
 				)}
-				<span className="flex flex-col">
-					<span className="text-sm leading-5 font-medium">
-						{displayName}
-					</span>
-					{user.email && (
-						<span className="text-xs leading-4 text-text-tertiary">
-							{user.email}
+				{!compact && (
+					<>
+						<span className="flex flex-col">
+							<span className="text-sm leading-5 font-medium">
+								{displayName}
+							</span>
+							{user.email && (
+								<span className="text-xs leading-4 text-text-tertiary">
+									{user.email}
+								</span>
+							)}
 						</span>
-					)}
-				</span>
-				<ChevronDown aria-hidden="true" className="size-4" />
+						<ChevronDown aria-hidden="true" className="size-4" />
+					</>
+				)}
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="min-w-48">
+				{compact && (
+					<>
+						<DropdownMenuLabel className="flex flex-col">
+							<span className="text-sm font-medium">
+								{displayName}
+							</span>
+							{user.email && (
+								<span className="text-xs font-normal text-text-tertiary">
+									{user.email}
+								</span>
+							)}
+						</DropdownMenuLabel>
+						<DropdownMenuSeparator />
+					</>
+				)}
 				<DropdownMenuItem
 					disabled={pending}
 					onSelect={() => {

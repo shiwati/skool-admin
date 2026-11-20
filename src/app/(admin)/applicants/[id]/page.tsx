@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Breadcrumb } from "@/components/admin-shell/breadcrumb";
+import { PageShell } from "@/components/admin-shell/page-shell";
 import { ApplicantDetailActions } from "@/components/applicants/detail/applicant-detail-actions";
 import { ApplicantDetailHeader } from "@/components/applicants/detail/applicant-detail-header";
 import {
@@ -41,30 +42,15 @@ export default async function ApplicantDetailPage({ params }: Props) {
 	const name = fullName(applicant);
 
 	return (
-		<div className="flex flex-col gap-5 px-8 pt-7 pb-16">
-			<nav aria-label="Morzsamenü" className="text-sm">
-				<ol className="flex flex-wrap items-center gap-2">
-					<li>
-						<Link
-							href="/applicants"
-							className="font-medium underline-offset-2 hover:underline"
-						>
-							Jelentkezők
-						</Link>
-					</li>
-					<li aria-hidden="true" className="text-text-tertiary">
-						›
-					</li>
-					<li>
-						<span
-							aria-current="page"
-							className="text-text-secondary"
-						>
-							{name}
-						</span>
-					</li>
-				</ol>
-			</nav>
+		<PageShell className="md:pb-16">
+			{/* Mobile: only the "‹ Jelentkezők" back link (board 04.1 M). */}
+			<Breadcrumb
+				mobileBack
+				items={[
+					{ label: "Jelentkezők", href: "/applicants" },
+					{ label: name },
+				]}
+			/>
 
 			<ApplicantDetailHeader
 				applicant={applicant}
@@ -74,8 +60,9 @@ export default async function ApplicantDetailPage({ params }: Props) {
 				}
 			/>
 
-			<div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-				<div className="flex min-w-0 flex-col gap-5">
+			{/* Below xl one column: the aside (tags, history) follows the main cards. */}
+			<div className="grid grid-cols-1 items-start gap-4 md:gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+				<div className="flex min-w-0 flex-col gap-4 md:gap-5">
 					<PersonalDataCard applicant={applicant} now={now} />
 					<ParentDataCard applicant={applicant} />
 					<ProgramsTable applications={applicant.applications} />
@@ -84,7 +71,7 @@ export default async function ApplicantDetailPage({ params }: Props) {
 					/>
 				</div>
 				<aside
-					className="flex min-w-0 flex-col gap-5"
+					className="flex min-w-0 flex-col gap-4 md:gap-5"
 					aria-label="Kiegészítő adatok"
 				>
 					<TagsCard applicant={applicant} now={now} />
@@ -94,6 +81,6 @@ export default async function ApplicantDetailPage({ params }: Props) {
 					/>
 				</aside>
 			</div>
-		</div>
+		</PageShell>
 	);
 }

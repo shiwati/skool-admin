@@ -55,9 +55,12 @@ describe("EventsView", () => {
 		expect(
 			screen.getByRole("tab", { name: /^Összes\s*15$/ }),
 		).toHaveAttribute("aria-selected", "true");
-		expect(
-			screen.getByRole("link", { name: "Új program" }),
-		).toHaveAttribute("href", "/events/new");
+		// Header button (md+) and the mobile floating button.
+		const newLinks = screen.getAllByRole("link", { name: "Új program" });
+		expect(newLinks).toHaveLength(2);
+		for (const link of newLinks) {
+			expect(link).toHaveAttribute("href", "/events/new");
+		}
 
 		const row = screen.getAllByRole("row")[1];
 		expect(
@@ -98,7 +101,9 @@ describe("EventsView", () => {
 		nav.search = "q=nincs";
 		render(<EventsView items={[]} total={0} counts={counts} now={now} />);
 		expect(
-			screen.getByText("Nincs a szűrésnek megfelelő program"),
+			within(screen.getByRole("table")).getByText(
+				"Nincs a szűrésnek megfelelő program",
+			),
 		).toBeInTheDocument();
 		await userEvent.click(
 			screen.getAllByRole("button", { name: "Szűrők törlése" })[0],
@@ -165,7 +170,9 @@ describe("EventsView", () => {
 		nav.search = "tab=planned";
 		render(<EventsView items={[]} total={0} counts={counts} now={now} />);
 		expect(
-			screen.getByText("Ebben a szakaszban nincs program"),
+			within(screen.getByRole("table")).getByText(
+				"Ebben a szakaszban nincs program",
+			),
 		).toBeInTheDocument();
 		expect(
 			screen.queryByRole("button", { name: "Szűrők törlése" }),
@@ -196,5 +203,78 @@ describe("EventsView", () => {
 		expect(
 			screen.getByText(/1–1 \/ 1 tervezett program/),
 		).toBeInTheDocument();
+	});
+});
+
+describe("EventsView on mobile (05.1 M)", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		nav.search = "";
+	});
+
+	it("shows program cards with demand and a name link (spec scenario)", () => {
+		render(
+			<EventsView
+				items={[event()]}
+				total={1}
+				counts={counts}
+				now={now}
+			/>,
+		);
+		const list = screen.getByRole("list", { name: "Programok" });
+		expect(list).toHaveClass("md:hidden");
+		const card = within(list).getByRole("listitem");
+		expect(card).toHaveTextContent("62 / 20 fő");
+		expect(card).toHaveTextContent("3,1×");
+		expect(card).toHaveTextContent("Budapest");
+		expect(card).toHaveTextContent("Sigma Technology");
+		expect(
+			within(card).getByRole("link", { name: "Python alapok – ősz" }),
+		).toHaveAttribute("href", "/events/e1");
+		expect(screen.getByTestId("events-table-frame")).toHaveClass(
+			"hidden",
+			"md:block",
+		);
+	});
+
+	it("keeps the row actions on the card", async () => {
+		render(
+			<EventsView
+				items={[event()]}
+				total={1}
+				counts={counts}
+				now={now}
+			/>,
+		);
+		const card = within(
+			screen.getByRole("list", { name: "Programok" }),
+		).getByRole("listitem");
+		await userEvent.click(
+			within(card).getByRole("button", {
+				name: "Műveletek: Python alapok – ősz",
+			}),
+		);
+		expect(
+			screen.getByRole("menuitem", { name: "Jelentkezők megtekintése" }),
+		).toHaveAttribute("href", "/applicants?eventIds=e1");
+	});
+
+	it("offers a floating Új program button and scrollable tabs and chips", () => {
+		render(
+			<EventsView
+				items={[event()]}
+				total={1}
+				counts={counts}
+				now={now}
+			/>,
+		);
+		const fab = screen.getByTestId("new-event-fab");
+		expect(fab).toHaveAttribute("href", "/events/new");
+		expect(fab).toHaveClass("fixed", "md:hidden");
+		expect(screen.getByRole("tablist")).toHaveClass("overflow-x-auto");
+		expect(screen.getByTestId("event-filter-chips")).toHaveClass(
+			"overflow-x-auto",
+			"md:contents",
+		);
 	});
 });

@@ -110,7 +110,38 @@ export function EventsTable({
 
 	return (
 		<Card className="overflow-hidden">
-			<div className="overflow-x-auto">
+			{/* Mobile (< md): program cards instead of the table (board 05.1 M). */}
+			{items.length === 0 ? (
+				<div className="px-4 py-10 md:hidden">
+					<EventsEmptyState
+						filtersActive={filtersActive}
+						onClearFilters={onClearFilters}
+					/>
+				</div>
+			) : (
+				<ul
+					aria-label="Programok"
+					aria-busy={pending || undefined}
+					className={cn(
+						"divide-y divide-border-default transition-opacity md:hidden",
+						pending && "opacity-60",
+					)}
+				>
+					{items.map((item) => (
+						<li key={item.id}>
+							<EventCard
+								item={item}
+								now={now}
+								onDelete={onDelete}
+							/>
+						</li>
+					))}
+				</ul>
+			)}
+			<div
+				data-testid="events-table-frame"
+				className="relative hidden overflow-x-auto md:block"
+			>
 				<table
 					id={EVENTS_TABLE_ID}
 					className={cn(
@@ -166,33 +197,10 @@ export function EventsTable({
 						{items.length === 0 && (
 							<tr>
 								<td colSpan={7} className="px-6 py-12">
-									<div className="mx-auto flex max-w-sm flex-col items-center gap-2 text-center">
-										<span className="flex size-10 items-center justify-center rounded-full bg-sky-50">
-											<CalendarX
-												aria-hidden="true"
-												className="size-5"
-											/>
-										</span>
-										<h2 className="text-[15px] leading-[22px] font-semibold">
-											{filtersActive
-												? "Nincs a szűrésnek megfelelő program"
-												: "Ebben a szakaszban nincs program"}
-										</h2>
-										{filtersActive ? (
-											<Button
-												variant="surface"
-												size="sm"
-												onClick={onClearFilters}
-											>
-												Szűrők törlése
-											</Button>
-										) : (
-											<p className="text-xs text-text-secondary">
-												Nézd meg a többi fület, vagy
-												hozz létre új programot.
-											</p>
-										)}
-									</div>
+									<EventsEmptyState
+										filtersActive={filtersActive}
+										onClearFilters={onClearFilters}
+									/>
 								</td>
 							</tr>
 						)}
@@ -221,6 +229,185 @@ export function EventsTable({
 	);
 }
 
+/* Cell renderers, shared by the table row and the mobile card. */
+
+function people(item: EventListItem) {
+	return [item.instructor, ...item.mentors].filter((name): name is string =>
+		Boolean(name?.trim()),
+	);
+}
+
+function EventTags({ tags }: { tags: string[] }) {
+	if (tags.length === 0) return null;
+	return (
+		<div className="flex flex-wrap gap-1">
+			{tags.map((tag) => (
+				<span
+					key={tag}
+					className={cn(
+						"rounded-full px-2 text-xs leading-5 font-medium",
+						tagClass(tag),
+					)}
+				>
+					{tag}
+				</span>
+			))}
+		</div>
+	);
+}
+
+function DemandCell({ item }: { item: EventListItem }) {
+	const applications = item.applicationCounts.total;
+	const ratio = demandRatio(applications, item.capacity);
+	return (
+		<div className="flex flex-col gap-1.5">
+			<div className="flex items-center gap-2">
+				<span className="flex-1 font-mono text-xs">
+					{item.capacity > 0
+						? `${formatCount(applications)} / ${formatCount(item.capacity)} fő`
+						: `${formatCount(applications)} jelentkező`}
+				</span>
+				{ratio !== null && (
+					<span
+						className={cn(
+							"rounded-full px-2 font-mono text-xs leading-5 font-medium",
+							ratioBadgeClass(ratio),
+						)}
+						aria-label={`Túljelentkezés: ${formatRatio(ratio)}`}
+					>
+						{formatRatio(ratio)}
+					</span>
+				)}
+			</div>
+			{ratio !== null && (
+				<div
+					aria-hidden="true"
+					className="h-1.5 overflow-hidden rounded-full bg-surface-subtle"
+				>
+					<span
+						className={cn(
+							"block h-full rounded-full",
+							programColorClass(item.id),
+						)}
+						style={{
+							width: `${Math.min(100, Math.round(ratio * 100))}%`,
+						}}
+					/>
+				</div>
+			)}
+		</div>
+	);
+}
+
+function PeopleCell({ item }: { item: EventListItem }) {
+	const all = people(item);
+	const shown = all.slice(0, 2);
+	const more = all.length - shown.length;
+	if (shown.length === 0) {
+		return <span className="text-text-tertiary">{EMPTY}</span>;
+	}
+	return (
+		<div
+			className="flex items-center"
+			aria-label={all.join(", ")}
+			role="img"
+		>
+			{shown.map((name, i) => (
+				<span
+					key={`${name}-${i}`}
+					title={name}
+					className={cn(
+						"flex size-[26px] items-center justify-center rounded-full border-2 border-white text-[11px] font-semibold",
+						AVATAR_CLASSES[i % AVATAR_CLASSES.length],
+						i > 0 && "-ml-1.5",
+					)}
+				>
+					{initials(name)}
+				</span>
+			))}
+			{more > 0 && (
+				<span className="ml-1.5 text-xs text-text-tertiary">
+					+{more}
+				</span>
+			)}
+		</div>
+	);
+}
+
+function StatusBadge({ item, now }: { item: EventListItem; now: Date }) {
+	const status = eventStatus(
+		{ ...item, applications: item.applicationCounts.total },
+		now,
+	);
+	return (
+		<span
+			className={cn(
+				"inline-flex items-center gap-1.5 rounded-full px-2 text-xs leading-5 font-medium whitespace-nowrap",
+				EVENT_STATUS_BADGE_CLASSES[status],
+			)}
+		>
+			<span
+				aria-hidden="true"
+				className="size-1.5 rounded-full bg-current"
+			/>
+			{EVENT_STATUS_LABELS[status]}
+		</span>
+	);
+}
+
+function RowActions({
+	item,
+	onDelete,
+	className,
+}: {
+	item: EventListItem;
+	onDelete?: (target: EventDeleteTarget) => void;
+	className?: string;
+}) {
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger
+				aria-label={`Műveletek: ${item.name}`}
+				className={cn(
+					"flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+					className,
+				)}
+			>
+				<MoreHorizontal aria-hidden="true" className="size-[18px]" />
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end">
+				<DropdownMenuItem asChild>
+					<Link href={applicantsHref(item.id)}>
+						<Users aria-hidden="true" />
+						Jelentkezők megtekintése
+					</Link>
+				</DropdownMenuItem>
+				<DropdownMenuItem asChild>
+					<Link href={eventEditHref(item.id)}>
+						<Pencil aria-hidden="true" />
+						Program szerkesztése
+					</Link>
+				</DropdownMenuItem>
+				{onDelete && (
+					<DropdownMenuItem
+						className="text-error-fg focus:text-error-fg [&_svg]:text-error-fg!"
+						onSelect={() =>
+							onDelete({
+								id: item.id,
+								name: item.name,
+								applications: item.applicationCounts.total,
+							})
+						}
+					>
+						<Trash2 aria-hidden="true" />
+						Program törlése
+					</DropdownMenuItem>
+				)}
+			</DropdownMenuContent>
+		</DropdownMenu>
+	);
+}
+
 function EventRow({
 	item,
 	now,
@@ -230,15 +417,6 @@ function EventRow({
 	now: Date;
 	onDelete?: (target: EventDeleteTarget) => void;
 }) {
-	const applications = item.applicationCounts.total;
-	const ratio = demandRatio(applications, item.capacity);
-	const status = eventStatus({ ...item, applications }, now);
-	const people = [item.instructor, ...item.mentors].filter(
-		(name): name is string => Boolean(name?.trim()),
-	);
-	const shown = people.slice(0, 2);
-	const more = people.length - shown.length;
-
 	return (
 		<tr className="border-b border-border-default last:border-0 hover:bg-canvas">
 			<td className="px-3 py-2.5 align-middle">
@@ -249,21 +427,7 @@ function EventRow({
 					>
 						{item.name}
 					</Link>
-					{item.tags.length > 0 && (
-						<div className="flex flex-wrap gap-1">
-							{item.tags.map((tag) => (
-								<span
-									key={tag}
-									className={cn(
-										"rounded-full px-2 text-xs leading-5 font-medium",
-										tagClass(tag),
-									)}
-								>
-									{tag}
-								</span>
-							))}
-						</div>
-					)}
+					<EventTags tags={item.tags} />
 				</div>
 			</td>
 			<td className="px-3 py-2.5 align-middle">
@@ -280,130 +444,113 @@ function EventRow({
 				)}
 			</td>
 			<td className="px-3 py-2.5 align-middle">
-				<div className="flex flex-col gap-1.5">
-					<div className="flex items-center gap-2">
-						<span className="flex-1 font-mono text-xs">
-							{item.capacity > 0
-								? `${formatCount(applications)} / ${formatCount(item.capacity)} fő`
-								: `${formatCount(applications)} jelentkező`}
-						</span>
-						{ratio !== null && (
-							<span
-								className={cn(
-									"rounded-full px-2 font-mono text-xs leading-5 font-medium",
-									ratioBadgeClass(ratio),
-								)}
-								aria-label={`Túljelentkezés: ${formatRatio(ratio)}`}
-							>
-								{formatRatio(ratio)}
-							</span>
-						)}
-					</div>
-					{ratio !== null && (
-						<div
-							aria-hidden="true"
-							className="h-1.5 overflow-hidden rounded-full bg-surface-subtle"
-						>
-							<span
-								className={cn(
-									"block h-full rounded-full",
-									programColorClass(item.id),
-								)}
-								style={{
-									width: `${Math.min(100, Math.round(ratio * 100))}%`,
-								}}
-							/>
-						</div>
-					)}
-				</div>
+				<DemandCell item={item} />
 			</td>
 			<td className="px-3 py-2.5 align-middle">
-				{shown.length === 0 ? (
-					<span className="text-text-tertiary">{EMPTY}</span>
-				) : (
-					<div
-						className="flex items-center"
-						aria-label={people.join(", ")}
-						role="img"
-					>
-						{shown.map((name, i) => (
-							<span
-								key={`${name}-${i}`}
-								title={name}
-								className={cn(
-									"flex size-[26px] items-center justify-center rounded-full border-2 border-white text-[11px] font-semibold",
-									AVATAR_CLASSES[i % AVATAR_CLASSES.length],
-									i > 0 && "-ml-1.5",
-								)}
-							>
-								{initials(name)}
-							</span>
-						))}
-						{more > 0 && (
-							<span className="ml-1.5 text-xs text-text-tertiary">
-								+{more}
-							</span>
-						)}
-					</div>
-				)}
+				<PeopleCell item={item} />
 			</td>
 			<td className="px-3 py-2.5 align-middle">
-				<span
-					className={cn(
-						"inline-flex items-center gap-1.5 rounded-full px-2 text-xs leading-5 font-medium whitespace-nowrap",
-						EVENT_STATUS_BADGE_CLASSES[status],
-					)}
-				>
-					<span
-						aria-hidden="true"
-						className="size-1.5 rounded-full bg-current"
-					/>
-					{EVENT_STATUS_LABELS[status]}
-				</span>
+				<StatusBadge item={item} now={now} />
 			</td>
 			<td className="px-2 py-2.5">
-				<DropdownMenu>
-					<DropdownMenuTrigger
-						aria-label={`Műveletek: ${item.name}`}
-						className="flex size-8 items-center justify-center rounded-full hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
-					>
-						<MoreHorizontal
-							aria-hidden="true"
-							className="size-[18px]"
-						/>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						<DropdownMenuItem asChild>
-							<Link href={applicantsHref(item.id)}>
-								<Users aria-hidden="true" />
-								Jelentkezők megtekintése
-							</Link>
-						</DropdownMenuItem>
-						<DropdownMenuItem asChild>
-							<Link href={eventEditHref(item.id)}>
-								<Pencil aria-hidden="true" />
-								Program szerkesztése
-							</Link>
-						</DropdownMenuItem>
-						{onDelete && (
-							<DropdownMenuItem
-								className="text-error-fg focus:text-error-fg [&_svg]:text-error-fg!"
-								onSelect={() =>
-									onDelete({
-										id: item.id,
-										name: item.name,
-										applications,
-									})
-								}
-							>
-								<Trash2 aria-hidden="true" />
-								Program törlése
-							</DropdownMenuItem>
-						)}
-					</DropdownMenuContent>
-				</DropdownMenu>
+				<RowActions item={item} onDelete={onDelete} />
 			</td>
 		</tr>
+	);
+}
+
+/** Mobil programkártya (terv: 05.1 M), a táblázatsor celláiból. */
+function EventCard({
+	item,
+	now,
+	onDelete,
+}: {
+	item: EventListItem;
+	now: Date;
+	onDelete?: (target: EventDeleteTarget) => void;
+}) {
+	return (
+		<div className="flex flex-col gap-2.5 px-4 py-3.5">
+			<div className="flex items-start gap-2">
+				<span
+					aria-hidden="true"
+					className={cn(
+						"mt-1.5 size-2 shrink-0 rounded-full",
+						programColorClass(item.id),
+					)}
+				/>
+				<div className="flex min-w-0 flex-1 flex-col gap-1">
+					<Link
+						href={eventHref(item.id)}
+						className="font-medium hover:underline focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+					>
+						{item.name}
+					</Link>
+					<EventTags tags={item.tags} />
+				</div>
+				<RowActions
+					item={item}
+					onDelete={onDelete}
+					className="size-11"
+				/>
+			</div>
+			<dl className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-2 gap-y-1.5 text-sm">
+				<dt className="text-text-tertiary">Időpont</dt>
+				<dd className="font-mono text-xs leading-5">
+					{formatDateRange(item.from, item.to)}
+				</dd>
+				<dt className="text-text-tertiary">Helyszín</dt>
+				<dd className="min-w-0">
+					<span className="block">{item.location ?? EMPTY}</span>
+					{item.companyName && (
+						<span className="block text-text-tertiary">
+							{item.companyName}
+						</span>
+					)}
+				</dd>
+				<dt className="text-text-tertiary">Igény</dt>
+				<dd>
+					<DemandCell item={item} />
+				</dd>
+				<dt className="text-text-tertiary">Oktatók</dt>
+				<dd>
+					<PeopleCell item={item} />
+				</dd>
+			</dl>
+			<div>
+				<StatusBadge item={item} now={now} />
+			</div>
+		</div>
+	);
+}
+
+function EventsEmptyState({
+	filtersActive,
+	onClearFilters,
+}: {
+	filtersActive: boolean;
+	onClearFilters: () => void;
+}) {
+	return (
+		<div className="mx-auto flex max-w-sm flex-col items-center gap-2 text-center">
+			<span className="flex size-10 items-center justify-center rounded-full bg-sky-50">
+				<CalendarX aria-hidden="true" className="size-5" />
+			</span>
+			<h2 className="text-[15px] leading-[22px] font-semibold">
+				{filtersActive
+					? "Nincs a szűrésnek megfelelő program"
+					: "Ebben a szakaszban nincs program"}
+			</h2>
+			{filtersActive ? (
+				<Button variant="surface" size="sm" onClick={onClearFilters}>
+					Szűrők törlése
+				</Button>
+			) : (
+				<p className="text-xs text-text-secondary">
+					Nézd meg a többi fület, vagy hozz létre új programot.
+				</p>
+			)}
+		</div>
 	);
 }
 

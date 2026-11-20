@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { CapacityChart } from "./capacity-chart";
 import { DemographicsCard } from "./demographics-card";
+import { KpiCard, KpiGrid } from "./kpi-card";
 import { trendSummary } from "./oversubscription-trend";
 
 describe("CapacityChart", () => {
@@ -102,5 +103,30 @@ describe("trendSummary", () => {
 
 	it("handles missing data", () => {
 		expect(trendSummary([point("jún", null)])).toMatch(/nem indult/);
+	});
+});
+
+describe("KPI grid (02.1 M / T)", () => {
+	it("uses two columns on mobile with the wide card spanning both, three from tablet", () => {
+		render(
+			<KpiGrid>
+				<KpiCard label="Összes jelentkező" value="1 248" note="x" />
+				<KpiCard label="Átlagos túljelentkezés" value="2,4×" note="x" />
+				<KpiCard label="Átlagos elégedettség" value="—" note="x" wide />
+			</KpiGrid>,
+		);
+		expect(screen.getByTestId("kpi-grid")).toHaveClass(
+			"grid-cols-2",
+			"md:grid-cols-3",
+		);
+		const wide = screen
+			.getByRole("heading", { name: "Átlagos elégedettség" })
+			.closest("[data-slot=card]");
+		expect(wide).toHaveClass("col-span-2", "md:col-span-1");
+		expect(
+			screen
+				.getByRole("heading", { name: "Összes jelentkező" })
+				.closest("[data-slot=card]"),
+		).not.toHaveClass("col-span-2");
 	});
 });

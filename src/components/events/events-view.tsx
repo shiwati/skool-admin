@@ -69,7 +69,8 @@ export function EventsView({
 				title="Programok és események"
 				description={<>{formatCount(counts.all)} program</>}
 				actions={
-					<Button asChild>
+					// Mobile: the floating button below takes this role.
+					<Button asChild className="hidden md:inline-flex">
 						<Link href="/events/new">
 							<Plus aria-hidden="true" />
 							Új program
@@ -77,6 +78,16 @@ export function EventsView({
 					</Button>
 				}
 			/>
+			{/* Mobile (board 05.1 M): floating "Új program" above the bottom nav. */}
+			<Button
+				asChild
+				className="fixed right-4 bottom-[calc(var(--shell-bottom)+1rem)] z-30 h-13 rounded-full px-5 shadow-overlay md:hidden"
+			>
+				<Link href="/events/new" data-testid="new-event-fab">
+					<Plus aria-hidden="true" />
+					Új program
+				</Link>
+			</Button>
 			<EventsTabs
 				tab={state.tab}
 				counts={counts}

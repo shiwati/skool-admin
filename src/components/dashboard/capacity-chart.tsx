@@ -69,7 +69,7 @@ export function CapacityChart({ rows }: { rows: CapacityRow[] }) {
 							key={row.id}
 							className="flex flex-wrap items-center gap-x-4 gap-y-1.5"
 						>
-							<span className="flex w-full min-w-0 items-center gap-2 text-sm sm:w-56">
+							<span className="flex w-full min-w-0 items-center gap-2 text-sm md:w-56">
 								<span
 									aria-hidden="true"
 									className={`size-2.5 shrink-0 rounded-full ${DOT_COLORS[index % DOT_COLORS.length]}`}

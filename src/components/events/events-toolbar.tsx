@@ -37,31 +37,42 @@ export function EventsToolbar({
 				label="Keresés a programok között"
 				placeholder="Program neve…"
 			/>
-			<TagFilter
-				selected={filters.tags}
-				onChange={(tags) => onChange({ tags: tags as EventTag[] })}
-			/>
-			<TextChip
-				label="Helyszín / partner"
-				value={filters.place}
-				placeholder="pl. Budapest"
-				onChange={(place) => onChange({ place })}
-			/>
-			<YearChip
-				year={filters.year}
-				onChange={(year) => onChange({ year })}
-			/>
-			<TextChip
-				label="Oktató"
-				value={filters.instructor}
-				placeholder="pl. Kovács Béla"
-				onChange={(instructor) => onChange({ instructor })}
-			/>
-			{hasActiveEventFilters(filters) && (
-				<Button variant="ghost" size="sm" onClick={onClearAll}>
-					Szűrők törlése
-				</Button>
-			)}
+			{/* Mobile (board 05.1 M): the chips form one horizontally scrollable row. */}
+			<div
+				data-testid="event-filter-chips"
+				className="relative -mx-4 flex w-[calc(100%+2rem)] items-center gap-2 overflow-x-auto px-4 pb-1 md:contents"
+			>
+				<TagFilter
+					selected={filters.tags}
+					onChange={(tags) => onChange({ tags: tags as EventTag[] })}
+				/>
+				<TextChip
+					label="Helyszín / partner"
+					value={filters.place}
+					placeholder="pl. Budapest"
+					onChange={(place) => onChange({ place })}
+				/>
+				<YearChip
+					year={filters.year}
+					onChange={(year) => onChange({ year })}
+				/>
+				<TextChip
+					label="Oktató"
+					value={filters.instructor}
+					placeholder="pl. Kovács Béla"
+					onChange={(instructor) => onChange({ instructor })}
+				/>
+				{hasActiveEventFilters(filters) && (
+					<Button
+						variant="ghost"
+						size="sm"
+						className="shrink-0"
+						onClick={onClearAll}
+					>
+						Szűrők törlése
+					</Button>
+				)}
+			</div>
 		</div>
 	);
 }

@@ -9,13 +9,16 @@ import { isActive, navGroups } from "./nav-items";
 const itemBase =
 	"flex h-10 items-center gap-3 rounded-full px-3 text-sm font-medium [&_svg]:size-[18px] [&_svg]:shrink-0";
 
-export function AdminSidebar() {
+export function AdminSidebar({ className }: { className?: string }) {
 	const pathname = usePathname();
 
 	return (
 		<nav
 			aria-label="Főmenü"
-			className="flex h-full flex-col gap-1 bg-sky px-3.5 pt-5 pb-4 text-text-primary"
+			className={cn(
+				"flex h-full flex-col gap-1 bg-sky px-3.5 pt-5 pb-4 text-text-primary",
+				className,
+			)}
 		>
 			<div className="flex items-center gap-2.5 pt-0.5 pr-2 pb-[18px] pl-1">
 				<Image

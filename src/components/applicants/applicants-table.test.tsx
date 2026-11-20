@@ -130,11 +130,12 @@ describe("ApplicantsTable", () => {
 			data: { status: "success", items: [], total: 0 },
 			filtersActive: true,
 		});
+		const table = within(screen.getByRole("table"));
 		expect(
-			screen.getByText("Nincs a szűrésnek megfelelő jelentkező"),
+			table.getByText("Nincs a szűrésnek megfelelő jelentkező"),
 		).toBeInTheDocument();
 		await userEvent.click(
-			screen.getByRole("button", { name: "Szűrők törlése" }),
+			table.getByRole("button", { name: "Szűrők törlése" }),
 		);
 		expect(onClearFilters).toHaveBeenCalledOnce();
 	});
@@ -150,11 +151,12 @@ describe("ApplicantsTable", () => {
 
 	it("shows the error state without details and retries", async () => {
 		const { onReload } = renderTable({ data: { status: "error" } });
-		expect(screen.getByRole("alert")).toHaveTextContent(
+		const table = within(screen.getByRole("table"));
+		expect(table.getByRole("alert")).toHaveTextContent(
 			"Nem sikerült betölteni a listát",
 		);
 		await userEvent.click(
-			screen.getByRole("button", { name: "Újratöltés" }),
+			table.getByRole("button", { name: "Újratöltés" }),
 		);
 		expect(onReload).toHaveBeenCalledOnce();
 	});
@@ -295,5 +297,19 @@ describe("ApplicantsTable row navigation", () => {
 		renderTable({ data: { status: "loading" } });
 		await userEvent.click(screen.getAllByTestId("skeleton-row")[0]);
 		expect(router.push).not.toHaveBeenCalled();
+	});
+});
+
+describe("ApplicantsTable responsive variants", () => {
+	it("renders the table for tablet/desktop and the card list for mobile", () => {
+		renderTable();
+		expect(screen.getByTestId("table-frame")).toHaveClass(
+			"hidden",
+			"md:block",
+			"overflow-x-auto",
+		);
+		expect(screen.getByRole("list", { name: "Jelentkezők" })).toHaveClass(
+			"md:hidden",
+		);
 	});
 });

@@ -248,3 +248,36 @@ describe("HistoryCard", () => {
 		).toBeInTheDocument();
 	});
 });
+
+describe("ProgramsTable on mobile (04.1 M)", () => {
+	it("shows a list with one row per application and keeps the table for md+", () => {
+		render(
+			<ProgramsTable
+				applications={[
+					detailApplication(),
+					detailApplication({ id: "b", status: "ATTENDED" }),
+					detailApplication({ id: "c", status: "WAITLISTED" }),
+				]}
+			/>,
+		);
+		const list = screen.getByRole("list", { name: "Programok" });
+		expect(list).toHaveClass("md:hidden");
+		const rows = within(list).getAllByRole("listitem");
+		expect(rows).toHaveLength(3);
+		expect(rows[0]).toHaveTextContent("Python alapok – ősz");
+		expect(rows[0]).toHaveTextContent("2026.11.21 – 2026.12.12");
+		expect(rows[0]).toHaveTextContent("Elfogadva");
+		expect(screen.getByTestId("programs-table-frame")).toHaveClass(
+			"hidden",
+			"md:block",
+		);
+	});
+});
+
+describe("KeyValueList on mobile", () => {
+	it("uses one column with dividers, two columns from md", () => {
+		render(<ParentDataCard applicant={detailApplicant()} />);
+		const dl = screen.getAllByRole("term")[0].closest("dl");
+		expect(dl).toHaveClass("grid-cols-1", "divide-y", "md:grid-cols-2");
+	});
+});

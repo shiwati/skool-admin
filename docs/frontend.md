@@ -6,6 +6,22 @@
 - shadcn/ui primitívek: `src/components/ui` (új: `npx shadcn@latest add <komponens>`). Téma-tokenek: `src/app/globals.css`.
 - Prettier: **tab** behúzás, rendezett Tailwind osztályok. A felület nyelve magyar.
 
+## Reszponzivitás
+
+A tervek: „Reszponzív nézetek” oldal (tablet 820 px, mobil 390 px). Három sáv, a Tailwind alapértelmezett töréspontjaival (nincs egyedi `--breakpoint-*`):
+
+| Sáv     | Szélesség   | Prefix | Navigáció                           | Listák                                   |
+| ------- | ----------- | ------ | ----------------------------------- | ---------------------------------------- |
+| Mobil   | 360–767 px  | (alap) | felső sáv + alsó navigáció + „Több” | kártyák, szűrők párbeszédablakban        |
+| Tablet  | 768–1279 px | `md:`  | 80 px-es ikonsáv + topbar           | táblázat, vízszintes görgetés a keretben |
+| Desktop | ≥ 1280 px   | `xl:`  | 248 px-es oldalmenü + topbar        | táblázat                                 |
+
+- 360 px alatt nincs vállalás. Az `sm:`/`lg:` nem sáv; csak sávon belüli finomításra használd.
+- **Váltás CSS-sel, nem JS-sel:** ahol a jelölés eltér (táblázat ↔ kártyák, oldalmenü ↔ ikonsáv ↔ alsó navigáció), mindkét változat renderelődik, és `hidden md:block` / `md:hidden` (illetve `xl:`) dönt. Így a szerver elsőre is a jó elrendezést adja. A jsdom nem alkalmaz CSS-t, ezért a tesztek mindkét változatot látják: a lekérdezéseket egy konténerre szűkítsd (`within(...)`), és az osztállyal rögzítsd, melyik változat melyik sávé.
+- **Keret-változók:** az `(admin)` layout beállítja a `--shell-left` (0 / 80 / 248 px) és a `--shell-bottom` (mobilon az alsó navigáció magassága + safe area, különben 0) változót; lebegő elem (tömeges műveleti sáv, mentési sáv, lebegő gomb) ezekből számolja a helyét, fix szélességet ne írj. Mobilon a felső sáv és az alsó navigáció `fixed` (a képernyő széléhez tapad), a mentési sáv teljes szélességben közvetlenül az alsó navigáció fölött ül.
+- **Vízszintes görgetés:** minden `overflow-x-auto` keret legyen `relative` (a `Card` alapból az). Különben a benne lévő abszolút pozíciójú elemek (`sr-only` feliratok, a Radix checkbox rejtett inputja) kilógnak a keretből, és az egész oldalt szélesítik. Biztonsági háló: a layout tartalomoszlopa `overflow-x-clip`.
+- A root layout `viewportFit: "cover"`-t exportál, hogy az alsó navigáció kitérhessen a `env(safe-area-inset-bottom)` elől.
+
 ## Közös elemek
 
 - **`DataTable`** (`src/components/data-table.tsx`): TanStack Table, **kliensoldali** rendezés és lapozás, korlátos adatra. Props: `columns`, `data`, `caption` (képernyőolvasónak). Szerveroldali lapozású listához lásd az `ApplicantsTable` mintáját (`src/components/applicants/`).

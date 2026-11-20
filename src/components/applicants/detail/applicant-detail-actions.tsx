@@ -24,10 +24,13 @@ const LATER = "Hamarosan elérhető.";
 function UnavailableButton({
 	id,
 	variant,
+	label,
 	children,
 }: {
 	id: string;
 	variant: "surface";
+	/** Az akadálymentes név (a látható felirat mobilon rövidebb). */
+	label: string;
 	children: ReactNode;
 }) {
 	return (
@@ -36,11 +39,16 @@ function UnavailableButton({
 				<TooltipTrigger asChild>
 					{/* Disabled buttons get no pointer or focus events, so the
 					    wrapper carries the tooltip trigger. */}
-					<span tabIndex={0} className="rounded-md">
+					<span
+						tabIndex={0}
+						className="flex-1 rounded-md xl:flex-none"
+					>
 						<Button
 							variant={variant}
 							disabled
+							aria-label={label}
 							aria-describedby={id}
+							className="w-full"
 						>
 							{children}
 						</Button>
@@ -68,14 +76,25 @@ export function ApplicantDetailActions({
 	const [run, setRun] = useState(0);
 
 	return (
-		<div className="flex flex-wrap items-center gap-2">
+		// Below xl: a full-width row where the two main actions share the width.
+		<div
+			data-testid="detail-actions"
+			className="flex w-full items-center gap-2 xl:w-auto"
+		>
 			<TooltipProvider>
-				<UnavailableButton id="confirm-unavailable" variant="surface">
+				<UnavailableButton
+					id="confirm-unavailable"
+					variant="surface"
+					label="Visszaigazolás küldése"
+				>
 					<Send aria-hidden="true" />
-					Visszaigazolás küldése
+					<span className="md:hidden">Visszaigazolás</span>
+					<span className="hidden md:inline">
+						Visszaigazolás küldése
+					</span>
 				</UnavailableButton>
 			</TooltipProvider>
-			<Button asChild variant="surface">
+			<Button asChild variant="surface" className="flex-1 xl:flex-none">
 				<Link href={`/applicants/${encodeURIComponent(id)}/edit`}>
 					<Pencil aria-hidden="true" />
 					Szerkesztés

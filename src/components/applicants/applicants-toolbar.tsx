@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import {
 	useEffect,
 	useEffectEvent,
@@ -10,6 +10,14 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
 	ageRangeError,
@@ -30,6 +38,21 @@ type Props = {
 	trailing?: ReactNode;
 };
 
+/** Az aktív szűrők száma (a keresés nélkül), a mobil „Szűrők” gombhoz. */
+export function activeFilterCount(filters: ListFilters): number {
+	return [
+		filters.eventIds.length > 0,
+		filters.ageFrom !== undefined || filters.ageTo !== undefined,
+		!!filters.hometown,
+		filters.newsletter !== undefined,
+		filters.attended !== undefined,
+	].filter(Boolean).length;
+}
+
+/**
+ * Mobilon (< md) a keresés mellett csak egy „Szűrők” gomb látszik, a chipek
+ * párbeszédablakban nyílnak; tablettől a chipek sorban, tördelve.
+ */
 export function ApplicantsToolbar({
 	filters,
 	events,
@@ -37,12 +60,78 @@ export function ApplicantsToolbar({
 	onClearAll,
 	trailing,
 }: Props) {
+	const chips = (
+		<FilterChips
+			filters={filters}
+			events={events}
+			onChange={onChange}
+			onClearAll={onClearAll}
+		/>
+	);
 	return (
 		<div className="flex flex-wrap items-center gap-2">
 			<SearchField
 				value={filters.q ?? ""}
 				onSearch={(q) => onChange({ q })}
 			/>
+			<MobileFiltersDialog count={activeFilterCount(filters)}>
+				<div className="flex flex-col items-start gap-2">{chips}</div>
+			</MobileFiltersDialog>
+			<div data-testid="inline-filters" className="hidden md:contents">
+				{chips}
+				<span className="flex-1" />
+				{trailing}
+			</div>
+		</div>
+	);
+}
+
+/** Mobil „Szűrők” gomb (aktív szűrők számával) és a szűrők párbeszédablaka. */
+export function MobileFiltersDialog({
+	count,
+	children,
+}: {
+	count: number;
+	children: ReactNode;
+}) {
+	return (
+		<Dialog>
+			<DialogTrigger
+				aria-label={count > 0 ? `Szűrők (${count} aktív)` : "Szűrők"}
+				className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-border-strong bg-white focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none md:hidden"
+			>
+				<SlidersHorizontal aria-hidden="true" className="size-[18px]" />
+				{count > 0 && (
+					<span
+						aria-hidden="true"
+						className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-ink text-[11px] font-semibold text-white"
+					>
+						{count}
+					</span>
+				)}
+			</DialogTrigger>
+			<DialogContent className="max-h-[85vh] overflow-y-auto">
+				<DialogTitle>Szűrők</DialogTitle>
+				<DialogDescription className="sr-only">
+					A lista szűrése; a változások azonnal érvényesek.
+				</DialogDescription>
+				{children}
+				<DialogClose asChild>
+					<Button className="mt-2 w-full rounded-full">Kész</Button>
+				</DialogClose>
+			</DialogContent>
+		</Dialog>
+	);
+}
+
+function FilterChips({
+	filters,
+	events,
+	onChange,
+	onClearAll,
+}: Omit<Props, "trailing">) {
+	return (
+		<>
 			<ProgramChip
 				events={events}
 				selected={filters.eventIds}
@@ -100,9 +189,7 @@ export function ApplicantsToolbar({
 					Szűrők törlése
 				</Button>
 			)}
-			<span className="flex-1" />
-			{trailing}
-		</div>
+		</>
 	);
 }
 
@@ -141,7 +228,7 @@ export function SearchField({
 	}, [draft]);
 
 	return (
-		<label className="flex h-8 w-64 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary focus-within:ring-2 focus-within:ring-ink">
+		<label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary focus-within:ring-2 focus-within:ring-ink md:h-8 md:w-64 md:flex-none">
 			<Search aria-hidden="true" className="size-4" />
 			<input
 				type="search"
@@ -149,7 +236,7 @@ export function SearchField({
 				placeholder={placeholder}
 				value={draft}
 				onChange={(e) => setDraft(e.target.value)}
-				className="min-w-0 flex-1 bg-transparent text-xs text-text-primary outline-none"
+				className="min-w-0 flex-1 bg-transparent text-sm text-text-primary outline-none md:text-xs"
 			/>
 		</label>
 	);

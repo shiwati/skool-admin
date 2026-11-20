@@ -232,3 +232,16 @@ describe("EventForm", () => {
 		).toBeEnabled();
 	});
 });
+
+describe("EventForm responsive layout", () => {
+	it("uses one column on mobile, two from md, and the section nav only on xl", () => {
+		render(<EventForm mode="create" />);
+		const nav = screen.getByRole("navigation", { name: "Szakaszok" });
+		expect(nav).toHaveClass("hidden", "xl:flex");
+		const grid = screen.getByRole("heading", {
+			name: /Alapadatok/,
+		}).nextElementSibling;
+		expect(grid).toHaveClass("grid", "md:grid-cols-2");
+		expect(grid).not.toHaveClass("sm:grid-cols-2");
+	});
+});

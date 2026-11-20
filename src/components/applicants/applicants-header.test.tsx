@@ -50,3 +50,29 @@ describe("DuplicateBanner", () => {
 		expect(onReview).toHaveBeenCalledOnce();
 	});
 });
+
+describe("ApplicantsHeader on mobile", () => {
+	it("offers the e-mail list in a menu", async () => {
+		const onEmailList = vi.fn();
+		render(<ApplicantsHeader total={3} onEmailList={onEmailList} />);
+		const trigger = screen.getByRole("button", {
+			name: "További műveletek",
+		});
+		expect(trigger.parentElement).toHaveClass("md:hidden");
+		await userEvent.click(trigger);
+		await userEvent.click(
+			screen.getByRole("menuitem", { name: "E-mail lista" }),
+		);
+		expect(onEmailList).toHaveBeenCalledOnce();
+	});
+});
+
+describe("DuplicateBanner on mobile", () => {
+	it("hides the explanation for a compact single line", () => {
+		render(<DuplicateBanner count={3} onReview={vi.fn()} />);
+		expect(screen.getByText(/Azonos névvel és e-mail címmel/)).toHaveClass(
+			"hidden",
+			"md:block",
+		);
+	});
+});
