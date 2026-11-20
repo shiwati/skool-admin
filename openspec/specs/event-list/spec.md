@@ -105,7 +105,7 @@ Each row SHALL show one status badge:
 
 ### Requirement: Program table columns
 
-The table SHALL show these columns, in this order: "Program", "Időpont", "Helyszín", "Kapacitás · jelentkezők", "Oktatók", "Státusz", and a row actions button labelled "Műveletek: <program name>" for assistive technology.
+The table SHALL show these columns, in this order: "Program", "Időpont", "Helyszín", "Jelentkezők · kapacitás", "Oktatók", "Státusz", and a row actions button labelled "Műveletek: <program name>" for assistive technology.
 
 #### Scenario: Column order
 
@@ -154,7 +154,7 @@ The "Helyszín" cell SHALL show the location and, below it, the partner company 
 
 ### Requirement: Demand cell
 
-When the capacity is above zero, the "Kapacitás · jelentkezők" cell SHALL show "<applications> / <capacity> fő", the ratio of applications to capacity as a badge with one decimal and a decimal comma (for example "3,1×"), and a bar filled in proportion to the ratio, up to full. When the capacity is zero, it SHALL show "<applications> jelentkező" with no badge and no bar. Applications SHALL be counted in every status.
+When the capacity is above zero, the "Jelentkezők · kapacitás" cell SHALL show "<applications> / <capacity> fő", the ratio of applications to capacity as a badge with one decimal and a decimal comma (for example "3,1×"), and a bar filled in proportion to the ratio, up to full. When the capacity is zero, it SHALL show "<applications> jelentkező" with no badge and no bar. Applications SHALL be counted in every status.
 
 #### Scenario: Oversubscribed program
 
@@ -241,7 +241,7 @@ Active filters SHALL combine with AND. "Szűrők törlése" SHALL appear while a
 
 ### Requirement: Sorting
 
-The "Program", "Időpont" and "Kapacitás · jelentkezők" headers SHALL sort the list by name, start date and capacity. The list SHALL be sorted by start date, newest first, by default. The first activation of a header SHALL sort by name or capacity in ascending order, and by start date in descending order. Activating the current sort header again SHALL reverse the order. The current sort SHALL be exposed to assistive technology.
+The "Program", "Időpont" and "Jelentkezők · kapacitás" headers SHALL sort the list by name, start date and capacity. The list SHALL be sorted by start date, newest first, by default. The first activation of a header SHALL sort by name or capacity in ascending order, and by start date in descending order. Activating the current sort header again SHALL reverse the order. The current sort SHALL be exposed to assistive technology.
 
 #### Scenario: Sort by name
 

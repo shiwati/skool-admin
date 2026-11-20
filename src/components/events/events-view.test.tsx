@@ -177,7 +177,7 @@ describe("EventsView", () => {
 		const cells = within(screen.getAllByRole("row")[1]).getAllByRole(
 			"cell",
 		);
-		// Helyszín, Kapacitás · jelentkezők, Oktatók
+		// Helyszín, Jelentkezők · kapacitás, Oktatók
 		expect(cells[2]).toHaveTextContent(/^—$/);
 		expect(cells[3]).toHaveTextContent(/^7 jelentkező$/);
 		expect(within(cells[3]).queryByText(/×$/)).not.toBeInTheDocument();

@@ -105,8 +105,8 @@ export const EVENT_COLUMNS: Record<EventColumnId, EventColumnDef> = {
 	},
 	demand: {
 		id: "demand",
-		label: "Kapacitás · jelentkezők",
-		pickerLabel: "Kapacitás · jelentkezők",
+		label: "Jelentkezők · kapacitás",
+		pickerLabel: "Jelentkezők · kapacitás",
 		cardLabel: "Igény",
 		sortKey: "capacity",
 		width: 220,
