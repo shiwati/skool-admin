@@ -5,7 +5,6 @@ import {
 	DEFAULT_STATE,
 	hasActiveFilters,
 	parseListState,
-	resultKey,
 	toApiQuery,
 	toSearchParams,
 	updateListState,
@@ -158,11 +157,5 @@ describe("filters helpers", () => {
 		expect(ageRangeError(16, 12)).toMatch(/minimum/);
 		expect(ageRangeError(12, 16)).toBeNull();
 		expect(ageRangeError(undefined, 3)).toBeNull();
-	});
-
-	it("gives a different result key when the result set changes", () => {
-		expect(resultKey(DEFAULT_STATE)).not.toBe(
-			resultKey({ ...DEFAULT_STATE, page: 2 }),
-		);
 	});
 });

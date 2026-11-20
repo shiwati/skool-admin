@@ -205,8 +205,3 @@ export function clearFilters(state: ListState): ListState {
 		attended: undefined,
 	});
 }
-
-/** Az aktuális eredményhalmazt azonosító kulcs (kijelölés törléséhez). */
-export function resultKey(state: ListState): string {
-	return toSearchParams(state).toString();
-}
