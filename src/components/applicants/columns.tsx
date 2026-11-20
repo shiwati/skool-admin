@@ -15,7 +15,9 @@ import {
 	programColorClass,
 	STATUS_BADGE_CLASSES,
 	STATUS_LABELS,
+	TAG_BADGE_CLASSES,
 } from "@/lib/applicants/format";
+import { Pill } from "@/components/applicants/detail/detail-card";
 import type { ColumnId } from "@/lib/applicants/column-settings";
 import type { SortKey } from "@/lib/applicants/list-params";
 import type { ApplicantListItem } from "@/lib/applicants/types";
@@ -103,9 +105,7 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 				<div className="flex items-center gap-1.5">
 					{age}
 					{isOver16(age) && (
-						<span className="rounded-full bg-info-bg px-2 text-xs leading-5 font-medium text-info-fg">
-							16+
-						</span>
+						<Pill className={TAG_BADGE_CLASSES.over16}>16+</Pill>
 					)}
 				</div>
 			);

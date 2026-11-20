@@ -1,4 +1,8 @@
-import { ALUMNI_DESCRIPTION, ALUMNI_LABEL } from "@/lib/applicants/format";
+import {
+	ALUMNI_DESCRIPTION,
+	ALUMNI_LABEL,
+	TAG_BADGE_CLASSES,
+} from "@/lib/applicants/format";
 import type { ApplicantDetail } from "@/lib/applicants/detail";
 import { applicantTags } from "./applicant-tags";
 import { DetailCard, Pill } from "./detail-card";
@@ -18,19 +22,23 @@ export function TagsCard({
 				<ul aria-label="Címkék" className="flex flex-wrap gap-2">
 					{tags.over16 && (
 						<li>
-							<Pill className="bg-info-bg text-info-fg">16+</Pill>
+							<Pill className={TAG_BADGE_CLASSES.over16}>
+								16+
+							</Pill>
 						</li>
 					)}
 					{tags.newsletter && (
 						<li>
-							<Pill className="bg-success-bg text-success-fg">
+							<Pill className={TAG_BADGE_CLASSES.newsletter}>
 								Hírlevél
 							</Pill>
 						</li>
 					)}
 					{tags.alumni && (
 						<li>
-							<Pill className="bg-sage">{ALUMNI_LABEL}</Pill>
+							<Pill className={TAG_BADGE_CLASSES.alumni}>
+								{ALUMNI_LABEL}
+							</Pill>
 						</li>
 					)}
 				</ul>

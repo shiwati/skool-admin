@@ -1,6 +1,11 @@
 "use client";
 
-import { ALUMNI_LABEL, ALUMNI_MIN_ATTENDED } from "@/lib/applicants/format";
+import {
+	ALUMNI_LABEL,
+	ALUMNI_MIN_ATTENDED,
+	TAG_BADGE_CLASSES,
+} from "@/lib/applicants/format";
+import { Pill } from "@/components/applicants/detail/detail-card";
 import { RotateCcw, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -319,15 +324,15 @@ export function ApplicantEditForm({
 							Automatikus mezők
 						</h2>
 						<p className="flex items-center gap-2 text-sm text-text-secondary">
-							<span className="rounded-full bg-info-bg px-2.5 text-xs leading-6 font-medium text-info-fg">
+							<Pill className={TAG_BADGE_CLASSES.over16}>
 								16+
-							</span>
+							</Pill>
 							a születési évből számolva
 						</p>
 						<p className="flex items-center gap-2 text-sm text-text-secondary">
-							<span className="rounded-full bg-sage px-2.5 text-xs leading-6 font-medium text-text-primary">
+							<Pill className={TAG_BADGE_CLASSES.alumni}>
 								{ALUMNI_LABEL}
-							</span>
+							</Pill>
 							legalább {ALUMNI_MIN_ATTENDED} elvégzett program
 							esetén
 						</p>

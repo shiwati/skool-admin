@@ -5,6 +5,7 @@ import {
 	applicantInitials,
 	fullName,
 	isOver16,
+	TAG_BADGE_CLASSES,
 } from "@/lib/applicants/format";
 import type { ApplicantListItem } from "@/lib/applicants/types";
 import { cn } from "@/lib/utils";
@@ -52,7 +53,8 @@ function ApplicantCard({
 						<span
 							className={cn(
 								badge,
-								"bg-info-bg px-2 text-info-fg",
+								"px-2",
+								TAG_BADGE_CLASSES.over16,
 							)}
 						>
 							16+
