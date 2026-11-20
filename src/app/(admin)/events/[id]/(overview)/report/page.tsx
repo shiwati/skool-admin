@@ -54,6 +54,19 @@ export default async function EventReportPage({ params }: Props) {
 						},
 						{ key: "Helyszín", value: event.location },
 						{
+							key: "Rövid leírás",
+							value: event.description ? (
+								<span className="font-normal whitespace-pre-line">
+									{event.description}
+								</span>
+							) : (
+								<span className="font-normal text-warning-fg">
+									Nincs megadva – a program szerkesztésénél
+									pótolható
+								</span>
+							),
+						},
+						{
 							key: "Résztvevők",
 							value:
 								report.participants > 0 ? (

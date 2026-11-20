@@ -14,6 +14,8 @@ export type ReportDocumentData = {
 	to: Date;
 	location: string | null;
 	ageRange: string | null;
+	/** Az esemény rövid leírása (`{short_desc}`). */
+	description: string | null;
 	participants: number;
 	people: { role: string; organization: string; name: string }[];
 	highlightedQuotes: ReportQuote[];

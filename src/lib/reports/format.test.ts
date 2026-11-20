@@ -13,6 +13,7 @@ const data: ReportDocumentData = {
 	to: new Date("2025-05-16T16:30:00Z"),
 	location: "Budapest",
 	ageRange: "10-12",
+	description: "Rövid leírás",
 	participants: 15,
 	people: [{ role: "Oktató", organization: "Skool", name: "Jéney Ildikó" }],
 	highlightedQuotes: [
