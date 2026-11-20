@@ -53,7 +53,11 @@ Válasz: `200 { id }`; `400` `{error, details}`; `401`; `404`.
 ### `GET /api/events/[id]/applicants`
 
 Paraméterek: `page`, `pageSize`, `status` (CSV enum), `ageFrom`, `ageTo`, `q`, `sort` (`lastName`|`birthYear`|`status`|`receivedAt`, alap `receivedAt`), `order` (alap `asc`).
-Válasz: Application + beágyazott `applicant`. `404`, ha az esemény nem létezik.
+Válasz: Application + beágyazott `applicant` (a törölt/anonimizált jelentkezők nélkül). `404`, ha az esemény nem létezik.
+
+### `POST /api/events/[id]/applicants/status` — tömeges státuszmódosítás
+
+Body: `{ "ids": ["…"], "status": "ACCEPTED" }` (1–100 egyedi `Application` id, `status` az `ApplicationStatus` enumból). Egy tranzakcióban csak a ténylegesen változó jelentkezések frissülnek (`status`, `updatedById`), soronként egy `History` sorral (`tableName: "application"`, `fieldName: "status"`, `oldValue`/`newValue` az enum kulcsa). A már célstátuszú sor kimarad. Válasz: `{ updated, skipped }`; hibák: 400 (validáció), 401, 404 (ismeretlen vagy másik programhoz tartozó id, semmi sem változik). Kód: `src/lib/applications/update-status.ts`. A férőhelyet a szerver nem kényszeríti ki, a felület csak figyelmeztet.
 
 Egyéb: `GET /api/health` (nyilvános readiness, 200/503), `/api/auth/*` (NextAuth).
 

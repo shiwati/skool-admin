@@ -38,7 +38,7 @@ describe("EventHeader", () => {
 		expect(pills).toHaveTextContent("Jelentkezés nyitva");
 	});
 
-	it("shows a full program as 'Betelt · várólista'", () => {
+	it("shows a full program as 'Betelt'", () => {
 		render(
 			<EventHeader
 				event={overviewEvent({
@@ -49,7 +49,7 @@ describe("EventHeader", () => {
 				now={NOW}
 			/>,
 		);
-		expect(screen.getByText("Betelt · várólista")).toBeInTheDocument();
+		expect(screen.getByText("Betelt")).toBeInTheDocument();
 	});
 
 	it("summarises place and people, with a +N for more than two", () => {

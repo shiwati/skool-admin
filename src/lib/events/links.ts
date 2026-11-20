@@ -5,6 +5,11 @@ export function applicantsHref(eventId: string) {
 	return `/applicants?eventIds=${encodeURIComponent(eventId)}`;
 }
 
+/** A program Jelentkezők füle (jelentkezések tömeges státuszkezeléssel). */
+export function eventApplicantsHref(eventId: string) {
+	return `/events/${encodeURIComponent(eventId)}/applicants`;
+}
+
 /** A program saját oldala. */
 export function eventHref(eventId: string) {
 	return `/events/${encodeURIComponent(eventId)}`;

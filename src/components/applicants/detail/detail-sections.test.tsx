@@ -9,7 +9,7 @@ import { TagsCard } from "./tags-card";
 import { detailApplicant, detailApplication, NOW } from "./test-fixtures";
 
 describe("ApplicantDetailHeader", () => {
-	it("shows status, 16+, newsletter and alumni badges (spec: alumni applicant)", () => {
+	it("shows 16+, newsletter and alumni badges (spec: alumni applicant)", () => {
 		render(
 			<ApplicantDetailHeader applicant={detailApplicant()} now={NOW} />,
 		);
@@ -21,7 +21,7 @@ describe("ApplicantDetailHeader", () => {
 		)
 			.getAllByRole("listitem")
 			.map((li) => li.textContent);
-		expect(badges).toEqual(["Elfogadva", "16+", "Hírlevél", "Alumni"]);
+		expect(badges).toEqual(["16+", "Hírlevél", "Alumni"]);
 		expect(
 			screen.getByText(
 				/Létrehozva 2026\.10\.02 18:41 · Módosítva 2026\.10\.05 14:30/,

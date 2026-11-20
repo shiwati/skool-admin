@@ -13,7 +13,7 @@
 - **Sheet-import azonosítás:** hogyan ismerjük fel ugyanazt a jelentkezőt / eseményt újraimportáláskor (e-mail? név + születési év? külső azonosító mező, pl. `sheetRowId`)? A séma jelenleg nem ad természetes egyedi kulcsot; az `Applicant.email` csak indexelt, és a gyerekeknek lehet közös szülői e-mailje.
 - Az import saját, bejelentkezett admin funkció lesz (nem seed), a `dataFileSchema` közös validációval; az írási alap (body-validáció, session, History) előbb kell.
 - Az írási végpontok közös alapja (body-validáció, session, hibakezelés, History) még hiányzik, az első írási igénnyel együtt tervezendő.
-- Milyen további írási műveletek kellenek (státuszváltás, szerkesztés)? A törlés megvan (GDPR-anonimizálás, lásd [data-and-db.md](data-and-db.md)), a History-naplózás általános megoldása még nyitott.
+- Milyen további írási műveletek kellenek (a tömeges státuszváltás megvan az esemény oldalán, `POST /api/events/[id]/applicants/status`; szerkesztés)? A törlés megvan (GDPR-anonimizálás, lásd [data-and-db.md](data-and-db.md)), a History-naplózás általános megoldása még nyitott.
 - ~~Szerveroldali lapozású tábla~~ Megoldva: `ApplicantsTable` (`src/components/applicants/`).
 - Szerepkörök: marad az "egy Workspace-tag = admin" modell?
 - Személyes adatok (gyerekek, szülők): adatkezelési/GDPR követelmények, megőrzés, törlés.

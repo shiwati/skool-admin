@@ -4,7 +4,7 @@ import { overviewCounts } from "./test-fixtures";
 import { StatusBreakdown } from "./status-breakdown";
 
 describe("StatusBreakdown", () => {
-	it("lists every status with its count and links to the filtered applicants", () => {
+	it("lists every status with its count and links to the applicants tab", () => {
 		render(<StatusBreakdown eventId="e1" counts={overviewCounts()} />);
 		expect(screen.getByText("62 jelentkezés")).toBeInTheDocument();
 		const items = screen.getAllByRole("listitem");
@@ -22,7 +22,7 @@ describe("StatusBreakdown", () => {
 		).toBeInTheDocument();
 		expect(
 			screen.getByRole("link", { name: "Jelentkezők megtekintése" }),
-		).toHaveAttribute("href", "/applicants?eventIds=e1");
+		).toHaveAttribute("href", "/events/e1/applicants");
 	});
 
 	it("shows an empty state instead of the bar without applications", () => {
