@@ -242,7 +242,7 @@ export function SearchField({
 	}, [draft]);
 
 	return (
-		<label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-coral md:h-8 md:w-64 md:flex-none">
+		<label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary md:h-8 md:w-64 md:flex-none">
 			<Search aria-hidden="true" className="size-4" />
 			<input
 				type="search"
@@ -250,7 +250,7 @@ export function SearchField({
 				placeholder={placeholder}
 				value={draft}
 				onChange={(e) => setDraft(e.target.value)}
-				className="min-w-0 flex-1 bg-transparent text-sm text-text-primary outline-none md:text-xs"
+				className="min-w-0 flex-1 bg-transparent text-sm text-text-primary md:text-xs"
 			/>
 		</label>
 	);

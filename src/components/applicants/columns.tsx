@@ -73,7 +73,7 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 				<div className="min-w-0">
 					<Link
 						href={applicantHref(item.id)}
-						className="block truncate font-medium underline-offset-2 hover:underline focus-visible:underline"
+						className="block truncate font-medium underline-offset-2 hover:underline"
 					>
 						{fullName(item)}
 					</Link>
