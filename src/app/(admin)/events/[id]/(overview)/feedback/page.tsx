@@ -40,7 +40,8 @@ export default async function EventFeedbackPage({
 	const { event } = overview;
 
 	const parsed = parseFeedbackQuery(await searchParams);
-	const query = { ...parsed, eventId: event.id };
+	// A program fülén nincs időszakszűrő: egy kézzel beírt `period` se szűrjön rejtetten.
+	const query = { ...parsed, eventId: event.id, period: undefined };
 	const [data, lastImport, found] = await Promise.all([
 		listFeedback(query),
 		lastFeedbackImport(event.id),

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+	formatScore,
+	programSatisfaction,
+	satisfactionByRole,
+	share,
 	ageAtEvent,
 	ageDistribution,
 	budapestYear,
@@ -212,5 +216,51 @@ describe("ageAtEvent", () => {
 	it("uses the Budapest start year of the event", () => {
 		expect(ageAtEvent(2012, new Date("2025-12-31T23:30:00Z"))).toBe(14);
 		expect(ageAtEvent(null, new Date("2026-03-01"))).toBeNull();
+	});
+});
+
+describe("satisfaction", () => {
+	const row = (
+		eventId: string,
+		role: "PARTICIPANT" | "MENTOR",
+		overallScore: number | null,
+		recommend: string | null = null,
+	) => ({
+		eventId,
+		eventName: eventId.toUpperCase(),
+		eventFrom: new Date("2026-10-01T08:00:00Z"),
+		role,
+		overallScore,
+		recommend,
+	});
+
+	it("averages scores per role, skipping missing scores and unknown recommend values", () => {
+		const s = satisfactionByRole([
+			row("a", "PARTICIPANT", 5, "yes"),
+			row("a", "PARTICIPANT", null, "bogus"),
+			row("a", "MENTOR", 4, "no"),
+		]);
+		expect(s.PARTICIPANT).toEqual({
+			score: { average: 5, count: 1 },
+			recommend: { yes: 1, maybe: 0, no: 0, total: 1 },
+			responses: 2,
+		});
+		expect(s.MENTOR.score).toEqual({ average: 4, count: 1 });
+	});
+
+	it("orders programs by participant average, unscored last", () => {
+		const p = programSatisfaction([
+			row("x", "MENTOR", 5),
+			row("b", "PARTICIPANT", 3),
+			row("a", "PARTICIPANT", 4.5),
+			row("z", "PARTICIPANT", null),
+		]);
+		expect(p.map((r) => r.id)).toEqual(["x", "a", "b", "z"]);
+	});
+
+	it("formats scores and shares", () => {
+		expect(formatScore(4.63)).toBe("4,6");
+		expect(share(1, 3)).toBe(33);
+		expect(share(1, 0)).toBe(0);
 	});
 });

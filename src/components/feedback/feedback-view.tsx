@@ -266,6 +266,7 @@ export function FeedbackView({
 	state,
 	basePath,
 	events,
+	periods,
 	openItem,
 	header,
 }: {
@@ -274,6 +275,8 @@ export function FeedbackView({
 	basePath: string;
 	/** Programszűrő opciói; `undefined` a program saját fülén. */
 	events?: { id: string; name: string }[];
+	/** Időszakszűrő opciói; `undefined` a program saját fülén. */
+	periods?: { key: string; label: string }[];
 	openItem: FeedbackListItem | null;
 	header?: ReactNode;
 }) {
@@ -287,7 +290,9 @@ export function FeedbackView({
 	const prev = index > 0 ? items[index - 1] : undefined;
 	const next =
 		index >= 0 && index < items.length - 1 ? items[index + 1] : undefined;
-	const filtered = Boolean(state.q || state.role || state.eventId);
+	const filtered = Boolean(
+		state.q || state.role || state.eventId || state.period,
+	);
 
 	return (
 		<>
@@ -318,7 +323,7 @@ export function FeedbackView({
 				/>
 			</dl>
 
-			<FeedbackToolbar state={state} events={events} />
+			<FeedbackToolbar state={state} events={events} periods={periods} />
 
 			<Card className="overflow-hidden">
 				{items.length === 0 ? (

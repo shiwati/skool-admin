@@ -1,17 +1,22 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { applicationCount, applicationFindMany, eventFindMany } = vi.hoisted(
-	() => ({
-		applicationCount: vi.fn(),
-		applicationFindMany: vi.fn(),
-		eventFindMany: vi.fn(),
-	}),
-);
+const {
+	applicationCount,
+	applicationFindMany,
+	eventFindMany,
+	feedbackFindMany,
+} = vi.hoisted(() => ({
+	applicationCount: vi.fn(),
+	applicationFindMany: vi.fn(),
+	eventFindMany: vi.fn(),
+	feedbackFindMany: vi.fn(),
+}));
 vi.mock("@/lib/db", () => ({
 	db: {
 		application: { count: applicationCount, findMany: applicationFindMany },
 		event: { findMany: eventFindMany },
+		feedback: { findMany: feedbackFindMany },
 	},
 }));
 
@@ -61,6 +66,56 @@ describe("loadDashboard", () => {
 			])
 			.mockResolvedValueOnce(events);
 		applicationCount.mockResolvedValueOnce(120).mockResolvedValueOnce(100);
+		const fb = (
+			eventId: string,
+			name: string,
+			from: string,
+			role: "PARTICIPANT" | "MENTOR",
+			overallScore: number | null,
+			recommend: string | null,
+		) => ({
+			eventId,
+			role,
+			overallScore,
+			recommend,
+			event: { name, from: new Date(from) },
+		});
+		feedbackFindMany.mockResolvedValue([
+			fb(
+				"a",
+				"Python ősz",
+				"2026-10-01T08:00:00Z",
+				"PARTICIPANT",
+				5,
+				"yes",
+			),
+			fb(
+				"a",
+				"Python ősz",
+				"2026-10-01T08:00:00Z",
+				"PARTICIPANT",
+				4,
+				"maybe",
+			),
+			fb("a", "Python ősz", "2026-10-01T08:00:00Z", "MENTOR", 3, null),
+			fb(
+				"c",
+				"Tavaszi tábor",
+				"2026-03-01T08:00:00Z",
+				"PARTICIPANT",
+				null,
+				"no",
+			),
+			// Previous period (program started in 2025).
+			fb(
+				"b",
+				"Robotika tél",
+				"2025-12-01T08:00:00Z",
+				"PARTICIPANT",
+				2,
+				"no",
+			),
+		]);
 		applicationFindMany.mockResolvedValue([
 			{
 				event: { from: new Date("2026-10-01T08:00:00Z") },
@@ -160,5 +215,40 @@ describe("loadDashboard", () => {
 			"2026-11",
 		]);
 		expect(data.trend[4].ratio).toBe(2.5);
+	});
+
+	it("splits satisfaction by role and assigns feedback by program start", async () => {
+		const data = await loadDashboard({}, now);
+		expect(feedbackFindMany.mock.calls[0][0].where).toEqual({
+			event: {
+				from: { gte: range(2025).gte, lt: range(2026).lt },
+			},
+		});
+		const { current, previous } = data.satisfaction;
+		expect(current.PARTICIPANT.score).toEqual({ average: 4.5, count: 2 });
+		expect(current.PARTICIPANT.responses).toBe(3);
+		expect(current.PARTICIPANT.recommend).toEqual({
+			yes: 1,
+			maybe: 1,
+			no: 1,
+			total: 3,
+		});
+		expect(current.MENTOR.score).toEqual({ average: 3, count: 1 });
+		expect(previous.PARTICIPANT.score).toEqual({ average: 2, count: 1 });
+		expect(
+			data.satisfactionByProgram.map((p) => [
+				p.id,
+				p.participant.average,
+				p.mentor.average,
+			]),
+		).toEqual([
+			["a", 4.5, 3],
+			["c", null, null],
+		]);
+	});
+
+	it("restricts feedback to the selected program", async () => {
+		await loadDashboard({ program: "a" }, now);
+		expect(feedbackFindMany.mock.calls[0][0].where.eventId).toBe("a");
 	});
 });
