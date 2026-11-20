@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-applicant-detail. Update Purpose after archive.
+Shows everything about one applicant at `/applicants/<id>`: personal and parent data, the programs they applied to with their form answers, tags and the latest changes, with actions to edit or delete the applicant.
 
 ## Requirements
 

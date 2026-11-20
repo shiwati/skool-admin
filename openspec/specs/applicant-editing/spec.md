@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change add-applicant-edit. Update Purpose after archive.
+Lets admins correct an applicant's data at `/applicants/<id>/edit`, with validation in the form and on the server, conflict detection, and every saved change logged to the change history.
 
 ## Requirements
 
