@@ -155,7 +155,7 @@ With no applicable tag, it SHALL say "Nincs címke". The tags SHALL NOT be edita
 
 ### Requirement: Change history card
 
-A "Változástörténet" card SHALL list the recorded changes of the applicant and of their applications, newest first, at most 20 entries. Each entry SHALL show:
+A "Legutóbbi változások" card SHALL list the recorded changes of the applicant and of their applications, newest first, at most 5 entries. The card header SHALL show a "Teljes napló" link to the applicant's full change history at `/history/<id>`, also when there are no entries. Each entry SHALL show:
 
 - who made the change: the user's name, or "Rendszer" when no user is recorded
 - the changed field with a Hungarian label; for an application change, also the program name
@@ -174,6 +174,17 @@ Status values SHALL be shown with their status labels. Fields without a known la
 
 - **WHEN** no history entry exists for the applicant or their applications
 - **THEN** the card says "Még nincs rögzített változás"
+
+#### Scenario: Only the latest five changes
+
+- **GIVEN** the applicant and their applications have 8 recorded changes
+- **WHEN** the detail page is rendered
+- **THEN** the card lists the 5 latest changes
+
+#### Scenario: Opening the full history
+
+- **WHEN** the admin activates "Teljes napló" on the history card
+- **THEN** `/history/<id>` opens for this applicant
 
 ### Requirement: Header actions
 
