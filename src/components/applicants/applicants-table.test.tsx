@@ -56,7 +56,6 @@ describe("ApplicantsTable", () => {
 			"TelepülésIskola",
 			"Hírlevél",
 			"Előzmény",
-			"Jelentkezett",
 		]);
 	});
 
@@ -75,6 +74,15 @@ describe("ApplicantsTable", () => {
 		expect(cells[4]).toHaveTextContent("Gimnázium");
 		expect(within(cells[5]).getByRole("img", { name: "Feliratkozott" }));
 		expect(cells[6]).toHaveTextContent("1 program");
+	});
+
+	it("shows the application date when the column is enabled", () => {
+		renderTable({
+			columns: [...visibleColumns(DEFAULT_COLUMN_SETTINGS), "createdAt"],
+		});
+		const cells = within(
+			screen.getByRole("row", { name: /Nagy Luca/ }),
+		).getAllByRole("cell");
 		expect(cells[7]).toHaveTextContent("2026.10.02");
 	});
 
@@ -92,7 +100,11 @@ describe("ApplicantsTable", () => {
 	});
 
 	it("exposes the current sort and toggles direction", async () => {
-		const { onSort } = renderTable({ sort: "age", order: "asc" });
+		const { onSort } = renderTable({
+			sort: "age",
+			order: "asc",
+			columns: [...visibleColumns(DEFAULT_COLUMN_SETTINGS), "createdAt"],
+		});
 		const ageHeader = screen.getByRole("columnheader", { name: /Életkor/ });
 		expect(ageHeader).toHaveAttribute("aria-sort", "ascending");
 		expect(
