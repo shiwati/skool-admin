@@ -61,7 +61,7 @@ export function ProgramsTable({
 								<span className="flex min-w-0 flex-1 flex-col">
 									<Link
 										href={`/events/${application.event.id}`}
-										className="font-medium hover:underline focus-visible:underline"
+										className="font-medium hover:underline"
 									>
 										{application.event.name}
 									</Link>
@@ -124,7 +124,7 @@ export function ProgramsTable({
 												/>
 												<Link
 													href={`/events/${application.event.id}`}
-													className="font-medium hover:underline focus-visible:underline"
+													className="font-medium hover:underline"
 												>
 													{application.event.name}
 												</Link>
