@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { LinkRow } from "@/components/link-row";
 import { Card } from "@/components/ui/card";
 import {
 	EMPTY,
@@ -68,9 +69,10 @@ export function ReportsTable({ rows }: { rows: ReportListItem[] }) {
 					</thead>
 					<tbody>
 						{rows.map((row) => (
-							<tr
+							<LinkRow
 								key={row.eventId}
-								className="border-b border-border-default last:border-0 hover:bg-canvas"
+								href={eventReportHref(row.eventId)}
+								className="hover:bg-canvas"
 							>
 								<td className="px-3 py-2.5 align-middle">
 									<ProgramName row={row} />
@@ -87,7 +89,7 @@ export function ReportsTable({ rows }: { rows: ReportListItem[] }) {
 								<td className="px-3 py-2.5 text-right align-middle">
 									<ReportAction row={row} />
 								</td>
-							</tr>
+							</LinkRow>
 						))}
 					</tbody>
 				</table>

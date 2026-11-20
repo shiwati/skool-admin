@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, MessageSquare, Star } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { KpiCard } from "@/components/events/overview/kpi-card";
+import { LinkRow } from "@/components/link-row";
 import { Card } from "@/components/ui/card";
 import {
 	EMPTY,
@@ -22,7 +23,7 @@ import { RECOMMEND_LABELS } from "@/lib/feedback/questions";
 import { pageNumbers } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 import { FeedbackDrawer } from "./feedback-drawer";
-import { FeedbackRow } from "./feedback-row";
+
 import { FeedbackToolbar } from "./feedback-toolbar";
 import { RecommendBadge } from "./recommend-badge";
 
@@ -118,7 +119,11 @@ function Row({
 }) {
 	const note = feedbackNote(item.role, item.answers);
 	return (
-		<FeedbackRow href={href}>
+		<LinkRow
+			href={href}
+			scroll={false}
+			className="hover:bg-surface-subtle/60"
+		>
 			<td className="px-3 py-3">
 				<Link
 					href={href}
@@ -169,7 +174,7 @@ function Row({
 			<td className="truncate px-3 py-3 text-text-secondary" title={note}>
 				{note || <span className="text-text-tertiary">{EMPTY}</span>}
 			</td>
-		</FeedbackRow>
+		</LinkRow>
 	);
 }
 
