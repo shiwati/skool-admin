@@ -17,7 +17,11 @@ export type ColumnId = (typeof COLUMN_IDS)[number];
 
 /** Mindig látszik, nem rejthető el. */
 export const LOCKED_COLUMN: ColumnId = "name";
-export const DEFAULT_HIDDEN: readonly ColumnId[] = ["parent", "phone"];
+export const DEFAULT_HIDDEN: readonly ColumnId[] = [
+	"createdAt",
+	"parent",
+	"phone",
+];
 
 export type ColumnSettings = core.ColumnSettings<ColumnId>;
 

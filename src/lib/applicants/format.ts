@@ -92,11 +92,23 @@ export function formatDateRange(
 	return `${formatDate(from)} – ${formatDate(to)}`;
 }
 
-/** Alumni: legalább egy „Részt vett” státuszú jelentkezés. */
+/** Ennyi „Részt vett” státuszú jelentkezéstől jár az alumni címke. */
+export const ALUMNI_MIN_ATTENDED = 3;
+
+/** Az alumni címke megjelenített neve (egy helyen, hogy könnyű legyen átnevezni). */
+export const ALUMNI_LABEL = "Veterán";
+
+/** Az alumni címke magyarázata a felületen. */
+export const ALUMNI_DESCRIPTION = `Legalább ${ALUMNI_MIN_ATTENDED} programon „Részt vett” státuszú; a rendszer automatikusan adja.`;
+
+/** Alumni: legalább `ALUMNI_MIN_ATTENDED` „Részt vett” státuszú jelentkezés. */
 export function isAlumni(
 	applications: { status: ApplicationStatus }[],
 ): boolean {
-	return applications.some((a) => a.status === "ATTENDED");
+	return (
+		applications.filter((a) => a.status === "ATTENDED").length >=
+		ALUMNI_MIN_ATTENDED
+	);
 }
 
 /** „N jelentkezés · M elvégzett”. */
@@ -176,4 +188,36 @@ export function parentLabel(a: ApplicantListItem): {
 		.filter(Boolean)
 		.join(" ");
 	return { name: name || null, email: a.parentEmail };
+}
+
+/**
+ * Magyar telefonszám megjelenítése `+36 30 123 4567` alakban (Budapest:
+ * `+36 1 234 5678`). Felismeri a `+36`, `0036`, `06`, `36` előtagos és az
+ * előtag nélküli (`30 123 4567`) bevitelt is, bármilyen tagolással. Külföldi
+ * vagy ismeretlen szám változatlanul marad.
+ */
+export function formatPhone(value: string): string {
+	const trimmed = value.trim();
+	let digits = trimmed.replace(/\D/g, "");
+	const international = /^(\+|00)/.test(trimmed);
+	if (/^00/.test(trimmed)) digits = digits.slice(2);
+	else if (!international && digits.startsWith("06")) {
+		digits = `36${digits.slice(2)}`;
+	} else if (
+		!international &&
+		!(digits.startsWith("36") && [10, 11].includes(digits.length)) &&
+		[8, 9].includes(digits.length)
+	) {
+		digits = `36${digits}`;
+	}
+	if (!digits.startsWith("36")) return value;
+	const national = digits.slice(2);
+	if (national.startsWith("1")) {
+		if (national.length !== 8) return value;
+		return `+36 1 ${national.slice(1, 4)} ${national.slice(4)}`;
+	}
+	if (national.length === 9 || national.length === 8) {
+		return `+36 ${national.slice(0, 2)} ${national.slice(2, 5)} ${national.slice(5)}`;
+	}
+	return value;
 }

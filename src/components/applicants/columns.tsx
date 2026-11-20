@@ -6,6 +6,7 @@ import {
 	applicantInitials,
 	EMPTY,
 	formatDate,
+	formatPhone,
 	fullName,
 	historyLabel,
 	isOver16,
@@ -206,6 +207,7 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		id: "history",
 		label: "Előzmény",
 		pickerLabel: "Előzmény (elvégzett programok)",
+		sortKey: "history",
 		// Plain text "N program", or "—" without attended programs.
 		card: (item) => {
 			const label = historyLabel(item.applications);
@@ -266,10 +268,12 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		id: "phone",
 		label: "Telefonszám",
 		pickerLabel: "Telefonszám",
-		widthClass: "w-[140px]",
+		widthClass: "w-[156px]",
 		cell: (item) =>
 			item.phoneNumber ? (
-				<span className="font-mono text-xs">{item.phoneNumber}</span>
+				<span className="font-mono text-xs whitespace-nowrap">
+					{formatPhone(item.phoneNumber)}
+				</span>
 			) : (
 				dash
 			),

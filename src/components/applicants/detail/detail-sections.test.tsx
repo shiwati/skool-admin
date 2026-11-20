@@ -10,8 +10,19 @@ import { detailApplicant, detailApplication, NOW } from "./test-fixtures";
 
 describe("ApplicantDetailHeader", () => {
 	it("shows 16+, newsletter and alumni badges (spec: alumni applicant)", () => {
+		const attended = (id: string) =>
+			detailApplication({ id, status: "ATTENDED" });
 		render(
-			<ApplicantDetailHeader applicant={detailApplicant()} now={NOW} />,
+			<ApplicantDetailHeader
+				applicant={detailApplicant({
+					applications: [
+						attended("a1"),
+						attended("a2"),
+						attended("a3"),
+					],
+				})}
+				now={NOW}
+			/>,
 		);
 		expect(
 			screen.getByRole("heading", { level: 1, name: "Nagy Luca" }),
@@ -21,7 +32,7 @@ describe("ApplicantDetailHeader", () => {
 		)
 			.getAllByRole("listitem")
 			.map((li) => li.textContent);
-		expect(badges).toEqual(["16+", "Hírlevél", "Alumni"]);
+		expect(badges).toEqual(["16+", "Hírlevél", "Veterán"]);
 		expect(
 			screen.getByText(
 				/Létrehozva 2026\.10\.02 18:41 · Módosítva 2026\.10\.05 14:30/,
@@ -164,7 +175,7 @@ describe("TagsCard", () => {
 				now={NOW}
 			/>,
 		);
-		expect(screen.getByText("16+ · automatikus")).toBeInTheDocument();
+		expect(screen.getByText("16+")).toBeInTheDocument();
 		expect(screen.queryByText("Hírlevél")).not.toBeInTheDocument();
 	});
 

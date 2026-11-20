@@ -1,14 +1,17 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { findMany, count, getSession } = vi.hoisted(() => ({
+const { findMany, count, groupBy, getSession } = vi.hoisted(() => ({
 	findMany: vi.fn(),
 	count: vi.fn(),
+	groupBy: vi.fn(),
 	getSession: vi.fn(),
 }));
 vi.mock("next-auth", () => ({ getServerSession: getSession }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
-vi.mock("@/lib/db", () => ({ db: { applicant: { findMany, count } } }));
+vi.mock("@/lib/db", () => ({
+	db: { applicant: { findMany, count }, application: { groupBy } },
+}));
 vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
 import { GET } from "./route";
@@ -21,6 +24,11 @@ describe("GET /api/applicants", () => {
 		getSession.mockResolvedValue({ user: {} });
 		findMany.mockResolvedValue([]);
 		count.mockResolvedValue(0);
+		groupBy.mockResolvedValue([
+			{ applicantId: "a1", _count: { _all: 1 } },
+			{ applicantId: "a2", _count: { _all: 3 } },
+			{ applicantId: "a3", _count: { _all: 5 } },
+		]);
 	});
 
 	it("rejects unauthenticated requests", async () => {
@@ -50,12 +58,38 @@ describe("GET /api/applicants", () => {
 	it("validates query params", async () => {
 		expect((await call("?pageSize=500")).status).toBe(400);
 		expect((await call("?ageFrom=15&ageTo=10")).status).toBe(400);
+		expect((await call("?historyFrom=3&historyTo=1")).status).toBe(400);
+	});
+
+	it("filters by a history range starting above zero", async () => {
+		await call("?historyFrom=2&historyTo=4");
+		expect(findMany.mock.calls[0][0].where.AND).toContainEqual({
+			id: { in: ["a2"] },
+		});
+	});
+
+	it("sorts by history count in memory and loads only the page", async () => {
+		findMany
+			.mockResolvedValueOnce([
+				{ id: "a1", lastName: "B", firstName: "X" },
+				{ id: "a3", lastName: "C", firstName: "X" },
+				{ id: "a0", lastName: "A", firstName: "X" },
+			])
+			.mockResolvedValueOnce([{ id: "a3" }, { id: "a1" }]);
+		const res = await call("?sort=history&order=desc&pageSize=10");
+		expect(findMany.mock.calls[1][0].where).toEqual({
+			id: { in: ["a3", "a1", "a0"] },
+		});
+		expect(await res.json()).toMatchObject({
+			items: [{ id: "a3" }, { id: "a1" }],
+			total: 3,
+		});
 	});
 
 	it("builds filters, sorting and pagination", async () => {
 		count.mockResolvedValue(42);
 		const res = await call(
-			"?eventIds=e1,e2&programYear=2025&hometown=Pécs&newsletter=true&attended=false&q=kiss%20p&page=3&pageSize=10&sort=birthYear&order=desc",
+			"?eventIds=e1,e2&programYear=2025&hometown=Pécs&newsletter=true&historyFrom=0&historyTo=3&q=kiss%20p&page=3&pageSize=10&sort=birthYear&order=desc",
 		);
 		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual({
@@ -88,7 +122,7 @@ describe("GET /api/applicants", () => {
 			},
 			{ hometown: { contains: "Pécs", mode: "insensitive" } },
 			{ newsletter: true },
-			{ NOT: { applications: { some: { status: "ATTENDED" } } } },
+			{ id: { notIn: ["a3"] } },
 			expect.objectContaining({ OR: expect.any(Array) }),
 			expect.objectContaining({ OR: expect.any(Array) }),
 		]);

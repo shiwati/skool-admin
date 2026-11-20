@@ -15,9 +15,9 @@ describe("PeopleCard", () => {
 			/>,
 		);
 		expect(avatar("KB")).toHaveClass("bg-pink-strong");
-		expect(avatar("SP")).toHaveClass("bg-pink");
+		expect(avatar("SP")).toHaveClass("bg-pink-soft");
 		expect(avatar("SP")).not.toHaveClass("bg-pink-strong");
-		expect(avatar("NÁ")).toHaveClass("bg-pink");
+		expect(avatar("NÁ")).toHaveClass("bg-pink-soft");
 		expect(avatar("NÁ")).not.toHaveClass("bg-pink-strong");
 	});
 

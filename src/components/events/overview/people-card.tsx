@@ -31,7 +31,7 @@ export function PeopleCard({
 									"flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
 									person.role === "oktató"
 										? "bg-pink-strong"
-										: "bg-pink",
+										: "bg-pink-soft ring-1 ring-pink ring-inset",
 								)}
 							>
 								{initials(person.name)}

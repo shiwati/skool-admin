@@ -22,7 +22,8 @@ describe("parseListState", () => {
 			ageTo: undefined,
 			hometown: undefined,
 			newsletter: undefined,
-			attended: undefined,
+			historyFrom: undefined,
+			historyTo: undefined,
 		});
 	});
 
@@ -78,7 +79,8 @@ describe("toSearchParams", () => {
 			ageTo: 16,
 			hometown: "Pécs",
 			newsletter: true,
-			attended: false,
+			historyFrom: 1,
+			historyTo: 3,
 			sort: "age",
 			order: "asc",
 			page: 3,
@@ -109,7 +111,7 @@ describe("toApiQuery", () => {
 			...DEFAULT_STATE,
 			eventIds: ["e1", "e2"],
 			hometown: "Győr",
-			attended: true,
+			historyFrom: 2,
 			page: 4,
 		};
 		expect(Object.fromEntries(toApiQuery(state))).toEqual({
@@ -119,7 +121,7 @@ describe("toApiQuery", () => {
 			order: "desc",
 			eventIds: "e1,e2",
 			hometown: "Győr",
-			attended: "true",
+			historyFrom: "2",
 		});
 		const all = toApiQuery(state, { page: 1, pageSize: 100 });
 		expect(all.get("page")).toBe("1");

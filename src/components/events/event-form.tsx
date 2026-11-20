@@ -572,7 +572,7 @@ export function EventForm(props: EventFormProps) {
 												{...field}
 												value={value}
 												onChange={onChange}
-												chipClassName="bg-pink"
+												chipClassName="bg-pink-soft ring-1 ring-pink ring-inset"
 												placeholder="Név hozzáadása…"
 												removeLabel={(name) =>
 													`${name} eltávolítása`
