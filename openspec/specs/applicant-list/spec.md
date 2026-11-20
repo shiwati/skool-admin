@@ -226,15 +226,6 @@ The "E-mail lista" header button SHALL open a dialog containing the e-mail addre
 - **WHEN** no matching applicant has an e-mail address
 - **THEN** the dialog says there is no e-mail address to copy and "Másolás" is disabled
 
-### Requirement: Sync action is disabled
-
-The page header SHALL show a "Szinkronizálás" button that is disabled and explains, for assistive technology and on hover or focus, that synchronization is not available yet.
-
-#### Scenario: Trying to sync
-
-- **WHEN** the user tries to activate "Szinkronizálás"
-- **THEN** nothing happens and the "not available yet" explanation is available
-
 ### Requirement: Duplicate-check placeholder banner
 
 The page SHALL show a warning banner titled "Lehetséges duplikált jelentkezések", saying that applications from the same e-mail address should be checked and that the check is coming soon. Its "Ellenőrzés" button SHALL be disabled. The banner SHALL NOT claim a number of duplicates.
@@ -335,7 +326,7 @@ Below 768 px, the toolbar SHALL show the search field and a "Szűrők" button ne
 
 ### Requirement: Mobile list header
 
-Below 768 px, the page title and the total ("N fő") SHALL be shown on one line with a "További műveletek" menu button. The "E-mail lista" action SHALL be available from that menu. The disabled "Szinkronizálás" action SHALL be shown in that menu as disabled. The duplicate banner SHALL use a compact single-line form with its action button.
+Below 768 px, the page title and the total ("N fő") SHALL be shown on one line with a "További műveletek" menu button. The "Exportálás CSV-be" and "E-mail lista" actions SHALL be available from that menu. The duplicate banner SHALL use a compact single-line form with its action button.
 
 #### Scenario: E-mail list from the menu
 
