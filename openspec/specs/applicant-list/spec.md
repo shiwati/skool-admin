@@ -156,7 +156,7 @@ An "Oszlopok" button SHALL open the "Oszlopok a listában" panel. In it the user
 
 "Név / e-mail" SHALL always remain visible. Besides the default columns, "Szülő neve és e-mail" and "Telefonszám" SHALL be available, hidden by default.
 
-The button SHALL be available at every width. Below 768 px it SHALL be a 44 × 44 px icon button with the accessible name "Oszlopok", next to the search field and the "Szűrők" button.
+The button SHALL be available at every width. Below 768 px it SHALL be a 44 × 44 px icon button with the accessible name "Oszlopok", next to the search field and the "Szűrők" button. Its panel SHALL only control visibility: it SHALL NOT offer drag handles or move up/down controls, and the cards SHALL keep the order set on a larger screen.
 
 #### Scenario: Showing the phone number
 
@@ -173,6 +173,7 @@ The button SHALL be available at every width. Below 768 px it SHALL be a 44 × 4
 - **WHEN** the applicants page is shown at 390 px
 - **THEN** an "Oszlopok" icon button is shown next to the "Szűrők" button
 - **AND** activating it opens the "Oszlopok a listában" panel
+- **AND** the panel has checkboxes but no move up/down controls
 
 ### Requirement: Column settings persist in the browser
 

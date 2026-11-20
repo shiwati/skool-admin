@@ -26,8 +26,8 @@ const iconButton =
 
 /**
  * Az „Oszlopok a listában” panel bármelyik listához. `compact` (mobil):
- * 44 px-es ikongomb a szöveges gomb helyett; a panel ugyanaz, a képernyőhöz
- * szűkítve.
+ * 44 px-es ikongomb a szöveges gomb helyett, a panel a képernyőhöz szűkítve,
+ * és csak a láthatóság állítható (nincs húzás és fel/le nyíl).
  */
 export function ColumnPicker<Id extends string>({
 	config,
@@ -42,6 +42,9 @@ export function ColumnPicker<Id extends string>({
 	onChange: (settings: ColumnSettings<Id>) => void;
 	compact?: boolean;
 }) {
+	// Mobile (compact): visibility only; the order set on a larger screen
+	// still applies to the cards.
+	const sortable = !compact;
 	const [dragged, setDragged] = useState<Id | null>(null);
 	const [dropTarget, setDropTarget] = useState<Id | null>(null);
 
@@ -73,8 +76,9 @@ export function ColumnPicker<Id extends string>({
 						Oszlopok a listában
 					</h2>
 					<p className="text-xs text-text-tertiary">
-						Húzással vagy a nyilakkal rendezhető · ebben a
-						böngészőben mentődik
+						{sortable
+							? "Húzással vagy a nyilakkal rendezhető · ebben a böngészőben mentődik"
+							: "Ebben a böngészőben mentődik"}
 					</p>
 				</div>
 				<ul className="flex flex-col gap-0.5">
@@ -84,8 +88,9 @@ export function ColumnPicker<Id extends string>({
 						return (
 							<li
 								key={id}
-								draggable
+								draggable={sortable}
 								onDragStart={(e) => {
+									if (!sortable) return;
 									setDragged(id);
 									e.dataTransfer.effectAllowed = "move";
 								}}
@@ -121,11 +126,19 @@ export function ColumnPicker<Id extends string>({
 									dragged === id && "opacity-50",
 								)}
 							>
-								<GripVertical
-									aria-hidden="true"
-									className="size-3.5 cursor-grab text-text-tertiary"
-								/>
-								<label className="flex flex-1 items-center gap-2.5">
+								{sortable && (
+									<GripVertical
+										aria-hidden="true"
+										className="size-3.5 cursor-grab text-text-tertiary"
+									/>
+								)}
+								<label
+									className={cn(
+										"flex flex-1 items-center gap-2.5",
+										// Mobile: a comfortable touch target per row.
+										!sortable && "min-h-9",
+									)}
+								>
 									<Checkbox
 										checked={visible}
 										disabled={column.locked}
@@ -150,40 +163,53 @@ export function ColumnPicker<Id extends string>({
 										{column.pickerLabel}
 									</span>
 								</label>
-								<button
-									type="button"
-									className={iconButton}
-									aria-label={`${column.pickerLabel} feljebb`}
-									disabled={index === 0}
-									onClick={() =>
-										onChange(
-											moveColumn(settings, id, index - 1),
-										)
-									}
-								>
-									<ChevronUp
-										aria-hidden="true"
-										className="size-3.5"
-									/>
-								</button>
-								<button
-									type="button"
-									className={iconButton}
-									aria-label={`${column.pickerLabel} lejjebb`}
-									disabled={
-										index === settings.order.length - 1
-									}
-									onClick={() =>
-										onChange(
-											moveColumn(settings, id, index + 1),
-										)
-									}
-								>
-									<ChevronDown
-										aria-hidden="true"
-										className="size-3.5"
-									/>
-								</button>
+								{sortable && (
+									<>
+										<button
+											type="button"
+											className={iconButton}
+											aria-label={`${column.pickerLabel} feljebb`}
+											disabled={index === 0}
+											onClick={() =>
+												onChange(
+													moveColumn(
+														settings,
+														id,
+														index - 1,
+													),
+												)
+											}
+										>
+											<ChevronUp
+												aria-hidden="true"
+												className="size-3.5"
+											/>
+										</button>
+										<button
+											type="button"
+											className={iconButton}
+											aria-label={`${column.pickerLabel} lejjebb`}
+											disabled={
+												index ===
+												settings.order.length - 1
+											}
+											onClick={() =>
+												onChange(
+													moveColumn(
+														settings,
+														id,
+														index + 1,
+													),
+												)
+											}
+										>
+											<ChevronDown
+												aria-hidden="true"
+												className="size-3.5"
+											/>
+										</button>
+									</>
+								)}
 							</li>
 						);
 					})}
