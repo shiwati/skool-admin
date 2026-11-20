@@ -101,16 +101,17 @@ Unit tests are colocated with the code they exercise. Add only necessary applica
 
 Copy `.env.example` to `.env` for local development. Next.js loads it automatically; Prisma CLI and seed commands load it through `dotenv`.
 
-| Variable               | Requirement                                                                 |
-| ---------------------- | --------------------------------------------------------------------------- |
-| `DATABASE_URL`         | PostgreSQL connection URL                                                   |
-| `NEXTAUTH_SECRET`      | Random secret, at least 32 characters                                       |
-| `NEXTAUTH_URL`         | Canonical HTTP(S) application URL                                           |
-| `GOOGLE_CLIENT_ID`     | Google OAuth client ID (see [Authentication](#authentication))              |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret                                                  |
-| `AUTH_ALLOWED_DOMAIN`  | Google Workspace domain allowed to sign in, e.g. `skool.org.hu`; no default |
-| `NODE_ENV`             | `development`, `test`, or `production`; defaults to `development`           |
-| `LOG_LEVEL`            | Pino level; defaults to `info`                                              |
+| Variable                 | Requirement                                                                                   |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`           | PostgreSQL connection URL                                                                     |
+| `NEXTAUTH_SECRET`        | Random secret, at least 32 characters                                                         |
+| `NEXTAUTH_URL`           | Canonical HTTP(S) application URL                                                             |
+| `GOOGLE_CLIENT_ID`       | Google OAuth client ID (see [Authentication](#authentication))                                |
+| `GOOGLE_CLIENT_SECRET`   | Google OAuth client secret                                                                    |
+| `AUTH_ALLOWED_DOMAIN`    | Google Workspace domain allowed to sign in, e.g. `skool.org.hu`; no default                   |
+| `REPORT_TEMPLATE_DOC_ID` | Google Doc ID of the closing-report template (see `docs/plans/report-google-doc-template.md`) |
+| `NODE_ENV`               | `development`, `test`, or `production`; defaults to `development`                             |
+| `LOG_LEVEL`              | Pino level; defaults to `info`                                                                |
 
 Server startup validates environment values via `src/instrumentation.ts`; invalid configuration fails explicitly without printing secrets. Server modules also validate on import. Supply the required variables during builds too, because Next.js evaluates server modules when building route metadata. `npm ci` and Prisma client generation do not require secrets or a running database.
 

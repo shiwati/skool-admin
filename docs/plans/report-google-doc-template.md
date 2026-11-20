@@ -1,8 +1,17 @@
 # Terv: záró riport Google Doc sablonból („A” változat)
 
-> **Állapot:** terv, nincs megvalósítva. A jelenlegi megoldás HTML-ből generál
-> Google Docot (lásd lent). Ez a dokumentum azt írja le, mit kell tenni, ha a
-> riportot egy kézzel megszépített Google Doc sablonból akarjuk előállítani.
+> **Állapot:** megvalósítva (`src/lib/reports/template.ts`, `src/lib/google/docs.ts`,
+> `src/lib/reports/save.ts`). A riport csak a sablonból készül; a `REPORT_TEMPLATE_DOC_ID`
+> kötelező, a régi HTML-es generálás (`render.ts`) törölve. **A ténylegesen használt helyőrzők eltérnek
+> az alábbi eredeti tervtől:** szimpla kapcsos zárójel, és ezek a nevek:
+>
+> `{company_name}` `{event_name}` `{event_date}` `{place}` `{count}` `{age}` (csak „10–12”, az
+> „évesek” a sablonban van) `{people_count}` (összes közreműködő) `{volunteer_count}`
+> `{volunteer_names}` `{all_names}` `{max_m}` (mentorok 4–5) `{max_t}` (oktató 4–5) `{rate}`
+> (ajánlaná) `{quote.text}` (minden kiválasztott idézet, külön bekezdésben), és a
+> közreműködő-táblázat mintasora: `{person.role}` · `{person.org}` · `{person.name}`.
+> A 4×4-es mutató-rács, a kiemelt idézetek külön blokkja és az opcionális blokkok
+> (`{{#…}}`) nincsenek megvalósítva; adat nélkül a csempe üres marad, kézzel törlendő.
 
 ## Miért
 

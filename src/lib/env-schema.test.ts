@@ -8,6 +8,7 @@ const valid = {
 	GOOGLE_CLIENT_ID: "test-client-id.apps.googleusercontent.com",
 	GOOGLE_CLIENT_SECRET: "test-only-google-client-secret-value",
 	AUTH_ALLOWED_DOMAIN: "skool.org.hu",
+	REPORT_TEMPLATE_DOC_ID: "1AbC-template_id",
 };
 
 describe("environment validation", () => {
@@ -30,6 +31,8 @@ describe("environment validation", () => {
 		["GOOGLE_CLIENT_ID", "   "],
 		["GOOGLE_CLIENT_SECRET", undefined],
 		["GOOGLE_CLIENT_SECRET", ""],
+		["REPORT_TEMPLATE_DOC_ID", undefined],
+		["REPORT_TEMPLATE_DOC_ID", "https://docs.google.com/x"],
 		["AUTH_ALLOWED_DOMAIN", undefined],
 		["AUTH_ALLOWED_DOMAIN", "not a hostname"],
 		["AUTH_ALLOWED_DOMAIN", "@skool.org.hu"],
