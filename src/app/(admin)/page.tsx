@@ -73,29 +73,49 @@ function oversubscriptionKpi({
 	};
 }
 
-function satisfactionKpi({ satisfaction: { current } }: DashboardData) {
+function satisfactionKpi({
+	satisfaction: { current, previous },
+	period,
+	program,
+}: DashboardData) {
 	const participant = current.PARTICIPANT.score;
+	const before = previous.PARTICIPANT.score.average;
 	const mentor = current.MENTOR.score;
 	const responses = current.PARTICIPANT.responses + current.MENTOR.responses;
-	const mentorNote =
-		mentor.average === null
-			? "mentorok: nincs értékelés"
-			: `mentorok: ${formatScore(mentor.average)} / 5`;
 	if (responses === 0)
 		return {
 			value: "—",
 			badge: undefined,
 			tone: "neutral" as Tone,
-			note: "nincs visszajelzés az időszak programjaira",
+			note: program
+				? "ehhez a programhoz még nincs visszajelzés"
+				: "nincs visszajelzés az időszak programjaira",
 		};
+	const mentorNote =
+		mentor.average === null
+			? "mentorok: —"
+			: `mentorok: ${formatScore(mentor.average)}`;
+	const counts = `${formatCount(responses)} kitöltés · ${mentorNote}`;
+	if (participant.average === null || before === null)
+		return {
+			value:
+				participant.average === null
+					? "—"
+					: `${formatScore(participant.average)} / 5`,
+			badge: undefined,
+			tone: "neutral" as Tone,
+			note: `${counts} · nincs adat összevetéshez (${period.previousLabel})`,
+		};
+	const diff = participant.average - before;
 	return {
-		value:
-			participant.average === null
-				? "—"
-				: `${formatScore(participant.average)} / 5`,
-		badge: `${formatCount(responses)} kitöltés`,
-		tone: "neutral" as Tone,
-		note: `résztvevők · ${mentorNote}`,
+		value: `${formatScore(participant.average)} / 5`,
+		badge: formatSignedDecimal(diff),
+		tone: (Math.round(diff * 10) === 0
+			? "neutral"
+			: diff > 0
+				? "ok"
+				: "alert") as Tone,
+		note: `vs. ${period.previousLabel} (${formatScore(before)}) · ${counts}`,
 	};
 }
 
@@ -142,7 +162,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 				<OversubscriptionTrend points={data.trend} />
 			</div>
 
-			<div className="grid gap-4 lg:grid-cols-2">
+			<div className="grid items-start gap-4 lg:grid-cols-2">
 				<DemographicsCard
 					data={data.demographics}
 					periodLabel={data.period.label}
@@ -150,6 +170,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 				<SatisfactionCard
 					programs={data.satisfactionByProgram}
 					satisfaction={data.satisfaction.current}
+					programSelected={data.program !== null}
 				/>
 			</div>
 		</PageShell>

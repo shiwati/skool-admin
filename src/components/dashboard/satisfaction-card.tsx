@@ -44,9 +44,12 @@ export function recommendText(label: string, r: RecommendSummary) {
 export function SatisfactionCard({
 	programs,
 	satisfaction,
+	programSelected = false,
 }: {
 	programs: ProgramSatisfaction[];
 	satisfaction: Satisfaction;
+	/** Egy programra szűrt nézet (más üres állapot-szöveg). */
+	programSelected?: boolean;
 }) {
 	const recommend = [
 		recommendText("Résztvevők", satisfaction.PARTICIPANT.recommend),
@@ -66,7 +69,9 @@ export function SatisfactionCard({
 						className="size-6 text-text-tertiary"
 					/>
 					<p className="text-sm text-text-secondary">
-						A kiválasztott időszakban még nincs visszajelzés.
+						{programSelected
+							? "Ehhez a programhoz még nincs visszajelzés."
+							: "A kiválasztott időszakban még nincs visszajelzés."}
 					</p>
 					<p className="max-w-xs text-xs text-text-tertiary">
 						A visszajelzések a program Visszajelzések fülén
