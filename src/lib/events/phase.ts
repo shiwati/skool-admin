@@ -37,7 +37,7 @@ export const EVENT_STATUS_BADGE_CLASSES: Record<EventStatus, string> = {
 type StatusInput = {
 	from: string | Date;
 	to: string | Date;
-	sheetUrl: string | null;
+	applicationSheetUrl: string | null;
 	capacity: number;
 	applications: number;
 };
@@ -49,7 +49,7 @@ export function eventStatus(event: StatusInput, now: Date): EventStatus {
 	const t = now.getTime();
 	if (to < t) return "closed";
 	if (from <= t) return "running";
-	if (!event.sheetUrl) return "planned";
+	if (!event.applicationSheetUrl) return "planned";
 	if (event.capacity > 0 && event.applications >= event.capacity)
 		return "full";
 	return "open";

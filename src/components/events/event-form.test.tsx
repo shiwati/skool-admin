@@ -141,8 +141,9 @@ describe("EventForm", () => {
 			location: null,
 			capacity: 24,
 			ageRange: "12-18",
-			sheetUrl: null,
-			feedbackSheetUrl: null,
+			applicationSheetUrl: null,
+			participantFeedbackSheetUrl: null,
+			mentorFeedbackSheetUrl: null,
 			instructor: null,
 			mentors: ["Szűcs Petra"],
 		};
@@ -192,8 +193,9 @@ describe("EventForm", () => {
 				location: null,
 				capacity: 24,
 				ageRange: "12-18",
-				sheetUrl: null,
-				feedbackSheetUrl: null,
+				applicationSheetUrl: null,
+				participantFeedbackSheetUrl: null,
+				mentorFeedbackSheetUrl: null,
 				instructor: null,
 				mentors: ["Szűcs Petra"],
 			});

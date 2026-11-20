@@ -13,8 +13,10 @@ export function overviewEvent(overrides: Partial<Event> = {}): Event {
 		companyName: "Sigma Technology",
 		location: "Budapest, Infopark sétány 1.",
 		description: "Négy szombati alkalom.",
-		sheetUrl: "https://docs.google.com/spreadsheets/d/abc/edit#gid=0",
-		feedbackSheetUrl: null,
+		applicationSheetUrl:
+			"https://docs.google.com/spreadsheets/d/abc/edit#gid=0",
+		participantFeedbackSheetUrl: null,
+		mentorFeedbackSheetUrl: null,
 		ageRange: "12-18",
 		instructor: "Kiss Bence",
 		mentors: ["Szűcs Petra"],

@@ -26,7 +26,7 @@ export const navGroups: NavGroup[] = [
 			{ label: "Áttekintés", icon: LayoutGrid, href: "/" },
 			{ label: "Jelentkezők", icon: Users, href: "/applicants" },
 			{ label: "Programok", icon: Calendar, href: "/events" },
-			{ label: "Visszajelzések", icon: MessageSquare },
+			{ label: "Visszajelzések", icon: MessageSquare, href: "/feedback" },
 			{ label: "Riportok", icon: FileText },
 		],
 	},

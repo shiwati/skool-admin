@@ -21,7 +21,7 @@ function event(overrides: Partial<EventListItem> = {}): EventListItem {
 		to: "2026-12-12T15:00:00.000Z",
 		companyName: "Sigma Technology",
 		location: "Budapest",
-		sheetUrl: "https://docs.google.com/spreadsheets/d/x",
+		applicationSheetUrl: "https://docs.google.com/spreadsheets/d/x",
 		instructor: "Kiss Bence",
 		mentors: ["Szabó Petra", "Tóth Anna"],
 		tags: ["programozás"],

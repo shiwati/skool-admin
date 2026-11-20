@@ -18,7 +18,7 @@ type HeaderEvent = Pick<
 	| "to"
 	| "companyName"
 	| "location"
-	| "sheetUrl"
+	| "applicationSheetUrl"
 	| "capacity"
 	| "tags"
 	| "instructor"

@@ -55,7 +55,7 @@ export type EventListItem = {
 	to: string;
 	companyName: string | null;
 	location: string | null;
-	sheetUrl: string | null;
+	applicationSheetUrl: string | null;
 	instructor: string | null;
 	mentors: string[];
 	tags: string[];

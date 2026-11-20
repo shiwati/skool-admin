@@ -5,8 +5,9 @@ Forrás: `prisma/schema.prisma`. A mezők DB-oszlopnevei snake_case-ek (`@map`),
 ## Entitások
 
 - **Applicant (jelentkező)**: a gyerek adatai (név, születési év, iskola, lakóhely, telefon, e-mail), a szülő adatai (`parent*` mezők), `newsletter` hozzájárulás. Egy jelentkező több eseményre jelentkezhet.
-- **Event (program/esemény)**: `name`, `from`/`to`, `companyName`, `location`, `description` (DB: `desc`), `sheetUrl`, `ageRange` (szabad szöveg), `instructor`, `mentors` (szöveglista), `tags` (címkelista a fix listából, alapérték üres; lásd lent), `capacity` (alapérték 0).
+- **Event (program/esemény)**: `name`, `from`/`to`, `companyName`, `location`, `description` (DB: `desc`), `applicationSheetUrl` (jelentkező űrlap sheetje), `participantFeedbackSheetUrl` és `mentorFeedbackSheetUrl` (a két visszajelző űrlap sheetje), `ageRange` (szabad szöveg), `instructor`, `mentors` (szöveglista), `tags` (címkelista a fix listából, alapérték üres; lásd lent), `capacity` (alapérték 0).
 - **Application (jelentkezés)**: egy Applicant × Event kapcsolat, **egyedi** `(eventId, applicantId)` párra. Tartalmazza a jelentkezési űrlap válaszait (`foodPreference`, `heardFromWhere/Whom`, `solvedProblem`, `pastExpInProg`, korábbi részvétel mezők, `comment`, `companyAwareness`), a `receivedAt` beérkezési időt és a `status`-t.
+- **Feedback (visszajelzés)**: egy névtelen visszajelző űrlap-válasz egy eseményhez, `role` = `PARTICIPANT` (résztvevő) vagy `MENTOR`. A válaszok stabil kérdéskulcsokkal a `answers` JSON-ban vannak (katalógus: `src/lib/feedback/questions.ts`); kiemelt oszlopok: `submittedAt`, `overallScore` (résztvevő: mentor- és oktatóértékelés átlaga; mentor: saját 1–5 összértékelése), `recommend` (`yes`/`maybe`/`no`), `searchText` (keresés). Jelentkezőhöz **szándékosan nincs párosítva**. Újraszinkronnál a `(eventId, role, sourceKey)` egyedi kulcs véd a duplikációtól (`sourceKey` = időbélyeg + azonos időbélyegű sor sorszáma).
 - **History (változásnapló)**: mezőszintű napló (`tableName`, `fieldName`, `recordId`, `oldValue`, `newValue`, `createdBy`). Írja: a GDPR-törlés, a duplikátum-összevonás és -elvetés, valamint a program szerkesztése (`PATCH /api/events/[id]`). Olvassa: a jelentkező adatlap és a `/history/[id]` oldal.
 - **User**: NextAuth felhasználó (admin). `updatedBy` kapcsolatot ad az Applicant és Application felé.
 
@@ -21,6 +22,7 @@ Forrás: `prisma/schema.prisma`. A mezők DB-oszlopnevei snake_case-ek (`@map`),
 
 ```
 Event 1─* Application *─1 Applicant
+Event 1─* Feedback
 User  1─* Applicant.updatedBy / Application.updatedBy / History.createdBy   (törléskor SetNull)
 ```
 

@@ -5,7 +5,7 @@ const now = new Date("2026-11-19T12:00:00Z");
 const upcoming = {
 	from: "2026-12-01T09:00:00Z",
 	to: "2026-12-01T15:00:00Z",
-	sheetUrl: "https://docs.google.com/spreadsheets/d/x",
+	applicationSheetUrl: "https://docs.google.com/spreadsheets/d/x",
 	capacity: 20,
 	applications: 5,
 };
@@ -21,9 +21,9 @@ describe("eventStatus", () => {
 	});
 
 	it("is planned for upcoming events without a sheet", () => {
-		expect(eventStatus({ ...upcoming, sheetUrl: null }, now)).toBe(
-			"planned",
-		);
+		expect(
+			eventStatus({ ...upcoming, applicationSheetUrl: null }, now),
+		).toBe("planned");
 	});
 
 	it("is full when applications reach the capacity", () => {

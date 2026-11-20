@@ -165,23 +165,28 @@ enum ApplicationStatus {
 
 /// Program / esemény
 model Event {
-  id               String        @id @default(cuid())
-  createdAt        DateTime      @default(now()) @map("created_at")
-  updatedAt        DateTime      @updatedAt @map("updated_at")
-  name             String
-  from             DateTime
-  to               DateTime
-  companyName      String?       @map("company_name")
-  location         String?
-  description      String?       @map("desc")
-  sheetUrl         String?       @map("sheet_url")
-  feedbackSheetUrl String?       @map("feedback_sheet_url")
-  ageRange         String?       @map("age_range")
-  instructor       String?
-  mentors          String[]
-  tags             String[]      @default([])
-  capacity         Int           @default(0)
-  applications     Application[]
+  id                          String        @id @default(cuid())
+  createdAt                   DateTime      @default(now()) @map("created_at")
+  updatedAt                   DateTime      @updatedAt @map("updated_at")
+  name                        String
+  from                        DateTime
+  to                          DateTime
+  companyName                 String?       @map("company_name")
+  location                    String?
+  description                 String?       @map("desc")
+  /// Jelentkező űrlap válasz-sheetje
+  applicationSheetUrl         String?       @map("application_sheet_url")
+  /// Résztvevői visszajelző űrlap válasz-sheetje
+  participantFeedbackSheetUrl String?       @map("participant_feedback_sheet_url")
+  /// Mentori visszajelző űrlap válasz-sheetje
+  mentorFeedbackSheetUrl      String?       @map("mentor_feedback_sheet_url")
+  ageRange                    String?       @map("age_range")
+  instructor                  String?
+  mentors                     String[]
+  tags                        String[]      @default([])
+  capacity                    Int           @default(0)
+  applications                Application[]
+  feedbacks                   Feedback[]
 
   @@map("event")
 }
@@ -200,4 +205,37 @@ model History {
 
   @@index([tableName, recordId])
   @@map("history")
+}
+
+enum FeedbackRole {
+  PARTICIPANT @map("participant") /// résztvevő (diák)
+  MENTOR      @map("mentor") /// mentor
+
+  @@map("feedback_role")
+}
+
+/// Anonim visszajelző űrlap-válasz (résztvevői vagy mentori Google Form sheetből).
+model Feedback {
+  id           String       @id @default(cuid())
+  createdAt    DateTime     @default(now()) @map("created_at")
+  eventId      String       @map("event_id")
+  event        Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  role         FeedbackRole
+  /// Az űrlap időbélyege (a sheet időzónájában értelmezve).
+  submittedAt  DateTime?    @map("submitted_at")
+  /// Stabil kérdéskulcs → válasz (lásd `src/lib/feedback/questions.ts`).
+  answers      Json
+  /// Összértékelés 1–5: résztvevőnél a mentor- és oktatóértékelés átlaga, mentornál a saját összértékelése.
+  overallScore Float?       @map("overall_score")
+  /// Ajánlaná: "yes" | "maybe" | "no"; null, ha az űrlapban nincs ilyen kérdés.
+  recommend    String?
+  /// Kisbetűs, összefűzött szöveges válaszok a kereséshez.
+  searchText   String       @default("") @map("search_text")
+  /// Forrás-sor azonosítója: újraszinkronnál nem jön létre kétszer.
+  sourceKey    String       @map("source_key")
+
+  @@unique([eventId, role, sourceKey])
+  @@index([eventId, role])
+  @@index([submittedAt])
+  @@map("feedback")
 }
