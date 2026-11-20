@@ -175,7 +175,7 @@ describe("TagsCard", () => {
 				now={NOW}
 			/>,
 		);
-		expect(screen.getByText("16+ · automatikus")).toBeInTheDocument();
+		expect(screen.getByText("16+")).toBeInTheDocument();
 		expect(screen.queryByText("Hírlevél")).not.toBeInTheDocument();
 	});
 
