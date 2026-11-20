@@ -47,6 +47,7 @@ export default async function EventApplicantsPage({ params }: Props) {
 				eventId={event.id}
 				capacity={event.capacity}
 				counts={counts}
+				applicationSheetUrl={event.applicationSheetUrl}
 			/>
 		</>
 	);

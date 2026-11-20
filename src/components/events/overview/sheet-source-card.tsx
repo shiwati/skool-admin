@@ -1,49 +1,12 @@
 "use client";
 
-import { ExternalLink, RefreshCw } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
 import { DetailCard } from "@/components/applicants/detail/detail-card";
-import { Button } from "@/components/ui/button";
-import { ApiError, apiFetch } from "@/lib/api/client";
-import { formatCount } from "@/lib/applicants/format";
 import { eventEditHref } from "@/lib/events/links";
+import { SheetSyncButton, SYNC_HINT } from "./sheet-sync-button";
 
-type SyncResult = {
-	created: number;
-	existing: number;
-	duplicates: number;
-	errors: unknown[];
-};
-
-const SYNC_FAILED = "A szinkronizálás nem sikerült. Próbáld újra.";
-export const SYNC_HINT =
-	"A szinkronizálás beolvassa a Google Sheetet, és felveszi a legutóbbi szinkronizálás óta beérkezett új jelentkezéseket. A sheetben utólag módosított sorok nem frissülnek.";
-
-function syncMessage(result: SyncResult): string {
-	const parts = [
-		`${formatCount(result.created)} új jelentkezés`,
-		`${formatCount(result.existing)} már meglévő`,
-	];
-	if (result.duplicates > 0) {
-		parts.push(`${formatCount(result.duplicates)} lehetséges duplikátum`);
-	}
-	if (result.errors.length > 0) {
-		parts.push(`${formatCount(result.errors.length)} hibás sor`);
-	}
-	return parts.join(", ");
-}
-
-/** A szerver magyar hibaüzenetét mutatjuk; ismeretlen válasznál általános szöveget. */
-function errorMessage(error: unknown): string {
-	if (error instanceof ApiError) {
-		const message = (error.body as { error?: unknown } | undefined)?.error;
-		if (typeof message === "string" && error.status !== 500) return message;
-	}
-	return SYNC_FAILED;
-}
+export { SYNC_HINT };
 
 function isWebUrl(value: string): boolean {
 	return /^https?:\/\//i.test(value);
@@ -56,27 +19,6 @@ export function SheetSourceCard({
 	eventId: string;
 	applicationSheetUrl: string | null;
 }) {
-	const router = useRouter();
-	const [pending, setPending] = useState(false);
-
-	async function sync() {
-		if (pending) return;
-		setPending(true);
-		try {
-			const result = await apiFetch<SyncResult>(
-				`/api/events/${encodeURIComponent(eventId)}/sync`,
-				{ method: "POST" },
-			);
-			toast.success(`Szinkronizálva: ${syncMessage(result)}.`);
-			router.refresh();
-		} catch (error) {
-			if (error instanceof ApiError && error.status === 401) return;
-			toast.error(errorMessage(error));
-		} finally {
-			setPending(false);
-		}
-	}
-
 	return (
 		<DetailCard
 			title="Jelentkezők forrása"
@@ -107,19 +49,7 @@ export function SheetSourceCard({
 							</span>
 						)}
 					</p>
-					<Button
-						variant="surface"
-						className="self-start"
-						disabled={pending}
-						aria-busy={pending || undefined}
-						onClick={() => void sync()}
-					>
-						<RefreshCw
-							aria-hidden="true"
-							className={pending ? "animate-spin" : undefined}
-						/>
-						Szinkronizálás most
-					</Button>
+					<SheetSyncButton eventId={eventId} className="self-start" />
 				</>
 			) : (
 				<p className="text-sm text-text-secondary">
