@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
 	formatDate,
 	formatDateRange,
@@ -58,9 +59,12 @@ export function ProgramsTable({
 									)}
 								/>
 								<span className="flex min-w-0 flex-1 flex-col">
-									<span className="font-medium">
+									<Link
+										href={`/events/${application.event.id}`}
+										className="font-medium hover:underline focus-visible:underline"
+									>
 										{application.event.name}
-									</span>
+									</Link>
 									<span className="font-mono text-xs text-text-tertiary">
 										{formatDateRange(
 											application.event.from,
@@ -118,9 +122,12 @@ export function ProgramsTable({
 														),
 													)}
 												/>
-												<span className="font-medium">
+												<Link
+													href={`/events/${application.event.id}`}
+													className="font-medium hover:underline focus-visible:underline"
+												>
 													{application.event.name}
-												</span>
+												</Link>
 											</div>
 										</td>
 										<td className="px-4 py-3 font-mono text-xs whitespace-nowrap text-text-secondary">
