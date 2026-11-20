@@ -45,8 +45,9 @@ const FIELD_LABELS: Record<FieldName, string> = {
 	capacity: "Maximális létszám",
 	ageFrom: "Korosztály – tól",
 	ageTo: "Korosztály – ig",
-	sheetUrl: "Jelentkezők sheetje",
-	feedbackSheetUrl: "Feedbackek sheetje",
+	applicationSheetUrl: "Jelentkezők sheetje",
+	participantFeedbackSheetUrl: "Résztvevői visszajelzések sheetje",
+	mentorFeedbackSheetUrl: "Mentori visszajelzések sheetje",
 	instructor: "Oktató",
 	mentors: "Mentorok",
 };
@@ -65,7 +66,7 @@ const SECTIONS: { id: string; title: string; fields: FieldName[] }[] = [
 	{
 		id: "kapacitas",
 		title: "Kapacitás",
-		fields: ["capacity", "ageFrom", "ageTo", "sheetUrl"],
+		fields: ["capacity", "ageFrom", "ageTo", "applicationSheetUrl"],
 	},
 	{
 		id: "oktatok",
@@ -75,7 +76,7 @@ const SECTIONS: { id: string; title: string; fields: FieldName[] }[] = [
 	{
 		id: "zaro-riport",
 		title: "Záró riport mezői",
-		fields: ["feedbackSheetUrl"],
+		fields: ["participantFeedbackSheetUrl", "mentorFeedbackSheetUrl"],
 	},
 ];
 
@@ -141,8 +142,9 @@ const EMPTY_VALUES: EventFormValues = {
 	capacity: "",
 	ageFrom: "",
 	ageTo: "",
-	sheetUrl: "",
-	feedbackSheetUrl: "",
+	applicationSheetUrl: "",
+	participantFeedbackSheetUrl: "",
+	mentorFeedbackSheetUrl: "",
 	instructor: "",
 	mentors: [],
 };
@@ -468,16 +470,16 @@ export function EventForm(props: EventFormProps) {
 								)}
 							</FormField>
 							<FormField
-								id={inputId("sheetUrl")}
+								id={inputId("applicationSheetUrl")}
 								label="Jelentkezők sheetje"
 								hint="A jelentkezők Google Sheetjének linkje; a másolt link gid része jelöli a lapot."
-								error={message("sheetUrl")}
+								error={message("applicationSheetUrl")}
 								className="md:col-span-2"
 							>
 								{(field) => (
 									<Input
 										{...field}
-										{...register("sheetUrl")}
+										{...register("applicationSheetUrl")}
 										type="url"
 										autoComplete="off"
 										placeholder="https://docs.google.com/spreadsheets/d/…"
@@ -542,16 +544,36 @@ export function EventForm(props: EventFormProps) {
 							title="Záró riport mezői"
 						>
 							<FormField
-								id={inputId("feedbackSheetUrl")}
-								label="Feedbackek sheetje"
-								hint="A feedbackek Google Sheetjének linkje; a másolt link gid része jelöli a lapot."
-								error={message("feedbackSheetUrl")}
-								className="sm:col-span-2"
+								id={inputId("participantFeedbackSheetUrl")}
+								label="Résztvevői visszajelzések sheetje"
+								hint="A résztvevői visszajelző űrlap válasz-sheetje; a másolt link gid része jelöli a lapot."
+								error={message("participantFeedbackSheetUrl")}
+								className="md:col-span-2"
 							>
 								{(field) => (
 									<Input
 										{...field}
-										{...register("feedbackSheetUrl")}
+										{...register(
+											"participantFeedbackSheetUrl",
+										)}
+										type="url"
+										autoComplete="off"
+										placeholder="https://docs.google.com/spreadsheets/d/…"
+										className={controlClass}
+									/>
+								)}
+							</FormField>
+							<FormField
+								id={inputId("mentorFeedbackSheetUrl")}
+								label="Mentori visszajelzések sheetje"
+								hint="A mentori visszajelző űrlap válasz-sheetje; a másolt link gid része jelöli a lapot."
+								error={message("mentorFeedbackSheetUrl")}
+								className="md:col-span-2"
+							>
+								{(field) => (
+									<Input
+										{...field}
+										{...register("mentorFeedbackSheetUrl")}
 										type="url"
 										autoComplete="off"
 										placeholder="https://docs.google.com/spreadsheets/d/…"

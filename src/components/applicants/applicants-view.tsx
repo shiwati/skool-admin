@@ -168,6 +168,7 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 						? applicants.data.total
 						: null
 				}
+				filtered={hasActiveFilters(state)}
 				onEmailList={() => {
 					setEmailListRun((n) => n + 1);
 					setEmailListOpen(true);
@@ -218,9 +219,6 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 					}
 					setSelected(next);
 				}}
-				onDeleteRow={(item) =>
-					openDelete({ ids: [item.id], name: fullName(item) })
-				}
 				onClearFilters={() => navigate(clearFilters(state))}
 				onReload={applicants.reload}
 			/>

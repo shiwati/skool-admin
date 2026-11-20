@@ -28,6 +28,7 @@ import {
 	formatDateRange,
 	formatRatio,
 	ratioBadgeClass,
+	ratioBarClass,
 } from "@/lib/events/format";
 import { applicantsHref, eventEditHref, eventHref } from "@/lib/events/links";
 import {
@@ -55,7 +56,7 @@ export type EventListItem = {
 	to: string;
 	companyName: string | null;
 	location: string | null;
-	sheetUrl: string | null;
+	applicationSheetUrl: string | null;
 	instructor: string | null;
 	mentors: string[];
 	tags: string[];
@@ -287,7 +288,7 @@ function DemandCell({ item }: { item: EventListItem }) {
 					<span
 						className={cn(
 							"block h-full rounded-full",
-							programColorClass(item.id),
+							ratioBarClass(ratio),
 						)}
 						style={{
 							width: `${Math.min(100, Math.round(ratio * 100))}%`,

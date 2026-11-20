@@ -90,7 +90,7 @@ export default async function EventOverviewPage({ params }: Props) {
 					<StatusBreakdown eventId={event.id} counts={counts} />
 					<SheetSourceCard
 						eventId={event.id}
-						sheetUrl={event.sheetUrl}
+						applicationSheetUrl={event.applicationSheetUrl}
 					/>
 					<EventHistoryCard eventId={event.id} entries={history} />
 				</aside>

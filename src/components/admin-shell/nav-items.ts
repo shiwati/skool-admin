@@ -44,6 +44,7 @@ export const navGroups: NavGroup[] = [
 				label: "Visszajelzések",
 				shortLabel: "Visszajelz.",
 				icon: MessageSquare,
+				href: "/feedback",
 				mobile: "tab",
 			},
 			{ label: "Riportok", icon: FileText, mobile: "more" },

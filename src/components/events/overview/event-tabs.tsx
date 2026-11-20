@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { formatCount } from "@/lib/applicants/format";
 import { applicantsHref, eventHref } from "@/lib/events/links";
+import { eventFeedbackHref } from "@/lib/feedback/format";
 import { cn } from "@/lib/utils";
 
 const tabClass =
@@ -37,7 +38,8 @@ export function EventTabs({
 }) {
 	const pathname = usePathname();
 	const overviewActive = pathname === eventHref(eventId);
-	const disabled = ["Visszajelzések", "Záró riport"];
+	const feedbackActive = pathname === eventFeedbackHref(eventId);
+	const disabled = ["Záró riport"];
 
 	return (
 		<nav
@@ -74,6 +76,21 @@ export function EventTabs({
 					>
 						Jelentkezők
 						<Count>{formatCount(applications)}</Count>
+					</Link>
+				</li>
+				<li>
+					<Link
+						href={eventFeedbackHref(eventId)}
+						aria-current={feedbackActive ? "page" : undefined}
+						className={cn(
+							tabClass,
+							"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							feedbackActive
+								? "border-ink text-text-primary"
+								: "border-transparent text-text-secondary hover:text-text-primary",
+						)}
+					>
+						Visszajelzések
 					</Link>
 				</li>
 				{disabled.map((label) => (

@@ -23,7 +23,7 @@ The system SHALL serve the programs screen at `/events` to signed-in admins. The
 
 ### Requirement: Event phase
 
-Every event SHALL be in exactly one phase at a given moment. An event SHALL be "closed" when its end (`to`) is in the past. It SHALL be "active" when it has not ended and has a registration sheet (`sheetUrl`). It SHALL be "planned" when it has not ended and has no registration sheet.
+Every event SHALL be in exactly one phase at a given moment. An event SHALL be "closed" when its end (`to`) is in the past. It SHALL be "active" when it has not ended and has a registration sheet (`applicationSheetUrl`). It SHALL be "planned" when it has not ended and has no registration sheet.
 
 #### Scenario: Ended event
 
@@ -33,19 +33,19 @@ Every event SHALL be in exactly one phase at a given moment. An event SHALL be "
 
 #### Scenario: Upcoming event with a sheet
 
-- **GIVEN** an event that starts next week and has a `sheetUrl`
+- **GIVEN** an event that starts next week and has a `applicationSheetUrl`
 - **WHEN** its phase is determined
 - **THEN** it is "active"
 
 #### Scenario: Upcoming event without a sheet
 
-- **GIVEN** an event that starts next month and has no `sheetUrl`
+- **GIVEN** an event that starts next month and has no `applicationSheetUrl`
 - **WHEN** its phase is determined
 - **THEN** it is "planned"
 
 #### Scenario: Running event
 
-- **GIVEN** an event that started yesterday, ends next week and has a `sheetUrl`
+- **GIVEN** an event that started yesterday, ends next week and has a `applicationSheetUrl`
 - **WHEN** its phase is determined
 - **THEN** it is "active"
 
@@ -301,7 +301,7 @@ When no program matches, the table SHALL show an empty state instead of rows. If
 #### Scenario: Planned events only
 
 - **WHEN** an admin calls `GET /api/events?phase=planned`
-- **THEN** only events that have not ended and have no `sheetUrl` are returned
+- **THEN** only events that have not ended and have no `applicationSheetUrl` are returned
 
 #### Scenario: Unknown phase
 

@@ -14,7 +14,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Imports the event's Google Form response sheet (`Event.sheetUrl`) with the
+ * Imports the event's Google Form response sheet (`Event.applicationSheetUrl`) with the
  * signed-in admin's Google access. New responses only; safe to repeat.
  */
 export async function POST(
@@ -30,11 +30,13 @@ export async function POST(
 	try {
 		const event = await db.event.findUnique({
 			where: { id },
-			select: { id: true, sheetUrl: true },
+			select: { id: true, applicationSheetUrl: true },
 		});
 		if (!event) return jsonResponse({ error: "Event not found" }, 404);
 
-		const ref = event.sheetUrl ? parseSheetUrl(event.sheetUrl) : null;
+		const ref = event.applicationSheetUrl
+			? parseSheetUrl(event.applicationSheetUrl)
+			: null;
 		if (!ref) {
 			return jsonResponse(
 				{

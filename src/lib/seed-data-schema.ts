@@ -14,7 +14,7 @@ const eventSchema = z.object({
 	companyName: text,
 	location: text,
 	description: text,
-	sheetUrl: text,
+	applicationSheetUrl: text,
 	ageRange: text,
 	instructor: text,
 	mentors: z.array(z.string()).default([]),

@@ -37,7 +37,6 @@ function Harness() {
 				onPageSize={() => {}}
 				onToggleRow={() => {}}
 				onToggleAll={() => {}}
-				onDeleteRow={() => {}}
 				onClearFilters={() => {}}
 				onReload={() => {}}
 			/>

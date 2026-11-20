@@ -11,13 +11,19 @@ describe("ApplicantsHeader", () => {
 			screen.getByRole("heading", { level: 1, name: "Jelentkezők" }),
 		).toBeInTheDocument();
 		expect(
-			screen.getByText("Google Formból érkező jelentkezések · 1 248 fő"),
+			screen.getByText(/^Összes jelentkező: 1\s248 fő$/),
 		).toBeInTheDocument();
+	});
+
+	it("labels the count as results when filtered", () => {
+		render(<ApplicantsHeader total={12} filtered onEmailList={() => {}} />);
+		expect(screen.getByText("Találatok száma: 12 fő")).toBeInTheDocument();
+		expect(screen.queryByText(/Összes jelentkező/)).not.toBeInTheDocument();
 	});
 
 	it("omits the count until data has loaded", () => {
 		render(<ApplicantsHeader total={null} onEmailList={() => {}} />);
-		expect(screen.queryByText(/fő/)).not.toBeInTheDocument();
+		expect(screen.queryByText(/száma/)).not.toBeInTheDocument();
 	});
 
 	it("opens the e-mail list", async () => {

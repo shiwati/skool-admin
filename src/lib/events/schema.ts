@@ -58,8 +58,9 @@ export const eventFormSchema = z
 			),
 		ageFrom: ageField,
 		ageTo: ageField,
-		sheetUrl: sheetUrlField,
-		feedbackSheetUrl: sheetUrlField,
+		applicationSheetUrl: sheetUrlField,
+		participantFeedbackSheetUrl: sheetUrlField,
+		mentorFeedbackSheetUrl: sheetUrlField,
 		instructor: z.string().trim().max(200),
 		mentors: z.array(tag).max(MAX_MENTORS),
 	})
@@ -87,8 +88,9 @@ export type CreateEventInput = {
 	location?: string;
 	capacity: number;
 	ageRange?: string;
-	sheetUrl?: string;
-	feedbackSheetUrl?: string;
+	applicationSheetUrl?: string;
+	participantFeedbackSheetUrl?: string;
+	mentorFeedbackSheetUrl?: string;
 	instructor?: string;
 	mentors: string[];
 };
@@ -104,8 +106,9 @@ export type UpdateEventInput = {
 	location: string | null;
 	capacity: number;
 	ageRange: string | null;
-	sheetUrl: string | null;
-	feedbackSheetUrl: string | null;
+	applicationSheetUrl: string | null;
+	participantFeedbackSheetUrl: string | null;
+	mentorFeedbackSheetUrl: string | null;
 	instructor: string | null;
 	mentors: string[];
 };
@@ -122,8 +125,9 @@ export type EventFormSource = {
 	location: string | null;
 	capacity: number;
 	ageRange: string | null;
-	sheetUrl: string | null;
-	feedbackSheetUrl: string | null;
+	applicationSheetUrl: string | null;
+	participantFeedbackSheetUrl: string | null;
+	mentorFeedbackSheetUrl: string | null;
 	instructor: string | null;
 	mentors: string[];
 };
@@ -153,8 +157,9 @@ export function toEventFormValues(event: EventFormSource): EventFormValues {
 		capacity: String(event.capacity),
 		ageFrom: age?.[1] ?? "",
 		ageTo: age?.[2] ?? "",
-		sheetUrl: event.sheetUrl ?? "",
-		feedbackSheetUrl: event.feedbackSheetUrl ?? "",
+		applicationSheetUrl: event.applicationSheetUrl ?? "",
+		participantFeedbackSheetUrl: event.participantFeedbackSheetUrl ?? "",
+		mentorFeedbackSheetUrl: event.mentorFeedbackSheetUrl ?? "",
 		instructor: event.instructor ?? "",
 		mentors: event.mentors,
 	};
@@ -168,8 +173,9 @@ export function toUpdateEventInput(values: EventFormValues): UpdateEventInput {
 		companyName: create.companyName ?? null,
 		location: create.location ?? null,
 		ageRange: create.ageRange ?? null,
-		sheetUrl: create.sheetUrl ?? null,
-		feedbackSheetUrl: create.feedbackSheetUrl ?? null,
+		applicationSheetUrl: create.applicationSheetUrl ?? null,
+		participantFeedbackSheetUrl: create.participantFeedbackSheetUrl ?? null,
+		mentorFeedbackSheetUrl: create.mentorFeedbackSheetUrl ?? null,
 		instructor: create.instructor ?? null,
 	};
 }
@@ -190,8 +196,10 @@ export function toCreateEventInput(values: EventFormValues): CreateEventInput {
 		location: values.location || undefined,
 		capacity: Number(values.capacity),
 		ageRange,
-		sheetUrl: values.sheetUrl || undefined,
-		feedbackSheetUrl: values.feedbackSheetUrl || undefined,
+		applicationSheetUrl: values.applicationSheetUrl || undefined,
+		participantFeedbackSheetUrl:
+			values.participantFeedbackSheetUrl || undefined,
+		mentorFeedbackSheetUrl: values.mentorFeedbackSheetUrl || undefined,
 		instructor: values.instructor || undefined,
 		mentors: values.mentors,
 	};

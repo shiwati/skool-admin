@@ -70,7 +70,7 @@ describe("MobileTabBar", () => {
 		).toHaveAttribute("aria-current", "page");
 		expect(
 			within(nav).getByRole("link", { name: "Visszajelzések" }),
-		).toHaveAttribute("aria-disabled", "true");
+		).toHaveAttribute("href", "/feedback");
 		expect(
 			within(nav).getByRole("button", { name: "Több" }),
 		).toBeInTheDocument();

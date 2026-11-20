@@ -66,7 +66,9 @@ describe("ApplicantsView", () => {
 	it("requests the API query derived from the URL and shows the total", async () => {
 		nav.search = "sort=age&order=asc&page=2&hometown=P%C3%A9cs";
 		render(<ApplicantsView />);
-		expect(await screen.findByText(/· 3 fő/)).toBeInTheDocument();
+		expect(
+			await screen.findByText("Találatok száma: 3 fő"),
+		).toBeInTheDocument();
 		const query = applicantCalls()[0];
 		expect(Object.fromEntries(query)).toEqual({
 			page: "2",

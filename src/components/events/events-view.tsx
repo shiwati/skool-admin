@@ -66,8 +66,11 @@ export function EventsView({
 		<>
 			<PageHeader
 				eyebrow="Programok"
-				title="Programok és események"
-				description={<>{formatCount(counts.all)} program</>}
+				title="Programok"
+				description={
+					hasActiveEventFilters(state) &&
+					`Találatok száma: ${formatCount(total)} db`
+				}
 				actions={
 					// Mobile: the floating button below takes this role.
 					<Button asChild className="hidden md:inline-flex">

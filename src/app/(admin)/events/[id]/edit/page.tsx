@@ -27,8 +27,9 @@ export default async function EditEventPage({
 				location: event.location,
 				capacity: event.capacity,
 				ageRange: event.ageRange,
-				sheetUrl: event.sheetUrl,
-				feedbackSheetUrl: event.feedbackSheetUrl,
+				applicationSheetUrl: event.applicationSheetUrl,
+				participantFeedbackSheetUrl: event.participantFeedbackSheetUrl,
+				mentorFeedbackSheetUrl: event.mentorFeedbackSheetUrl,
 				instructor: event.instructor,
 				mentors: event.mentors,
 			}}

@@ -10,8 +10,8 @@ export const EVENT_PHASES = ["planned", "closed"] as const;
 export type EventPhase = (typeof EVENT_PHASES)[number];
 
 export const PHASE_LABELS: Record<EventPhase | "all", string> = {
-	planned: "Tervezett",
-	closed: "Lezárt",
+	planned: "Jövőbeli",
+	closed: "Múltbeli",
 	all: "Összes",
 };
 
@@ -37,7 +37,7 @@ export const EVENT_STATUS_BADGE_CLASSES: Record<EventStatus, string> = {
 type StatusInput = {
 	from: string | Date;
 	to: string | Date;
-	sheetUrl: string | null;
+	applicationSheetUrl: string | null;
 	capacity: number;
 	applications: number;
 };
@@ -49,7 +49,7 @@ export function eventStatus(event: StatusInput, now: Date): EventStatus {
 	const t = now.getTime();
 	if (to < t) return "closed";
 	if (from <= t) return "running";
-	if (!event.sheetUrl) return "planned";
+	if (!event.applicationSheetUrl) return "planned";
 	if (event.capacity > 0 && event.applications >= event.capacity)
 		return "full";
 	return "open";
