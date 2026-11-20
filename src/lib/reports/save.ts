@@ -1,4 +1,6 @@
 import "server-only";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { db } from "@/lib/db";
 import { EVENT_TABLE } from "@/lib/events/changes";
 import { createGoogleDocFromHtml } from "@/lib/google/drive";
@@ -9,6 +11,18 @@ import {
 import type { ReportContent } from "./content";
 import { getEventReport, toDocumentData } from "./load";
 import { renderReportHtml, reportFileName } from "./render";
+
+/** A Skool-logó `data:` URI-ként (a Drive nem éri el a localhostot); hiba esetén szöveges logó. */
+async function skoolLogoDataUri(): Promise<string | null> {
+	try {
+		const file = await readFile(
+			path.join(process.cwd(), "public", "brand", "skool-logo.png"),
+		);
+		return `data:image/png;base64,${file.toString("base64")}`;
+	} catch {
+		return null;
+	}
+}
 
 /** History `fieldName` a generált dokumentumhoz (`tableName: "event"`). */
 export const REPORT_DOCUMENT_HISTORY_FIELD = "reportDocument";
@@ -58,7 +72,7 @@ export async function generateReportDocument(
 	);
 	const doc = await createGoogleDocFromHtml(
 		title,
-		renderReportHtml(data),
+		renderReportHtml(data, { logoDataUri: await skoolLogoDataUri() }),
 		accessToken,
 	);
 

@@ -10,7 +10,7 @@ export type MetricDefinition = {
 	key: string;
 	/** Rövid felirat az appban. */
 	label: string;
-	/** A riport mondata a százalék után: „A résztvevők 100%-a {phrase}.” */
+	/** A riport csempéjén a százalék alatti szöveg („100%” + phrase). */
 	phrase: string;
 };
 
@@ -128,9 +128,4 @@ export function computeMetrics(inputs: MetricInput[]): MetricResult[] {
 				answered === 0 ? null : Math.round((positive / answered) * 100),
 		};
 	});
-}
-
-/** „A résztvevők 100%-a …” – a „százaléka” miatt mindig „-a” rag. */
-export function metricSentence(metric: { percent: number; phrase: string }) {
-	return `A résztvevők ${metric.percent}%-a ${metric.phrase}.`;
 }
