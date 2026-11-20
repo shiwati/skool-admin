@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/admin-shell/page-header";
 import { PageShell } from "@/components/admin-shell/page-shell";
 import { FeedbackView } from "@/components/feedback/feedback-view";
 import { formatCount, formatDateTime } from "@/lib/applicants/format";
+import { periodOptions } from "@/lib/dashboard/period";
 import {
 	feedbackEventOptions,
 	parseFeedbackQuery,
@@ -32,6 +33,7 @@ export default async function FeedbackPage({
 				state={query}
 				basePath="/feedback"
 				events={events}
+				periods={periodOptions(new Date())}
 				openItem={openItem}
 				header={
 					<PageHeader

@@ -19,6 +19,7 @@ export function FilterChip({
 	onClear,
 	open,
 	onOpenChange,
+	contentClassName,
 	children,
 }: {
 	label: string;
@@ -27,6 +28,8 @@ export function FilterChip({
 	onClear: () => void;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
+	/** A lenyíló panel osztályai (pl. szélesebb panel hosszú opciókhoz). */
+	contentClassName?: string;
 	children: ReactNode;
 }) {
 	const active = value !== undefined;
@@ -48,7 +51,10 @@ export function FilterChip({
 					)}
 					<ChevronDown aria-hidden="true" className="size-3.5" />
 				</PopoverTrigger>
-				<PopoverContent align="start" className="w-72 p-3">
+				<PopoverContent
+					align="start"
+					className={cn("w-72 p-3", contentClassName)}
+				>
 					{children}
 				</PopoverContent>
 			</Popover>

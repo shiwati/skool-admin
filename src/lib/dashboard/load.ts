@@ -9,10 +9,15 @@ import {
 	lastMonthsStart,
 	monthlyOversubscription,
 	oversubscription,
+	programSatisfaction,
+	satisfactionByRole,
 	type CapacityRow,
 	type CountRow,
 	type EventStat,
+	type FeedbackStat,
 	type MonthlyRatio,
+	type ProgramSatisfaction,
+	type Satisfaction,
 } from "./compute";
 import {
 	periodOptions,
@@ -45,6 +50,9 @@ export type DashboardData = {
 	capacity: CapacityRow[];
 	trend: MonthlyRatio[];
 	demographics: Demographics;
+	/** Visszajelzések a program kezdete szerint az időszakhoz rendelve. */
+	satisfaction: { current: Satisfaction; previous: Satisfaction };
+	satisfactionByProgram: ProgramSatisfaction[];
 };
 
 export type DashboardFilters = { period?: string; program?: string };
@@ -87,34 +95,50 @@ export async function loadDashboard(
 		...(program && { id: program.id }),
 	};
 
-	const [current, previous, rawEvents, demographicRows] = await Promise.all([
-		applicationsIn(period.range),
-		applicationsIn(period.previous),
-		db.event.findMany({
-			where: eventsWhere,
-			select: {
-				id: true,
-				name: true,
-				from: true,
-				to: true,
-				capacity: true,
-				_count: {
-					select: { applications: { where: activeApplicant } },
+	const [current, previous, rawEvents, demographicRows, feedbackRows] =
+		await Promise.all([
+			applicationsIn(period.range),
+			applicationsIn(period.previous),
+			db.event.findMany({
+				where: eventsWhere,
+				select: {
+					id: true,
+					name: true,
+					from: true,
+					to: true,
+					capacity: true,
+					_count: {
+						select: { applications: { where: activeApplicant } },
+					},
 				},
-			},
-		}),
-		db.application.findMany({
-			where: {
-				...activeApplicant,
-				...programWhere,
-				event: { from: period.range },
-			},
-			select: {
-				event: { select: { from: true } },
-				applicant: { select: { birthYear: true, hometown: true } },
-			},
-		}),
-	]);
+			}),
+			db.application.findMany({
+				where: {
+					...activeApplicant,
+					...programWhere,
+					event: { from: period.range },
+				},
+				select: {
+					event: { select: { from: true } },
+					applicant: { select: { birthYear: true, hometown: true } },
+				},
+			}),
+			db.feedback.findMany({
+				where: {
+					...programWhere,
+					event: {
+						from: { gte: period.previous.gte, lt: period.range.lt },
+					},
+				},
+				select: {
+					eventId: true,
+					role: true,
+					overallScore: true,
+					recommend: true,
+					event: { select: { name: true, from: true } },
+				},
+			}),
+		]);
 
 	const events: EventStat[] = rawEvents.map((e) => ({
 		id: e.id,
@@ -126,6 +150,17 @@ export async function loadDashboard(
 	}));
 	const startsIn = (range: DateRange) =>
 		events.filter((e) => within(range, e.from));
+
+	const feedback: FeedbackStat[] = feedbackRows.map((f) => ({
+		eventId: f.eventId,
+		eventName: f.event.name,
+		eventFrom: f.event.from,
+		role: f.role,
+		overallScore: f.overallScore,
+		recommend: f.recommend,
+	}));
+	const feedbackIn = (range: DateRange) =>
+		feedback.filter((f) => within(range, f.eventFrom));
 
 	return {
 		period: {
@@ -154,5 +189,10 @@ export async function loadDashboard(
 				demographicRows.map((r) => r.applicant.hometown),
 			),
 		},
+		satisfaction: {
+			current: satisfactionByRole(feedbackIn(period.range)),
+			previous: satisfactionByRole(feedbackIn(period.previous)),
+		},
+		satisfactionByProgram: programSatisfaction(feedbackIn(period.range)),
 	};
 }

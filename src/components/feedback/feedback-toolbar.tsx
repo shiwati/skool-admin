@@ -14,10 +14,13 @@ function Option({
 	checked,
 	label,
 	onSelect,
+	wrap = false,
 }: {
 	name: string;
 	checked: boolean;
 	label: string;
+	/** Hosszú címkénél levágás helyett sortörés. */
+	wrap?: boolean;
 	onSelect: () => void;
 }) {
 	return (
@@ -27,9 +30,11 @@ function Option({
 				name={name}
 				checked={checked}
 				onChange={onSelect}
-				className="accent-ink"
+				className="shrink-0 accent-ink"
 			/>
-			<span className="min-w-0 truncate">{label}</span>
+			<span className={wrap ? "min-w-0 break-words" : "min-w-0 truncate"}>
+				{label}
+			</span>
 		</label>
 	);
 }
@@ -41,8 +46,11 @@ function Option({
 export function FeedbackToolbar({
 	state,
 	events,
+	periods,
 }: {
 	state: FeedbackUrlState;
+	/** Az időszakszűrő opciói (naptári évek); `undefined` a program saját fülén. */
+	periods?: { key: string; label: string }[];
 	/** A programszűrő opciói; `undefined`, ha a nézet egy programra szűkített. */
 	events?: { id: string; name: string }[];
 }) {
@@ -50,7 +58,9 @@ export function FeedbackToolbar({
 	const pathname = usePathname();
 	const [pending, startTransition] = useTransition();
 	const [q, setQ] = useState(state.q ?? "");
-	const [openChip, setOpenChip] = useState<"role" | "event" | null>(null);
+	const [openChip, setOpenChip] = useState<
+		"role" | "event" | "period" | null
+	>(null);
 
 	function go(patch: FeedbackUrlState) {
 		setOpenChip(null);
@@ -63,6 +73,9 @@ export function FeedbackToolbar({
 	}
 
 	const eventName = events?.find((e) => e.id === state.eventId)?.name;
+	const periodLabel = state.period
+		? (periods?.find((p) => p.key === state.period)?.label ?? state.period)
+		: undefined;
 
 	return (
 		<div
@@ -95,7 +108,7 @@ export function FeedbackToolbar({
 				open={openChip === "role"}
 				onOpenChange={(open) => setOpenChip(open ? "role" : null)}
 			>
-				<fieldset className="flex flex-col gap-1">
+				<fieldset className="flex min-w-0 flex-col gap-1">
 					<legend className="sr-only">Kitöltő</legend>
 					<Option
 						name="role"
@@ -114,6 +127,39 @@ export function FeedbackToolbar({
 					))}
 				</fieldset>
 			</FilterChip>
+			{periods && (
+				<FilterChip
+					label="Időszak"
+					value={periodLabel}
+					onClear={() => go({ period: undefined })}
+					open={openChip === "period"}
+					onOpenChange={(open) => setOpenChip(open ? "period" : null)}
+				>
+					<fieldset className="flex min-w-0 flex-col gap-1">
+						<legend className="sr-only">
+							Időszak (a program kezdete szerint)
+						</legend>
+						<Option
+							name="period"
+							label="Teljes időszak"
+							checked={!state.period}
+							onSelect={() => go({ period: undefined })}
+						/>
+						{periods.map((p) => (
+							<Option
+								key={p.key}
+								name="period"
+								label={p.label}
+								checked={state.period === p.key}
+								onSelect={() => go({ period: p.key })}
+							/>
+						))}
+					</fieldset>
+					<p className="mt-2 px-2 text-xs text-text-tertiary">
+						A program kezdete szerint, mint az Áttekintésen.
+					</p>
+				</FilterChip>
+			)}
 			{events && (
 				<FilterChip
 					label="Program"
@@ -123,13 +169,14 @@ export function FeedbackToolbar({
 					onClear={() => go({ eventId: undefined })}
 					open={openChip === "event"}
 					onOpenChange={(open) => setOpenChip(open ? "event" : null)}
+					contentClassName="w-[min(28rem,calc(100vw-2rem))]"
 				>
 					{events.length === 0 ? (
 						<p className="text-sm text-text-secondary">
 							Még egyik programhoz sincs visszajelzés.
 						</p>
 					) : (
-						<fieldset className="flex max-h-72 flex-col gap-1 overflow-y-auto">
+						<fieldset className="flex max-h-72 min-w-0 flex-col gap-1 overflow-y-auto">
 							<legend className="sr-only">Program</legend>
 							<Option
 								name="event"
@@ -142,6 +189,7 @@ export function FeedbackToolbar({
 									key={event.id}
 									name="event"
 									label={event.name}
+									wrap
 									checked={state.eventId === event.id}
 									onSelect={() => go({ eventId: event.id })}
 								/>

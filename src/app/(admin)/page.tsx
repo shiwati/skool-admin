@@ -11,6 +11,7 @@ import type { Tone } from "@/components/dashboard/stat-badge";
 import { formatCount } from "@/lib/applicants/format";
 import {
 	formatRatio,
+	formatScore,
 	formatSignedDecimal,
 	formatSignedPercent,
 	greeting,
@@ -72,6 +73,32 @@ function oversubscriptionKpi({
 	};
 }
 
+function satisfactionKpi({ satisfaction: { current } }: DashboardData) {
+	const participant = current.PARTICIPANT.score;
+	const mentor = current.MENTOR.score;
+	const responses = current.PARTICIPANT.responses + current.MENTOR.responses;
+	const mentorNote =
+		mentor.average === null
+			? "mentorok: nincs értékelés"
+			: `mentorok: ${formatScore(mentor.average)} / 5`;
+	if (responses === 0)
+		return {
+			value: "—",
+			badge: undefined,
+			tone: "neutral" as Tone,
+			note: "nincs visszajelzés az időszak programjaira",
+		};
+	return {
+		value:
+			participant.average === null
+				? "—"
+				: `${formatScore(participant.average)} / 5`,
+		badge: `${formatCount(responses)} kitöltés`,
+		tone: "neutral" as Tone,
+		note: `résztvevők · ${mentorNote}`,
+	};
+}
+
 // Access is enforced by the (admin) layout; the session is read for the greeting.
 export default async function DashboardPage({ searchParams }: Props) {
 	const session = await requireAdmin("/");
@@ -105,9 +132,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 				/>
 				<KpiCard
 					label="Átlagos elégedettség"
-					value="—"
-					badge="hamarosan"
-					note="feedback formok alapján"
+					{...satisfactionKpi(data)}
 					wide
 				/>
 			</KpiGrid>
@@ -122,7 +147,10 @@ export default async function DashboardPage({ searchParams }: Props) {
 					data={data.demographics}
 					periodLabel={data.period.label}
 				/>
-				<SatisfactionCard />
+				<SatisfactionCard
+					programs={data.satisfactionByProgram}
+					satisfaction={data.satisfaction.current}
+				/>
 			</div>
 		</PageShell>
 	);

@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { cache } from "react";
 import { z } from "zod";
+import { budapestYearRange } from "@/lib/api/query";
 import { db } from "@/lib/db";
 import type { Answers } from "./parse";
 import type { Recommend } from "./questions";
@@ -20,6 +21,12 @@ export const feedbackQuerySchema = z.object({
 	q: optionalText.catch(undefined),
 	role: z.enum(["PARTICIPANT", "MENTOR"]).optional().catch(undefined),
 	eventId: optionalText.catch(undefined),
+	/** Naptári év (pl. „2026”): a program kezdete szerint, mint az Áttekintésen. */
+	period: z
+		.string()
+		.regex(/^\d{4}$/)
+		.optional()
+		.catch(undefined),
 	page: z.coerce.number().int().min(1).catch(1).default(1),
 	/** A megnyitott visszajelzés (részletek fiók). */
 	open: optionalText.catch(undefined),
@@ -72,6 +79,9 @@ function where(query: FeedbackQuery): Prisma.FeedbackWhereInput {
 	return {
 		...(query.eventId && { eventId: query.eventId }),
 		...(query.role && { role: query.role }),
+		...(query.period && {
+			event: { from: budapestYearRange(Number(query.period)) },
+		}),
 		...(query.q && {
 			searchText: { contains: query.q.toLowerCase() },
 		}),
