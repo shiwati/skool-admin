@@ -130,19 +130,34 @@ describe("ColumnPicker", () => {
 });
 
 describe("ColumnPicker compact (mobile)", () => {
-	it("opens the same panel from a 44 px icon button", async () => {
+	it("opens a visibility-only panel from a 44 px icon button", async () => {
+		const onChange = vi.fn();
 		render(
 			<ColumnPicker
 				compact
 				settings={{ order: ["name", "age"], hidden: [] }}
-				onChange={() => {}}
+				onChange={onChange}
 			/>,
 		);
 		const trigger = screen.getByRole("button", { name: "Oszlopok" });
 		expect(trigger).toHaveClass("size-11");
 		await userEvent.click(trigger);
+		const panel = screen.getByRole("dialog", {
+			name: "Oszlopok a listában",
+		});
+		// No reordering on mobile: no arrows, no drag, no drag hint.
 		expect(
-			screen.getByRole("dialog", { name: "Oszlopok a listában" }),
-		).toBeInTheDocument();
+			within(panel).queryByRole("button", { name: /feljebb|lejjebb/ }),
+		).not.toBeInTheDocument();
+		expect(panel.querySelector('[draggable="true"]')).toBeNull();
+		expect(panel).not.toHaveTextContent("Húzással");
+
+		await userEvent.click(
+			within(panel).getByRole("checkbox", { name: /Életkor/ }),
+		);
+		expect(onChange).toHaveBeenCalledWith({
+			order: ["name", "age"],
+			hidden: ["age"],
+		});
 	});
 });

@@ -103,7 +103,7 @@ describe("Programok column settings", () => {
 		expect(window.localStorage.getItem(COLUMN_SETTINGS_KEY)).toBeNull();
 	});
 
-	it("reorders from the mobile icon button; the program column stays locked", async () => {
+	it("only toggles visibility from the mobile icon button", async () => {
 		renderView();
 		const panel = await openPicker("events-mobile-trailing");
 		expect(
@@ -111,6 +111,18 @@ describe("Programok column settings", () => {
 				name: "Program (név, címkék)",
 			}),
 		).toBeDisabled();
+		expect(
+			within(panel).queryByRole("button", { name: /feljebb|lejjebb/ }),
+		).not.toBeInTheDocument();
+		await userEvent.click(
+			within(panel).getByRole("checkbox", { name: "Oktatók, mentorok" }),
+		);
+		expect(cardLabels()).not.toContain("Oktatók");
+	});
+
+	it("reorders from the tablet+ picker; the cards follow", async () => {
+		renderView();
+		const panel = await openPicker("events-trailing");
 		await userEvent.click(
 			within(panel).getByRole("button", { name: "Státusz feljebb" }),
 		);
