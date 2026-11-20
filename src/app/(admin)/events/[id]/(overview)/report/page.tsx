@@ -37,7 +37,13 @@ export default async function EventReportPage({ params }: Props) {
 		<div className="flex flex-col gap-4">
 			<DetailCard
 				title="Alapadatok"
-				subtitle="A programból és a „Részt vett” státuszú jelentkezőkből. A riport nyelve magyar; angol változathoz használd a Docs „Eszközök → Dokumentum lefordítása” menüjét."
+				subtitle={
+					<span className="text-xs">
+						A programból és a „Részt vett” státuszú jelentkezőkből.
+						A riport nyelve magyar; angol változathoz használd a
+						Docs „Eszközök → Dokumentum lefordítása” menüjét.
+					</span>
+				}
 			>
 				<KeyValueList
 					items={[
@@ -53,19 +59,6 @@ export default async function EventReportPage({ params }: Props) {
 							value: reportDateText(event.from, event.to),
 						},
 						{ key: "Helyszín", value: event.location },
-						{
-							key: "Rövid leírás",
-							value: event.description ? (
-								<span className="font-normal whitespace-pre-line">
-									{event.description}
-								</span>
-							) : (
-								<span className="font-normal text-warning-fg">
-									Nincs megadva – a program szerkesztésénél
-									pótolható
-								</span>
-							),
-						},
 						{
 							key: "Résztvevők",
 							value:
@@ -86,6 +79,18 @@ export default async function EventReportPage({ params }: Props) {
 						},
 					]}
 				/>
+				<div className="flex flex-col gap-0.5 text-sm">
+					<h3 className="text-text-tertiary">Rövid leírás</h3>
+					{event.description ? (
+						<p className="font-medium break-words whitespace-pre-line">
+							{event.description}
+						</p>
+					) : (
+						<p className="text-warning-fg">
+							Nincs megadva – a program szerkesztésénél pótolható
+						</p>
+					)}
+				</div>
 			</DetailCard>
 			<ReportEditor
 				eventId={event.id}
