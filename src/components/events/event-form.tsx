@@ -13,7 +13,7 @@ import {
 	type ErrorSummaryItem,
 } from "@/components/form/form-error-summary";
 import { FormField, fieldControlClass } from "@/components/form/form-field";
-import { OptionChips } from "@/components/form/option-chips";
+import { TagCombobox } from "@/components/form/tag-combobox";
 import { TagInput } from "@/components/form/tag-input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,7 +29,6 @@ import {
 	type EventFormSource,
 	type EventFormValues,
 } from "@/lib/events/schema";
-import { EVENT_TAGS } from "@/lib/events/tags";
 import { cn } from "@/lib/utils";
 
 type FieldName = keyof EventFormValues;
@@ -125,10 +124,6 @@ function FormSection({
 	);
 }
 
-const SORTED_TAGS = [...EVENT_TAGS].sort(
-	new Intl.Collator("hu", { sensitivity: "base" }).compare,
-);
-
 const controlClass = cn("h-10", fieldControlClass);
 
 const EMPTY_VALUES: EventFormValues = {
@@ -170,8 +165,16 @@ export function EventForm(props: EventFormProps) {
 				: EMPTY_VALUES,
 	});
 
-	const message = (name: FieldName) =>
-		errors[name]?.message as string | undefined;
+	const message = (name: FieldName): string | undefined => {
+		const error = errors[name];
+		if (error?.message) return error.message as string;
+		// Array fields (tags): the error sits on the offending item.
+		if (Array.isArray(error)) {
+			return error.find((item) => item?.message)?.message as
+				string | undefined;
+		}
+		return undefined;
+	};
 	const invalid = (Object.keys(FIELD_LABELS) as FieldName[]).filter(
 		(name) => errors[name],
 	);
@@ -309,6 +312,7 @@ export function EventForm(props: EventFormProps) {
 								id={inputId("tags")}
 								label="Címkék"
 								error={message("tags")}
+								hint="Válassz a használt címkék közül, vagy írj be újat."
 								className="md:col-span-2"
 							>
 								{(field) => (
@@ -318,10 +322,8 @@ export function EventForm(props: EventFormProps) {
 										render={({
 											field: { value, onChange },
 										}) => (
-											<OptionChips
+											<TagCombobox
 												{...field}
-												label="Címkék"
-												options={SORTED_TAGS}
 												value={value}
 												onChange={onChange}
 											/>

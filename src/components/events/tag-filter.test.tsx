@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { searchKey, TagFilter } from "./tag-filter";
+import { TagFilter } from "./tag-filter";
 
 const TAGS = ["ablak", "Élmény", "kezdő", "robotika"];
 
@@ -38,20 +38,14 @@ const openChip = (user: ReturnType<typeof userEvent.setup>) =>
 const optionNames = () =>
 	screen.queryAllByRole("option").map((o) => o.textContent);
 
-describe("searchKey", () => {
-	it("ignores case and accents", () => {
-		expect(searchKey("Élmény")).toBe("elmeny");
-		expect(searchKey("PROGRAMOZÁS")).toBe("programozas");
-		expect(searchKey("kezdő")).toBe("kezdo");
-	});
-});
-
 describe("TagFilter", () => {
 	const fetchMock = vi.fn();
 
 	beforeEach(() => {
 		vi.stubGlobal("fetch", fetchMock);
-		fetchMock.mockResolvedValue(json({ items: TAGS }));
+		fetchMock.mockResolvedValue(
+			json({ items: TAGS.map((name) => ({ name, count: 1 })) }),
+		);
 	});
 	afterEach(() => {
 		vi.unstubAllGlobals();

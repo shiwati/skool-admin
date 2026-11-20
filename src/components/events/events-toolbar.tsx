@@ -10,7 +10,6 @@ import {
 	hasActiveEventFilters,
 	type EventListFilters,
 } from "@/lib/events/list-params";
-import type { EventTag } from "@/lib/events/tags";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 import { TagFilter } from "./tag-filter";
@@ -59,7 +58,7 @@ export function EventsToolbar({
 			>
 				<TagFilter
 					selected={filters.tags}
-					onChange={(tags) => onChange({ tags: tags as EventTag[] })}
+					onChange={(tags) => onChange({ tags })}
 				/>
 				<TextChip
 					label="Helyszín / partner"

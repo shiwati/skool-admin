@@ -6,6 +6,7 @@ import { FilterChip } from "@/components/applicants/filter-chip";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, apiFetch } from "@/lib/api/client";
+import { searchKey } from "@/lib/events/tags";
 import { cn } from "@/lib/utils";
 
 type Options =
@@ -13,18 +14,11 @@ type Options =
 	| { status: "success"; items: string[] }
 	| { status: "error" };
 
-/** Kis- és nagybetűt, valamint ékezetet figyelmen kívül hagyó kulcs. */
-export function searchKey(value: string) {
-	return value
-		.normalize("NFD")
-		.replace(/\p{M}/gu, "")
-		.toLocaleLowerCase("hu");
-}
-
 /**
- * Címkeszűrő: többválasztós lista a fix címkelistából, gépelés közbeni
- * (böngészőoldali) szűréssel. Új címkét nem lehet felvenni. Vezérelt
- * komponens; az URL-állapot a befoglaló képernyő dolga.
+ * Címkeszűrő: többválasztós lista a programokon használt címkékből,
+ * gépelés közbeni (böngészőoldali) szűréssel. Új címkét itt nem lehet
+ * felvenni, csak a program űrlapján. Vezérelt komponens; az URL-állapot a
+ * befoglaló képernyő dolga.
  */
 export function TagFilter({
 	selected,
@@ -46,10 +40,13 @@ export function TagFilter({
 		loading.current = true;
 		setOptions({ status: "loading" });
 		try {
-			const { items } = await apiFetch<{ items: string[] }>(
-				"/api/events/tags",
-			);
-			setOptions({ status: "success", items });
+			const { items } = await apiFetch<{
+				items: { name: string; count: number }[];
+			}>("/api/events/tags");
+			setOptions({
+				status: "success",
+				items: items.map((item) => item.name),
+			});
 		} catch (error) {
 			// 401: apiFetch is already redirecting to the login page.
 			if (!(error instanceof ApiError && error.status === 401)) {

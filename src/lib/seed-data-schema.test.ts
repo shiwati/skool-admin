@@ -37,18 +37,23 @@ describe("dataFileSchema", () => {
 		expect(dataFileSchema.parse(base).events[0].tags).toEqual([]);
 	});
 
-	it("accepts tags from the fixed list", () => {
+	it("accepts any well-formed tag and stores it normalized", () => {
 		const parsed = dataFileSchema.parse({
 			...base,
-			events: [{ ...base.events[0], tags: ["robotika", "kezdő"] }],
+			events: [
+				{
+					...base.events[0],
+					tags: ["robotika", "  3D Nyomtatás ", "Robotika"],
+				},
+			],
 		});
-		expect(parsed.events[0].tags).toEqual(["robotika", "kezdő"]);
+		expect(parsed.events[0].tags).toEqual(["robotika", "3d nyomtatás"]);
 	});
 
-	it("rejects a tag that is not in the fixed list", () => {
+	it("rejects a malformed tag", () => {
 		const result = dataFileSchema.safeParse({
 			...base,
-			events: [{ ...base.events[0], tags: ["nemletezik"] }],
+			events: [{ ...base.events[0], tags: ["a,b"] }],
 		});
 		expect(result.success).toBe(false);
 	});

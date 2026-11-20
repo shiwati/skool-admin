@@ -5,7 +5,7 @@ Forrás: `prisma/schema.prisma`. A mezők DB-oszlopnevei snake_case-ek (`@map`),
 ## Entitások
 
 - **Applicant (jelentkező)**: a gyerek adatai (név, születési év, iskola, lakóhely, telefon, e-mail), a szülő adatai (`parent*` mezők), `newsletter` hozzájárulás. Egy jelentkező több eseményre jelentkezhet.
-- **Event (program/esemény)**: `name`, `from`/`to`, `companyName`, `location`, `description` (DB: `desc`), `applicationSheetUrl` (jelentkező űrlap sheetje), `participantFeedbackSheetUrl` és `mentorFeedbackSheetUrl` (a két visszajelző űrlap sheetje), `ageRange` (szabad szöveg), `instructor`, `mentors` (szöveglista), `tags` (címkelista a fix listából, alapérték üres; lásd lent), `capacity` (alapérték 0).
+- **Event (program/esemény)**: `name`, `from`/`to`, `companyName`, `location`, `description` (DB: `desc`), `applicationSheetUrl` (jelentkező űrlap sheetje), `participantFeedbackSheetUrl` és `mentorFeedbackSheetUrl` (a két visszajelző űrlap sheetje), `ageRange` (szabad szöveg), `instructor`, `mentors` (szöveglista), `tags` (normalizált címkelista, alapérték üres; lásd lent), `capacity` (alapérték 0).
 - **Application (jelentkezés)**: egy Applicant × Event kapcsolat, **egyedi** `(eventId, applicantId)` párra. Tartalmazza a jelentkezési űrlap válaszait (`foodPreference`, `heardFromWhere/Whom`, `solvedProblem`, `pastExpInProg`, korábbi részvétel mezők, `comment`, `companyAwareness`), a `receivedAt` beérkezési időt és a `status`-t.
 - **Feedback (visszajelzés)**: egy névtelen visszajelző űrlap-válasz egy eseményhez, `role` = `PARTICIPANT` (résztvevő) vagy `MENTOR`. A válaszok stabil kérdéskulcsokkal a `answers` JSON-ban vannak (katalógus: `src/lib/feedback/questions.ts`); kiemelt oszlopok: `submittedAt`, `overallScore` (résztvevő: mentor- és oktatóértékelés átlaga; mentor: saját 1–5 összértékelése), `recommend` (`yes`/`maybe`/`no`), `searchText` (keresés). Jelentkezőhöz **szándékosan nincs párosítva**. Újraszinkronnál a `(eventId, role, sourceKey)` egyedi kulcs véd a duplikációtól (`sourceKey` = időbélyeg + azonos időbélyegű sor sorszáma).
 - **History (változásnapló)**: mezőszintű napló (`tableName`, `fieldName`, `recordId`, `oldValue`, `newValue`, `createdBy`). Írja: a GDPR-törlés, a duplikátum-összevonás és -elvetés, valamint a program szerkesztése (`PATCH /api/events/[id]`). Olvassa: a jelentkező adatlap és a `/history/[id]` oldal.
@@ -13,10 +13,11 @@ Forrás: `prisma/schema.prisma`. A mezők DB-oszlopnevei snake_case-ek (`@map`),
 
 ## Címkék (`Event.tags`)
 
-- Az érvényes címkék **fix listája** a `src/lib/events/tags.ts` `EVENT_TAGS` konstansa; ez az egyetlen forrás (API-szűrő, seed, felület). Kliensről is importálható.
-- A felületen új címke nem vehető fel; a lista bővítése, módosítása **kódmódosítás**, migráció nem kell hozzá.
-- Az ellenőrzés alkalmazásszintű (Zod `eventTagSchema`), adatbázis-megkötés nincs.
-- Címke **eltávolítása előtt** a meglévő eseményekről is el kell távolítani (migráció vagy szkript): a listán kívüli tárolt érték a válaszokban megjelenik, de szűrni nem lehet rá.
+- **Nincs fix lista és nincs címketábla:** a választható címkék a programokon használt címkék (`GET /api/events/tags`, darabszámmal; lekérdezés: `src/lib/events/tag-options.ts`). Új címkét a program űrlapján lehet felvenni; a címke akkor jön létre, amikor egy programot elmentenek vele, és eltűnik, ha már egy program sem használja.
+- **Normalizálás** (`src/lib/events/tags.ts`, kliensről is importálható): `normalizeTag` (szélek levágva, belső szóközök összevonva, kisbetű magyar szabályokkal), `tagSchema` (1–30 karakter, vessző nélkül), `tagListSchema` (ismétlődés kiszűrve). Ugyanez fut az űrlapon, a létrehozó/szerkesztő végpontokon, a listaszűrőben és a seedben. Adatbázis-megkötés nincs.
+- **Majdnem azonos címkék:** az űrlap ékezet- és kisbetű-független egyezésnél (`searchKey`) a meglévő címkét ajánlja fel, nem újat. Ez felületi védelem; a szerver csak normalizál.
+- **Átnevezés, összevonás nincs:** elírt címkét programonként kell javítani.
+- **Szín** (`src/lib/events/colors.ts`): a négy régi címke (`robotika`, `programozás`, `kezdő`, `haladó`) rögzített színt kap, minden más a nevéből hash-sel számolt palettaszínt.
 
 ## Kapcsolatok
 

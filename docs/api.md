@@ -28,16 +28,16 @@ Egy tranzakcióban: csak a ténylegesen változott mezőket írja, mindegyikhez 
 
 ### `GET /api/events`
 
-Paraméterek: `page`, `pageSize`, `year`, `companyName`, `place` (helyszín vagy partnercég, részszöveg), `instructor`, `q` (név), `phase` (`active`: még nem ért véget és van jelentkezési sheet / `planned`: még nem ért véget, sheet nélkül / `closed`: véget ért; hiányzik = mind), `tags` (csak a [fix címkelistából](domain.md#címkék-eventtags), csak ismételt paraméterként, pl. `?tags=robotika&tags=kezdő`, vesszőnél nem vág; bármelyik címke egyezése elég; listán kívüli címke → `400`), `sort` (`from`|`name`|`companyName`|`capacity`, alap `from`), `order` (alap: `from` esetén desc, különben asc).
+Paraméterek: `page`, `pageSize`, `year`, `companyName`, `place` (helyszín vagy partnercég, részszöveg), `instructor`, `q` (név), `phase` (`active`: még nem ért véget és van jelentkezési sheet / `planned`: még nem ért véget, sheet nélkül / `closed`: véget ért; hiányzik = mind), `tags` ([címkék](domain.md#címkék-eventtags), csak ismételt paraméterként, pl. `?tags=robotika&tags=kezdő`, vesszőnél nem vág; normalizálódik; bármelyik címke egyezése elég; olyan érvényes címke, amit egy program sem használ → üres találat; hibás formájú címke (üres, 30 karakternél hosszabb, vesszőt tartalmaz) → `400`), `sort` (`from`|`name`|`companyName`|`capacity`, alap `from`), `order` (alap: `from` esetén desc, különben asc).
 Válasz: események + `applicationCounts` (státuszonként + `total`).
 
 ### `GET /api/events/tags`
 
-Paraméter nincs. Válasz: `{ items: string[] }`, a **fix címkelista** (`EVENT_TAGS`) minden eleme magyar ábécérendben, akkor is, ha egyik esemény sem használja; adatbázist nem olvas. Ez a címkeszűrő multiselect opciólistája; új címke a felületen nem vehető fel. Azért végpont és nem közvetlen import, hogy a lista később dinamikussá válhasson a felület módosítása nélkül.
+Paraméter nincs. Válasz: `{ items: { name: string, count: number }[] }`, a **programokon használt címkék** és hogy hány program használja őket (`unnest(tags)` + `GROUP BY`, `src/lib/events/tag-options.ts`), a legtöbbet használt elöl, azonos számnál magyar ábécérendben. A nem használt címke nem szerepel. Példa: `{ "items": [{ "name": "robotika", "count": 2 }, { "name": "ablak", "count": 1 }, { "name": "élmény", "count": 1 }] }`. Ebből dolgozik a címkeszűrő (új címke ott nem vehető fel) és a program űrlapjának címkemezője (ott igen).
 
 ### `POST /api/events` — új program
 
-Törzs (JSON, sémája `createEventSchema` a `src/lib/events/api-schema.ts`-ben): `name` (kötelező), `from`/`to` (dátum, `to >= from`); választható: `tags[]` (csak a fix címkelistából, alap üres), `description`, `companyName`, `location`, `applicationSheetUrl`, `ageRange` (`"12-18"`), `instructor`, `mentors[]`, `capacity` (egész, ≥ 0, alap 0). Üres szöveg `null`-ra normalizálódik. Az űrlap legalább 1 fős létszámot kér, ezt a kliens ellenőrzi.
+Törzs (JSON, sémája `createEventSchema` a `src/lib/events/api-schema.ts`-ben): `name` (kötelező), `from`/`to` (dátum, `to >= from`); választható: `tags[]` (bármilyen érvényes címke: normalizálódik — szélek levágva, belső szóközök összevonva, kisbetű —, 1–30 karakter, vessző nélkül, ismétlődés kiszűrve; alap üres), `description`, `companyName`, `location`, `applicationSheetUrl`, `ageRange` (`"12-18"`), `instructor`, `mentors[]`, `capacity` (egész, ≥ 0, alap 0). Üres szöveg `null`-ra normalizálódik. Az űrlap legalább 1 fős létszámot kér, ezt a kliens ellenőrzi.
 Válasz: `201 { id }`; `400` `{error, details}` (mezőnkénti hibák); `401`.
 
 ### `GET /api/events/[id]`
