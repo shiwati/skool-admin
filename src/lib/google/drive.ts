@@ -1,9 +1,6 @@
 import "server-only";
 import { GoogleReauthRequiredError } from "./token";
 
-const UPLOAD_URL =
-	"https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink";
-
 export type CreatedDoc = { id: string; url: string };
 
 /** The Drive API is not enabled in the OAuth client's Google Cloud project. */
@@ -18,7 +15,7 @@ export class DriveApiDisabledError extends Error {
  * Google's machine-readable error reasons (e.g. `accessNotConfigured`,
  * `SERVICE_DISABLED`), never the message text or the request.
  */
-async function errorReason(response: Response): Promise<string> {
+export async function errorReason(response: Response): Promise<string> {
 	try {
 		const body = (await response.json()) as {
 			error?: {
@@ -39,66 +36,33 @@ async function errorReason(response: Response): Promise<string> {
 }
 
 /**
- * Feltölti a HTML-t a bejelentkezett admin saját Drive-jába, Google Doccá
- * konvertálva (`drive.file` scope: csak az app által létrehozott fájlok).
+ * Közös hibakezelés a Google REST hívásokhoz: 401 vagy hiányzó scope →
+ * újrabejelentkezés; kikapcsolt API → `disabled()`; egyébként a Google által
+ * adott ok (`reason`) kerül a hibaüzenetbe. `other` a fennmaradó hibákat
+ * képezheti le saját hibára (pl. nem elérhető sablon).
  */
-export async function createGoogleDocFromHtml(
-	name: string,
-	html: string,
-	accessToken: string,
-): Promise<CreatedDoc> {
-	const boundary = `skool-${crypto.randomUUID()}`;
-	const metadata = JSON.stringify({
-		name,
-		mimeType: "application/vnd.google-apps.document",
-	});
-	const body = [
-		`--${boundary}`,
-		"Content-Type: application/json; charset=UTF-8",
-		"",
-		metadata,
-		`--${boundary}`,
-		"Content-Type: text/html; charset=UTF-8",
-		"",
-		html,
-		`--${boundary}--`,
-		"",
-	].join("\r\n");
-
-	const response = await fetch(UPLOAD_URL, {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-			"Content-Type": `multipart/related; boundary=${boundary}`,
-		},
-		body,
-		cache: "no-store",
-	});
+export async function throwOnGoogleError(
+	response: Response,
+	api: string,
+	disabled: () => Error,
+	other?: (status: number, reason: string) => Error | null,
+): Promise<void> {
+	if (response.ok) return;
 	if (response.status === 401) throw new GoogleReauthRequiredError();
-	if (!response.ok) {
-		const reason = await errorReason(response);
-		// Missing scope: 403 insufficientPermissions / ACCESS_TOKEN_SCOPE_INSUFFICIENT.
-		if (response.status === 403 && /insufficient/i.test(reason)) {
-			throw new GoogleReauthRequiredError();
-		}
-		if (
-			response.status === 403 &&
-			/accessNotConfigured|SERVICE_DISABLED/i.test(reason)
-		) {
-			throw new DriveApiDisabledError();
-		}
-		throw new Error(
-			`Google Drive API error (${response.status}${reason ? `: ${reason}` : ""})`,
-		);
+	const reason = await errorReason(response);
+	// Missing scope: 403 insufficientPermissions / ACCESS_TOKEN_SCOPE_INSUFFICIENT.
+	if (response.status === 403 && /insufficient/i.test(reason)) {
+		throw new GoogleReauthRequiredError();
 	}
-	const file = (await response.json()) as {
-		id: string;
-		webViewLink?: string;
-	};
-	return {
-		id: file.id,
-		url:
-			file.webViewLink ??
-			`https://docs.google.com/document/d/${file.id}/edit`,
-	};
+	if (
+		response.status === 403 &&
+		/accessNotConfigured|SERVICE_DISABLED/i.test(reason)
+	) {
+		throw disabled();
+	}
+	const mapped = other?.(response.status, reason);
+	if (mapped) throw mapped;
+	throw new Error(
+		`Google ${api} API error (${response.status}${reason ? `: ${reason}` : ""})`,
+	);
 }

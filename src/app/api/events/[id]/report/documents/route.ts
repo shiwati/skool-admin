@@ -1,4 +1,8 @@
 import { jsonResponse } from "@/lib/api/handler";
+import {
+	DocsApiDisabledError,
+	ReportTemplateNotAccessibleError,
+} from "@/lib/google/docs";
 import { DriveApiDisabledError } from "@/lib/google/drive";
 import { GoogleReauthRequiredError } from "@/lib/google/token";
 import { logger } from "@/lib/logger";
@@ -72,6 +76,32 @@ export async function POST(
 					code: "DRIVE_API_DISABLED",
 				},
 				503,
+			);
+		}
+		if (error instanceof DocsApiDisabledError) {
+			logger.error({
+				event: "event_report.docs_api_disabled",
+				eventId: id,
+			});
+			return jsonResponse(
+				{
+					error: "A Google Docs API nincs engedélyezve az app Google Cloud projektjében. Szólj a rendszergazdának.",
+					code: "DOCS_API_DISABLED",
+				},
+				503,
+			);
+		}
+		if (error instanceof ReportTemplateNotAccessibleError) {
+			logger.error({
+				event: "event_report.template_not_accessible",
+				eventId: id,
+			});
+			return jsonResponse(
+				{
+					error: "A riport-sablon nem érhető el. Ellenőrizd, hogy meg van-e osztva a domainnel.",
+					code: "TEMPLATE_NOT_ACCESSIBLE",
+				},
+				422,
 			);
 		}
 		if (error instanceof GoogleReauthRequiredError) {

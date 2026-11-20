@@ -31,13 +31,10 @@ function Harness() {
 				order="desc"
 				page={1}
 				pageSize={25}
-				selected={new Set()}
 				filtersActive={false}
 				onSort={() => {}}
 				onPage={() => {}}
 				onPageSize={() => {}}
-				onToggleRow={() => {}}
-				onToggleAll={() => {}}
 				onClearFilters={() => {}}
 				onReload={() => {}}
 			/>

@@ -9,6 +9,13 @@ export const GOOGLE_SHEETS_SCOPE =
 export const GOOGLE_DRIVE_FILE_SCOPE =
 	"https://www.googleapis.com/auth/drive.file";
 
+/**
+ * Read access to Drive files the admin can see: needed to copy the report
+ * template (a file the app did not create).
+ */
+export const GOOGLE_DRIVE_READONLY_SCOPE =
+	"https://www.googleapis.com/auth/drive.readonly";
+
 /** The admin has to sign in again (missing scope or revoked refresh token). */
 export class GoogleReauthRequiredError extends Error {
 	constructor() {
@@ -25,12 +32,16 @@ const EXPIRY_MARGIN_SECONDS = 60;
  */
 export async function getGoogleAccessToken(
 	userId: string,
-	requiredScope: string = GOOGLE_SHEETS_SCOPE,
+	requiredScope: string | string[] = GOOGLE_SHEETS_SCOPE,
 ): Promise<string> {
 	const account = await db.account.findFirst({
 		where: { userId, provider: "google" },
 	});
-	if (!account?.scope?.split(" ").includes(requiredScope)) {
+	const granted = account?.scope?.split(" ") ?? [];
+	const required = Array.isArray(requiredScope)
+		? requiredScope
+		: [requiredScope];
+	if (!account || !required.every((scope) => granted.includes(scope))) {
 		throw new GoogleReauthRequiredError();
 	}
 

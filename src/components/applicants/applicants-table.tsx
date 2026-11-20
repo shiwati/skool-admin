@@ -4,9 +4,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fullName } from "@/lib/applicants/format";
 import type {
 	PageSize,
 	SortKey,
@@ -32,14 +30,11 @@ type Props = {
 	order: SortOrder;
 	page: number;
 	pageSize: PageSize;
-	selected: ReadonlySet<string>;
 	filtersActive: boolean;
 	now?: Date;
 	onSort: (sort: SortKey, order: SortOrder) => void;
 	onPage: (page: number) => void;
 	onPageSize: (size: PageSize) => void;
-	onToggleRow: (id: string) => void;
-	onToggleAll: (ids: string[], select: boolean) => void;
 	onClearFilters: () => void;
 	onReload: () => void;
 };
@@ -62,14 +57,11 @@ export function ApplicantsTable({
 	order,
 	page,
 	pageSize,
-	selected,
 	filtersActive,
 	now = new Date(),
 	onSort,
 	onPage,
 	onPageSize,
-	onToggleRow,
-	onToggleAll,
 	onClearFilters,
 	onReload,
 }: Props) {
@@ -80,15 +72,7 @@ export function ApplicantsTable({
 	}
 
 	const items = data.status === "success" ? data.items : [];
-	const ids = items.map((item) => item.id);
-	const selectedOnPage = ids.filter((id) => selected.has(id)).length;
-	const headerChecked =
-		ids.length > 0 && selectedOnPage === ids.length
-			? true
-			: selectedOnPage > 0
-				? "indeterminate"
-				: false;
-	const colSpan = columns.length + 1;
+	const colSpan = columns.length;
 
 	return (
 		<Card className="overflow-hidden">
@@ -110,21 +94,11 @@ export function ApplicantsTable({
 					className="w-full table-fixed border-collapse text-sm"
 					// Narrower viewports scroll inside the frame instead of
 					// squeezing the user's columns.
-					style={{ minWidth: `${44 + columns.length * 128}px` }}
+					style={{ minWidth: `${columns.length * 128}px` }}
 				>
 					<caption className="sr-only">Jelentkezők</caption>
 					<thead className="bg-surface-subtle text-left">
 						<tr className="border-b border-border-default">
-							<th scope="col" className="w-11 px-3 py-2.5">
-								<Checkbox
-									aria-label="Összes kijelölése"
-									checked={headerChecked}
-									disabled={ids.length === 0}
-									onCheckedChange={() =>
-										onToggleAll(ids, headerChecked !== true)
-									}
-								/>
-							</th>
 							{columns.map((id) => {
 								const column = COLUMNS[id];
 								const sortKey = column.sortKey;
@@ -199,9 +173,6 @@ export function ApplicantsTable({
 									className="border-b border-border-default last:border-0"
 									data-testid="skeleton-row"
 								>
-									<td className="px-3 py-3">
-										<Skeleton className="size-4" />
-									</td>
 									{columns.map((id) => (
 										<td key={id} className="px-3 py-3">
 											<Skeleton className="h-3.5 w-3/4" />
@@ -230,32 +201,12 @@ export function ApplicantsTable({
 						)}
 
 						{items.map((item) => {
-							const isSelected = selected.has(item.id);
-							const name = fullName(item);
 							return (
 								<tr
 									key={item.id}
-									aria-selected={isSelected}
 									onClick={(event) => openRow(event, item.id)}
-									className={cn(
-										"cursor-pointer border-b border-border-default last:border-0",
-										isSelected
-											? "bg-sky-50"
-											: "hover:bg-canvas",
-									)}
+									className="cursor-pointer border-b border-border-default last:border-0 hover:bg-canvas"
 								>
-									<td
-										className="px-3 py-2.5"
-										data-row-nav="off"
-									>
-										<Checkbox
-											aria-label={`${name} kijelölése`}
-											checked={isSelected}
-											onCheckedChange={() =>
-												onToggleRow(item.id)
-											}
-										/>
-									</td>
 									{columns.map((id) => (
 										<td
 											key={id}
