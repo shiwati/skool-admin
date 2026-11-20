@@ -13,3 +13,8 @@ export function eventHref(eventId: string) {
 export function eventEditHref(eventId: string) {
 	return `/events/${encodeURIComponent(eventId)}/edit`;
 }
+
+/** A program záró riportja. */
+export function eventReportHref(eventId: string) {
+	return `/events/${encodeURIComponent(eventId)}/report`;
+}

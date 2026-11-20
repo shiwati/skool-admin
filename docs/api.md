@@ -72,7 +72,7 @@ Egyéb: `GET /api/health` (nyilvános readiness, 200/503), `/api/auth/*` (NextAu
 
 ## `POST /api/events/[id]/sync` — Google Form sheet import
 
-Az esemény `applicationSheetUrl`-jében megadott válasz-sheetet olvassa a **bejelentkezett admin Google-jogosultságával** (`spreadsheets.readonly` scope; ha hiányzik: `403 REAUTH_REQUIRED`, újra be kell jelentkezni). A gid nélküli linknél az első munkalapot veszi.
+Az esemény `applicationSheetUrl`-jében megadott válasz-sheetet olvassa a **bejelentkezett admin Google-jogosultságával** (`spreadsheets.readonly` scope; a bejelentkezés a riportokhoz `drive.file`-t is kér; ha hiányzik: `403 REAUTH_REQUIRED`, újra be kell jelentkezni). A gid nélküli linknél az első munkalapot veszi.
 
 - Oszlop ↔ mező párosítás fejléc-kulcsszavak alapján: `src/lib/sheet-import/mapping.ts` (kötelező: vezetéknév, utónév, e-mail). Ismeretlen oszlopok (pl. kézi „1. oszlop”) kimaradnak, a válasz `unmappedHeaders`-ben listázza őket.
 - Minden új válasz **új** `Applicant` + `Application`. Újraszinkronnál az `Application.sourceKey` (időbélyeg + e-mail, eseményen belül egyedi) miatt semmi nem jön létre kétszer, és semmi nem íródik felül.
@@ -101,3 +101,10 @@ Az esemény `participantFeedbackSheetUrl` és `mentorFeedbackSheetUrl` sheetjeit
 - `422 SHEET_NOT_ACCESSIBLE`, `403 REAUTH_REQUIRED`: mint a jelentkezői syncnél.
 
 A lista nem API-n megy: a `/feedback` oldal és a program „Visszajelzések” füle (`/events/[id]/feedback`) szerveren olvas (`src/lib/feedback/list.ts`), a szűrők (`q`, `role`, `eventId`, `page`, `open`) az URL-ben vannak.
+
+## Záró riport (`/api/events/[id]/report…`)
+
+A program „Záró riport” füle (`/events/[id]/report`) és a `/reports` lista szerveren olvas (`src/lib/reports/load.ts`, `list.ts`). A tartalom sémája `src/lib/reports/content.ts` (közreműködők, max. 8 idézet, ebből max. 2 kiemelt, kikapcsolt mutatók). A riport névsort nem tartalmaz: résztvevőkből csak darabszám, az idézeteknél csak a szerep.
+
+- `PUT /api/events/[id]/report` — `{ content }` mentése (`EventReport`, eseményenként egy). `200 { ok }`, `400` validációs hiba, `404`.
+- `POST /api/events/[id]/report/documents` — `{ content }` mentése, majd **mindig új** Google Doc a bejelentkezett admin saját Drive-jába (HTML-sablon → Drive konverzió, `src/lib/reports/render.ts`; `drive.file` scope). Naplózza: `EventReportDocument` + `History` (`tableName: "event"`, `fieldName: "reportDocument"`). `201 { id, title, docUrl, createdAt }`, `403 REAUTH_REQUIRED` (hiányzó scope: újra be kell jelentkezni), `502` Google-hiba.

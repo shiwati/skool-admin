@@ -5,6 +5,10 @@ import { env } from "@/lib/env";
 export const GOOGLE_SHEETS_SCOPE =
 	"https://www.googleapis.com/auth/spreadsheets.readonly";
 
+/** Only files the app itself creates (the generated report docs). */
+export const GOOGLE_DRIVE_FILE_SCOPE =
+	"https://www.googleapis.com/auth/drive.file";
+
 /** The admin has to sign in again (missing scope or revoked refresh token). */
 export class GoogleReauthRequiredError extends Error {
 	constructor() {
@@ -19,11 +23,14 @@ const EXPIRY_MARGIN_SECONDS = 60;
  * Returns a valid Google access token for the user, refreshing it with the
  * stored refresh token when it is about to expire.
  */
-export async function getGoogleAccessToken(userId: string): Promise<string> {
+export async function getGoogleAccessToken(
+	userId: string,
+	requiredScope: string = GOOGLE_SHEETS_SCOPE,
+): Promise<string> {
 	const account = await db.account.findFirst({
 		where: { userId, provider: "google" },
 	});
-	if (!account?.scope?.split(" ").includes(GOOGLE_SHEETS_SCOPE)) {
+	if (!account?.scope?.split(" ").includes(requiredScope)) {
 		throw new GoogleReauthRequiredError();
 	}
 

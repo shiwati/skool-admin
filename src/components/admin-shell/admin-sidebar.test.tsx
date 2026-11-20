@@ -64,9 +64,17 @@ describe("AdminSidebar", () => {
 		).not.toHaveAttribute("aria-current");
 	});
 
+	it("links the reports screen", () => {
+		render(<AdminSidebar />);
+		expect(screen.getByRole("link", { name: "Riportok" })).toHaveAttribute(
+			"href",
+			"/reports",
+		);
+	});
+
 	it("renders future screens as disabled, non-navigating items", () => {
 		render(<AdminSidebar />);
-		const programs = screen.getByRole("link", { name: "Riportok" });
+		const programs = screen.getByRole("link", { name: "Adatforrások" });
 		expect(programs).toHaveAttribute("aria-disabled", "true");
 		expect(programs).not.toHaveAttribute("href");
 		expect(programs.tagName).toBe("SPAN");
