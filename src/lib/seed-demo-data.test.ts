@@ -54,4 +54,41 @@ describe("dashboardDemoData", () => {
 		expect(data.applicants.some((a) => a.birthYear === null)).toBe(true);
 		expect(data.applicants.some((a) => a.hometown === null)).toBe(true);
 	});
+
+	it("respects capacity: attended ≤ capacity, overflow rejected or waitlisted", () => {
+		const statuses = new Set(data.applications.map((a) => a.status));
+		for (const s of [
+			"ATTENDED",
+			"REJECTED",
+			"WAITLISTED",
+			"ACCEPTED",
+			"APPLIED",
+		])
+			expect(statuses.has(s as never)).toBe(true);
+		for (const e of data.events) {
+			const attended = data.applications.filter(
+				(a) => a.eventId === e.id && a.status === "ATTENDED",
+			).length;
+			expect(attended).toBeLessThanOrEqual(e.capacity!);
+		}
+	});
+
+	it("has participant and mentor feedback only for ended events", () => {
+		const ended = new Set(
+			data.events.filter((e) => (e.to as Date) < now).map((e) => e.id),
+		);
+		expect(data.feedback.some((f) => f.role === "PARTICIPANT")).toBe(true);
+		expect(data.feedback.some((f) => f.role === "MENTOR")).toBe(true);
+		expect(data.feedback.every((f) => ended.has(f.eventId))).toBe(true);
+		expect(
+			data.feedback.every(
+				(f) =>
+					f.role === "MENTOR" ||
+					typeof f.answers.mentorRating === "number",
+			),
+		).toBe(true);
+		expect(new Set(data.feedback.map((f) => f.id)).size).toBe(
+			data.feedback.length,
+		);
+	});
 });
