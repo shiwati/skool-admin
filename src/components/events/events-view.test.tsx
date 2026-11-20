@@ -4,9 +4,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EventListItem } from "./events-table";
 import { EventsView } from "./events-view";
 
-const nav = vi.hoisted(() => ({ replace: vi.fn(), search: "" }));
+const nav = vi.hoisted(() => ({
+	replace: vi.fn(),
+	push: vi.fn(),
+	search: "",
+}));
 vi.mock("next/navigation", () => ({
-	useRouter: () => ({ replace: nav.replace }),
+	useRouter: () => ({ replace: nav.replace, push: nav.push }),
 	usePathname: () => "/events",
 	useSearchParams: () => new URLSearchParams(nav.search),
 }));
@@ -37,6 +41,7 @@ describe("EventsView", () => {
 	beforeEach(() => {
 		nav.search = "";
 		nav.replace.mockReset();
+		nav.push.mockReset();
 	});
 
 	it("renders the header, tabs and a row", () => {
@@ -293,5 +298,35 @@ describe("EventsView on mobile (05.1 M)", () => {
 			"overflow-x-auto",
 			"md:contents",
 		);
+	});
+	it("opens the program from anywhere on the row or the card", async () => {
+		render(
+			<EventsView
+				items={[event()]}
+				total={1}
+				counts={counts}
+				now={now}
+			/>,
+		);
+		const row = screen.getAllByRole("row")[1];
+		expect(row).toHaveClass("cursor-pointer");
+		await userEvent.click(within(row).getByText("62 / 20 fő"));
+		expect(nav.push).toHaveBeenCalledWith("/events/e1");
+
+		// The actions menu keeps its own behaviour.
+		nav.push.mockReset();
+		await userEvent.click(
+			within(row).getByRole("button", {
+				name: "Műveletek: Python alapok – ősz",
+			}),
+		);
+		expect(nav.push).not.toHaveBeenCalled();
+		await userEvent.keyboard("{Escape}");
+
+		const card = within(
+			screen.getByRole("list", { name: "Programok" }),
+		).getByText("Budapest");
+		await userEvent.click(card);
+		expect(nav.push).toHaveBeenCalledWith("/events/e1");
 	});
 });

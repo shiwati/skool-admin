@@ -13,6 +13,7 @@ import type {
 	SortOrder,
 } from "@/lib/applicants/list-params";
 import type { ApplicantListItem } from "@/lib/applicants/types";
+import { openRowHref } from "@/lib/row-nav";
 import { cn } from "@/lib/utils";
 import { ApplicantCardList } from "./applicant-card-list";
 import { applicantHref, COLUMNS, type ColumnId } from "./columns";
@@ -45,13 +46,6 @@ type Props = {
 
 const SKELETON_ROWS = 6;
 
-/**
- * Clicks on (or inside) these keep their own behaviour instead of opening the
- * detail page. Menu items are portaled, but React events still bubble to the row.
- */
-const ROW_NAV_IGNORE =
-	'a, button, input, label, [role="checkbox"], [role="menuitem"], [role="menu"], [data-row-nav="off"]';
-
 function nextOrder(
 	column: SortKey,
 	sort: SortKey,
@@ -82,13 +76,7 @@ export function ApplicantsTable({
 	const router = useRouter();
 
 	function openRow(event: MouseEvent<HTMLTableRowElement>, id: string) {
-		const target = event.target;
-		if (target instanceof Element && target.closest(ROW_NAV_IGNORE)) return;
-		// Selecting text in a cell is not a click on the row.
-		if (window.getSelection()?.toString()) return;
-		const href = applicantHref(id);
-		if (event.ctrlKey || event.metaKey) window.open(href, "_blank");
-		else router.push(href);
+		openRowHref(event, applicantHref(id), router.push);
 	}
 
 	const items = data.status === "success" ? data.items : [];

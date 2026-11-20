@@ -11,7 +11,8 @@ import {
 	Users,
 } from "lucide-react";
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import { useRouter } from "next/navigation";
+import type { CSSProperties, MouseEvent } from "react";
 import { Pager } from "@/components/shared/pager";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -36,6 +37,7 @@ import {
 	type SortOrder,
 } from "@/lib/events/list-params";
 import { PHASE_LABELS } from "@/lib/events/phase";
+import { openRowHref } from "@/lib/row-nav";
 import { cn } from "@/lib/utils";
 import type { EventDeleteTarget } from "./event-delete-dialog";
 import {
@@ -108,6 +110,7 @@ export function EventsTable({
 	onClearFilters,
 	onDelete,
 }: Props) {
+	const router = useRouter();
 	const sortProps = { sort, order, onSort };
 	const itemLabel =
 		tab === "all"
@@ -140,6 +143,13 @@ export function EventsTable({
 								now={now}
 								columns={columns}
 								onDelete={onDelete}
+								onOpen={(event) =>
+									openRowHref(
+										event,
+										eventHref(item.id),
+										router.push,
+									)
+								}
 							/>
 						</li>
 					))}
@@ -209,7 +219,16 @@ export function EventsTable({
 						{items.map((item) => (
 							<tr
 								key={item.id}
-								className="border-b border-border-default last:border-0 hover:bg-canvas"
+								// The whole row opens the program; the name stays a real
+								// link for keyboard users and opening in a new tab.
+								onClick={(event) =>
+									openRowHref(
+										event,
+										eventHref(item.id),
+										router.push,
+									)
+								}
+								className="cursor-pointer border-b border-border-default last:border-0 hover:bg-canvas"
 							>
 								{columns.map((id) => (
 									<td
@@ -307,15 +326,21 @@ function EventCard({
 	now,
 	columns,
 	onDelete,
+	onOpen,
 }: {
 	item: EventListItem;
 	now: Date;
 	columns: EventColumnId[];
 	onDelete?: (target: EventDeleteTarget) => void;
+	/** Az egész kártya a programot nyitja (a „…” menü kivételével). */
+	onOpen: (event: MouseEvent<HTMLDivElement>) => void;
 }) {
 	const lines = columns.filter((id) => id !== EVENT_COLUMN_CONFIG.locked);
 	return (
-		<div className="flex flex-col gap-2.5 px-4 py-3.5">
+		<div
+			onClick={onOpen}
+			className="flex cursor-pointer flex-col gap-2.5 px-4 py-3.5 active:bg-canvas"
+		>
 			<div className="flex items-start gap-2">
 				<span
 					aria-hidden="true"
