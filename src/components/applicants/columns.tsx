@@ -268,10 +268,10 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		id: "phone",
 		label: "Telefonszám",
 		pickerLabel: "Telefonszám",
-		widthClass: "w-[140px]",
+		widthClass: "w-[156px]",
 		cell: (item) =>
 			item.phoneNumber ? (
-				<span className="font-mono text-xs">
+				<span className="font-mono text-xs whitespace-nowrap">
 					{formatPhone(item.phoneNumber)}
 				</span>
 			) : (

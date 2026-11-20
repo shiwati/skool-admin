@@ -191,18 +191,27 @@ export function parentLabel(a: ApplicantListItem): {
 }
 
 /**
- * Magyar telefonszám megjelenítése `+36 30 123 4567` alakban (mobil/vidék:
- * +36 xx xxx xxxx, Budapest: +36 1 xxx xxxx). Ismeretlen vagy külföldi szám
- * változatlanul marad.
+ * Magyar telefonszám megjelenítése `+36 30 123 4567` alakban (Budapest:
+ * `+36 1 234 5678`). Felismeri a `+36`, `0036`, `06`, `36` előtagos és az
+ * előtag nélküli (`30 123 4567`) bevitelt is, bármilyen tagolással. Külföldi
+ * vagy ismeretlen szám változatlanul marad.
  */
 export function formatPhone(value: string): string {
 	const trimmed = value.trim();
-	const digits = trimmed.replace(/\D/g, "");
-	let national: string | null = null;
-	if (/^\+\s*36/.test(trimmed)) national = digits.slice(2);
-	else if (/^0036/.test(trimmed)) national = digits.slice(4);
-	else if (/^06/.test(trimmed)) national = digits.slice(2);
-	if (national === null || !/^\d+$/.test(national)) return value;
+	let digits = trimmed.replace(/\D/g, "");
+	const international = /^(\+|00)/.test(trimmed);
+	if (/^00/.test(trimmed)) digits = digits.slice(2);
+	else if (!international && digits.startsWith("06")) {
+		digits = `36${digits.slice(2)}`;
+	} else if (
+		!international &&
+		!(digits.startsWith("36") && [10, 11].includes(digits.length)) &&
+		[8, 9].includes(digits.length)
+	) {
+		digits = `36${digits}`;
+	}
+	if (!digits.startsWith("36")) return value;
+	const national = digits.slice(2);
 	if (national.startsWith("1")) {
 		if (national.length !== 8) return value;
 		return `+36 1 ${national.slice(1, 4)} ${national.slice(4)}`;
