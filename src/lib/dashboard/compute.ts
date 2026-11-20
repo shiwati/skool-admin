@@ -5,7 +5,11 @@
  * Kliensről is importálható (nincs benne `server-only` és Prisma).
  */
 
+import type { ApplicationStatus } from "@/lib/applicants/types";
+
 const TIME_ZONE = "Europe/Budapest";
+
+export type StatusBreakdown = Partial<Record<ApplicationStatus, number>>;
 
 /** Egy program a dashboard szemszögéből: kapacitás és beérkezett jelentkezések. */
 export type EventStat = {
@@ -15,6 +19,8 @@ export type EventStat = {
 	to: Date;
 	capacity: number;
 	applications: number;
+	/** Jelentkezések státusz szerint; hiányzó státusz = 0. */
+	byStatus?: StatusBreakdown;
 };
 
 const ymParts = new Intl.DateTimeFormat("en-CA", {
@@ -75,6 +81,7 @@ export type CapacityRow = {
 	name: string;
 	capacity: number;
 	applications: number;
+	byStatus: StatusBreakdown;
 	/** Jelentkezők / kapacitás; `null`, ha nincs megadva kapacitás. */
 	ratio: number | null;
 	/** Múltbeli: már véget ért; jövőbeli: még nem ért véget (a most zajló is). */
@@ -90,6 +97,7 @@ export function capacityRows(events: EventStat[], now: Date): CapacityRow[] {
 			name: event.name,
 			capacity: event.capacity,
 			applications: event.applications,
+			byStatus: event.byStatus ?? {},
 			ratio:
 				event.capacity > 0 ? event.applications / event.capacity : null,
 			state: event.to.getTime() < now.getTime() ? "past" : "upcoming",
