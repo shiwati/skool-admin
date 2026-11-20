@@ -70,6 +70,17 @@ describe("EventsToolbar", () => {
 		expect(onChange).toHaveBeenCalledWith({ place: "Pécs" });
 	});
 
+	it("sets the company filter", async () => {
+		const { onChange } = setup();
+		await userEvent.click(screen.getByRole("button", { name: /^Cég/ }));
+		await userEvent.type(
+			screen.getByRole("textbox", { name: "Cég" }),
+			" Sigma ",
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Alkalmaz" }));
+		expect(onChange).toHaveBeenCalledWith({ companyName: "Sigma" });
+	});
+
 	it("offers Szűrők törlése only while a filter is active", async () => {
 		setup();
 		expect(

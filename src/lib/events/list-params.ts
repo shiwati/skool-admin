@@ -7,7 +7,12 @@ import { tagSchema } from "./tags";
  * egyetlen igazságforrás: érvénytelen értékek csendben az alapértékre esnek.
  */
 
-export const EVENT_SORT_KEYS = ["from", "name", "capacity"] as const;
+export const EVENT_SORT_KEYS = [
+	"from",
+	"name",
+	"companyName",
+	"capacity",
+] as const;
 export type EventSortKey = (typeof EVENT_SORT_KEYS)[number];
 export type SortOrder = "asc" | "desc";
 
@@ -18,6 +23,7 @@ export type EventListFilters = {
 	q?: string;
 	tags: string[];
 	place?: string;
+	companyName?: string;
 	instructor?: string;
 	year?: number;
 };
@@ -83,6 +89,7 @@ export function parseEventListState(params: URLSearchParams): EventListState {
 		q: text(params.get("q")),
 		tags: parseTags(params.getAll("tags")),
 		place: text(params.get("place")),
+		companyName: text(params.get("companyName")),
 		instructor: text(params.get("instructor")),
 		year: year && year >= 2000 && year <= 2100 ? year : undefined,
 		sort,
@@ -101,6 +108,7 @@ export function toEventSearchParams(state: EventListState): URLSearchParams {
 	if (state.q) params.set("q", state.q);
 	for (const tag of state.tags) params.append("tags", tag);
 	if (state.place) params.set("place", state.place);
+	if (state.companyName) params.set("companyName", state.companyName);
 	if (state.instructor) params.set("instructor", state.instructor);
 	if (state.year !== undefined) params.set("year", String(state.year));
 	if (state.sort !== "from") params.set("sort", state.sort);
@@ -126,6 +134,7 @@ export function hasActiveEventFilters(filters: EventListFilters): boolean {
 		filters.q ||
 		filters.tags.length ||
 		filters.place ||
+		filters.companyName ||
 		filters.instructor ||
 		filters.year !== undefined,
 	);
@@ -137,6 +146,7 @@ export function clearEventFilters(state: EventListState): EventListState {
 		q: undefined,
 		tags: [],
 		place: undefined,
+		companyName: undefined,
 		instructor: undefined,
 		year: undefined,
 		page: 1,
@@ -154,6 +164,7 @@ export function toEventsApiQuery(
 	if (state.q) params.set("q", state.q);
 	for (const tag of state.tags) params.append("tags", tag);
 	if (state.place) params.set("place", state.place);
+	if (state.companyName) params.set("companyName", state.companyName);
 	if (state.instructor) params.set("instructor", state.instructor);
 	if (state.year !== undefined) params.set("year", String(state.year));
 	if (state.tab !== "all") params.set("phase", state.tab);
@@ -170,6 +181,7 @@ export function toEventsQueryInput(state: EventListState) {
 		q: state.q,
 		tags: state.tags.length ? state.tags : undefined,
 		place: state.place,
+		companyName: state.companyName,
 		instructor: state.instructor,
 		year: state.year,
 		phase: state.tab === "all" ? undefined : state.tab,

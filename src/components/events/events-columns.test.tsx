@@ -69,6 +69,7 @@ describe("Programok column settings", () => {
 			"Program",
 			"Időpont",
 			"Helyszín",
+			"Cég",
 			"Jelentkezők · kapacitás",
 			"Oktatók",
 			"Státusz",
@@ -77,6 +78,7 @@ describe("Programok column settings", () => {
 		expect(cardLabels()).toEqual([
 			"Időpont",
 			"Helyszín",
+			"Cég",
 			"Igény",
 			"Oktatók",
 			"Státusz",
@@ -87,12 +89,12 @@ describe("Programok column settings", () => {
 		renderView();
 		const panel = await openPicker("events-trailing");
 		await userEvent.click(
-			within(panel).getByRole("checkbox", { name: "Helyszín / partner" }),
+			within(panel).getByRole("checkbox", { name: "Helyszín" }),
 		);
 		expect(tableHeaders()).not.toContain("Helyszín");
 		expect(cardLabels()).not.toContain("Helyszín");
 		expect(screen.getByRole("table")).toHaveStyle({
-			minWidth: `${eventTableMinWidth(["name", "date", "demand", "people", "status"])}px`,
+			minWidth: `${eventTableMinWidth(["name", "date", "company", "demand", "people", "status"])}px`,
 		});
 
 		const stored = JSON.parse(
@@ -129,18 +131,19 @@ describe("Programok column settings", () => {
 		expect(cardLabels()).toEqual([
 			"Időpont",
 			"Helyszín",
+			"Cég",
 			"Igény",
 			"Státusz",
 			"Oktatók",
 		]);
-		expect(tableHeaders().slice(4, 6)).toEqual(["Státusz", "Oktatók"]);
+		expect(tableHeaders().slice(5, 7)).toEqual(["Státusz", "Oktatók"]);
 
 		await userEvent.click(
 			within(panel).getByRole("button", {
 				name: "Alapértelmezés visszaállítása",
 			}),
 		);
-		expect(tableHeaders()[4]).toBe("Oktatók");
+		expect(tableHeaders()[5]).toBe("Oktatók");
 	});
 
 	it("restores saved settings", () => {
@@ -157,6 +160,7 @@ describe("Programok column settings", () => {
 			"Program",
 			"Időpont",
 			"Helyszín",
+			"Cég",
 			"Jelentkezők · kapacitás",
 			"Műveletek",
 		]);

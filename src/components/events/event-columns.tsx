@@ -94,27 +94,25 @@ export const EVENT_COLUMNS: Record<EventColumnId, EventColumnDef> = {
 	location: {
 		id: "location",
 		label: "Helyszín",
-		pickerLabel: "Helyszín / partner",
+		pickerLabel: "Helyszín",
 		cardLabel: "Helyszín",
 		width: 190,
 		cell: (item) => (
-			<div className="min-w-0 text-xs">
-				<div className="truncate">{item.location ?? EMPTY}</div>
-				{item.companyName && (
-					<div className="truncate text-text-tertiary">
-						{item.companyName}
-					</div>
-				)}
+			<div className="min-w-0 truncate text-xs">
+				{item.location ?? EMPTY}
 			</div>
 		),
-		card: (item) => (
-			<div className="min-w-0">
-				<span className="block">{item.location ?? EMPTY}</span>
-				{item.companyName && (
-					<span className="block text-text-tertiary">
-						{item.companyName}
-					</span>
-				)}
+	},
+	company: {
+		id: "company",
+		label: "Cég",
+		pickerLabel: "Cég / partner",
+		cardLabel: "Cég",
+		sortKey: "companyName",
+		width: 160,
+		cell: (item) => (
+			<div className="min-w-0 truncate text-xs">
+				{item.companyName ?? EMPTY}
 			</div>
 		),
 	},

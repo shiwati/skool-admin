@@ -142,7 +142,7 @@ describe("EventsView", () => {
 		});
 	});
 
-	it("shows the partner under the location", () => {
+	it("shows the company in its own column", () => {
 		render(
 			<EventsView
 				items={[event()]}
@@ -152,10 +152,7 @@ describe("EventsView", () => {
 			/>,
 		);
 		const row = screen.getAllByRole("row")[1];
-		const location = within(row).getByText("Budapest");
-		expect(location.nextElementSibling).toHaveTextContent(
-			"Sigma Technology",
-		);
+		expect(within(row).getByText("Sigma Technology")).toBeInTheDocument();
 	});
 
 	it("renders placeholders for missing location, people and capacity", () => {
@@ -179,11 +176,12 @@ describe("EventsView", () => {
 		const cells = within(screen.getAllByRole("row")[1]).getAllByRole(
 			"cell",
 		);
-		// Helyszín, Jelentkezők · kapacitás, Oktatók
+		// Helyszín, Cég, Jelentkezők · kapacitás, Oktatók
 		expect(cells[2]).toHaveTextContent(/^—$/);
-		expect(cells[3]).toHaveTextContent(/^7 jelentkező$/);
-		expect(within(cells[3]).queryByText(/×$/)).not.toBeInTheDocument();
-		expect(cells[4]).toHaveTextContent(/^—$/);
+		expect(cells[3]).toHaveTextContent(/^—$/);
+		expect(cells[4]).toHaveTextContent(/^7 jelentkező$/);
+		expect(within(cells[4]).queryByText(/×$/)).not.toBeInTheDocument();
+		expect(cells[5]).toHaveTextContent(/^—$/);
 	});
 
 	it("shows the phase empty state without a clear button when unfiltered", () => {

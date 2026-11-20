@@ -62,6 +62,12 @@ export function EventsToolbar({
 					placeholder="pl. Budapest"
 					onChange={(place) => onChange({ place })}
 				/>
+				<TextChip
+					label="Cég"
+					value={filters.companyName}
+					placeholder="pl. Sigma Technology"
+					onChange={(companyName) => onChange({ companyName })}
+				/>
 				<YearChip
 					year={filters.year}
 					years={years}
