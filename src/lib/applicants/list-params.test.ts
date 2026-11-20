@@ -22,7 +22,8 @@ describe("parseListState", () => {
 			ageTo: undefined,
 			hometown: undefined,
 			newsletter: undefined,
-			attended: undefined,
+			historyFrom: undefined,
+			historyTo: undefined,
 		});
 	});
 
@@ -37,6 +38,12 @@ describe("parseListState", () => {
 		expect(state.ageFrom).toBeUndefined();
 		expect(state.newsletter).toBeUndefined();
 		expect(state.q).toBeUndefined();
+	});
+
+	it("reads the program year and ignores an invalid one", () => {
+		expect(parse("programYear=2025").programYear).toBe(2025);
+		expect(parse("programYear=abc").programYear).toBeUndefined();
+		expect(parse("programYear=1800").programYear).toBeUndefined();
 	});
 
 	it("drops an inverted age range", () => {
@@ -72,7 +79,8 @@ describe("toSearchParams", () => {
 			ageTo: 16,
 			hometown: "Pécs",
 			newsletter: true,
-			attended: false,
+			historyFrom: 1,
+			historyTo: 3,
 			sort: "age",
 			order: "asc",
 			page: 3,
@@ -103,7 +111,7 @@ describe("toApiQuery", () => {
 			...DEFAULT_STATE,
 			eventIds: ["e1", "e2"],
 			hometown: "Győr",
-			attended: true,
+			historyFrom: 2,
 			page: 4,
 		};
 		expect(Object.fromEntries(toApiQuery(state))).toEqual({
@@ -113,7 +121,7 @@ describe("toApiQuery", () => {
 			order: "desc",
 			eventIds: "e1,e2",
 			hometown: "Győr",
-			attended: "true",
+			historyFrom: "2",
 		});
 		const all = toApiQuery(state, { page: 1, pageSize: 100 });
 		expect(all.get("page")).toBe("1");

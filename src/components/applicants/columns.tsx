@@ -6,6 +6,7 @@ import {
 	applicantInitials,
 	EMPTY,
 	formatDate,
+	formatPhone,
 	fullName,
 	historyLabel,
 	isOver16,
@@ -27,6 +28,10 @@ export type ColumnDef = {
 	id: ColumnId;
 	/** Fejléc a táblában. */
 	label: string;
+	/** Második fejlécsor (a rendezés nem erre vonatkozik), pl. a név alatti e-mail. */
+	subLabel?: string;
+	/** Extra osztály a fejléc tartalmán, pl. a cellák monogramjához igazításhoz. */
+	headerClass?: string;
 	/** Felirat az oszlopválasztóban. */
 	pickerLabel: string;
 	/** Nem rejthető el (a "Név / e-mail"). */
@@ -52,7 +57,9 @@ const dash = <span className="text-text-tertiary">{EMPTY}</span>;
 export const COLUMNS: Record<ColumnId, ColumnDef> = {
 	name: {
 		id: "name",
-		label: "Név / e-mail",
+		label: "Név",
+		subLabel: "E-mail",
+		headerClass: "pl-10",
 		pickerLabel: "Név / e-mail",
 		locked: true,
 		sortKey: "name",
@@ -67,7 +74,7 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 				<div className="min-w-0">
 					<Link
 						href={applicantHref(item.id)}
-						className="block truncate font-medium underline-offset-2 hover:underline focus-visible:underline"
+						className="block truncate font-medium underline-offset-2 hover:underline"
 					>
 						{fullName(item)}
 					</Link>
@@ -156,7 +163,8 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 	},
 	location: {
 		id: "location",
-		label: "Település / iskola",
+		label: "Település",
+		subLabel: "Iskola",
 		pickerLabel: "Település / iskola",
 		card: (item) => {
 			const parts = [item.hometown, item.schoolName].filter(Boolean);
@@ -199,6 +207,7 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		id: "history",
 		label: "Előzmény",
 		pickerLabel: "Előzmény (elvégzett programok)",
+		sortKey: "history",
 		// Plain text "N program", or "—" without attended programs.
 		card: (item) => {
 			const label = historyLabel(item.applications);
@@ -259,10 +268,12 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		id: "phone",
 		label: "Telefonszám",
 		pickerLabel: "Telefonszám",
-		widthClass: "w-[140px]",
+		widthClass: "w-[156px]",
 		cell: (item) =>
 			item.phoneNumber ? (
-				<span className="font-mono text-xs">{item.phoneNumber}</span>
+				<span className="font-mono text-xs whitespace-nowrap">
+					{formatPhone(item.phoneNumber)}
+				</span>
 			) : (
 				dash
 			),

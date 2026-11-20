@@ -5,17 +5,19 @@ const {
 	applicationCount,
 	applicationFindMany,
 	eventFindMany,
+	eventAggregate,
 	feedbackFindMany,
 } = vi.hoisted(() => ({
 	applicationCount: vi.fn(),
 	applicationFindMany: vi.fn(),
 	eventFindMany: vi.fn(),
+	eventAggregate: vi.fn(),
 	feedbackFindMany: vi.fn(),
 }));
 vi.mock("@/lib/db", () => ({
 	db: {
 		application: { count: applicationCount, findMany: applicationFindMany },
-		event: { findMany: eventFindMany },
+		event: { findMany: eventFindMany, aggregate: eventAggregate },
 		feedback: { findMany: feedbackFindMany },
 	},
 }));
@@ -58,6 +60,10 @@ const events = [
 describe("loadDashboard", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
+		eventAggregate.mockResolvedValue({
+			_min: { from: null },
+			_max: { from: null },
+		});
 		eventFindMany
 			// program list of the period
 			.mockResolvedValueOnce([
@@ -202,6 +208,21 @@ describe("loadDashboard", () => {
 		const data = await loadDashboard({ program: "b" }, now);
 		expect(data.program).toBeNull();
 		expect(applicationCount.mock.calls[0][0].where.eventId).toBeUndefined();
+	});
+
+	it("offers years back to the first program in the database", async () => {
+		eventAggregate.mockResolvedValue({
+			_min: { from: new Date("2024-03-16T08:00:00Z") },
+			_max: { from: null },
+		});
+		const data = await loadDashboard({ period: "2024" }, now);
+		expect(data.periodOptions.map((o) => o.key)).toEqual([
+			"2026",
+			"2025",
+			"2024",
+		]);
+		expect(data.period.key).toBe("2024");
+		expect(data.period.previousLabel).toBe("2023");
 	});
 
 	it("returns six trend months ending with the current one", async () => {

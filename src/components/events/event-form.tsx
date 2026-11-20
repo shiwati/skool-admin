@@ -29,7 +29,9 @@ import {
 	type EventFormSource,
 	type EventFormValues,
 } from "@/lib/events/schema";
+import { parseSheetUrl } from "@/lib/google/sheet-url";
 import { cn } from "@/lib/utils";
+import { SheetMappingEditor } from "./sheet-mapping-editor";
 
 type FieldName = keyof EventFormValues;
 
@@ -47,6 +49,10 @@ const FIELD_LABELS: Record<FieldName, string> = {
 	applicationSheetUrl: "Jelentkezők sheetje",
 	participantFeedbackSheetUrl: "Résztvevői visszajelzések sheetje",
 	mentorFeedbackSheetUrl: "Mentori visszajelzések sheetje",
+	applicationSheetMapping: "Jelentkezők sheetjének mező-megfeleltetése",
+	participantFeedbackSheetMapping:
+		"Résztvevői visszajelzések mező-megfeleltetése",
+	mentorFeedbackSheetMapping: "Mentori visszajelzések mező-megfeleltetése",
 	instructor: "Oktató",
 	mentors: "Mentorok",
 };
@@ -65,7 +71,13 @@ const SECTIONS: { id: string; title: string; fields: FieldName[] }[] = [
 	{
 		id: "kapacitas",
 		title: "Kapacitás",
-		fields: ["capacity", "ageFrom", "ageTo", "applicationSheetUrl"],
+		fields: [
+			"capacity",
+			"ageFrom",
+			"ageTo",
+			"applicationSheetUrl",
+			"applicationSheetMapping",
+		],
 	},
 	{
 		id: "oktatok",
@@ -75,7 +87,12 @@ const SECTIONS: { id: string; title: string; fields: FieldName[] }[] = [
 	{
 		id: "zaro-riport",
 		title: "Záró riport mezői",
-		fields: ["participantFeedbackSheetUrl", "mentorFeedbackSheetUrl"],
+		fields: [
+			"participantFeedbackSheetUrl",
+			"participantFeedbackSheetMapping",
+			"mentorFeedbackSheetUrl",
+			"mentorFeedbackSheetMapping",
+		],
 	},
 ];
 
@@ -140,6 +157,9 @@ const EMPTY_VALUES: EventFormValues = {
 	applicationSheetUrl: "",
 	participantFeedbackSheetUrl: "",
 	mentorFeedbackSheetUrl: "",
+	applicationSheetMapping: null,
+	participantFeedbackSheetMapping: null,
+	mentorFeedbackSheetMapping: null,
 	instructor: "",
 	mentors: [],
 };
@@ -182,6 +202,11 @@ export function EventForm(props: EventFormProps) {
 		submitCount > 0
 			? invalid.map((name) => ({ name, label: FIELD_LABELS[name] }))
 			: [];
+
+	const sheetUrl = (name: FieldName) => {
+		const url = String(watch(name) ?? "");
+		return { url, urlValid: parseSheetUrl(url) !== null };
+	};
 
 	const focusField = (name: string) =>
 		document.getElementById(inputId(name as FieldName))?.focus();
@@ -489,6 +514,24 @@ export function EventForm(props: EventFormProps) {
 									/>
 								)}
 							</FormField>
+							<Controller
+								control={control}
+								name="applicationSheetMapping"
+								render={({ field: { value, onChange } }) => (
+									<SheetMappingEditor
+										kind="application"
+										value={value}
+										onChange={onChange}
+										error={message(
+											"applicationSheetMapping",
+										)}
+										triggerId={inputId(
+											"applicationSheetMapping",
+										)}
+										{...sheetUrl("applicationSheetUrl")}
+									/>
+								)}
+							/>
 						</FormSection>
 
 						<FormSection
@@ -529,7 +572,7 @@ export function EventForm(props: EventFormProps) {
 												{...field}
 												value={value}
 												onChange={onChange}
-												chipClassName="bg-pink"
+												chipClassName="bg-pink-soft ring-1 ring-pink ring-inset"
 												placeholder="Név hozzáadása…"
 												removeLabel={(name) =>
 													`${name} eltávolítása`
@@ -566,6 +609,26 @@ export function EventForm(props: EventFormProps) {
 									/>
 								)}
 							</FormField>
+							<Controller
+								control={control}
+								name="participantFeedbackSheetMapping"
+								render={({ field: { value, onChange } }) => (
+									<SheetMappingEditor
+										kind="PARTICIPANT"
+										value={value}
+										onChange={onChange}
+										error={message(
+											"participantFeedbackSheetMapping",
+										)}
+										triggerId={inputId(
+											"participantFeedbackSheetMapping",
+										)}
+										{...sheetUrl(
+											"participantFeedbackSheetUrl",
+										)}
+									/>
+								)}
+							/>
 							<FormField
 								id={inputId("mentorFeedbackSheetUrl")}
 								label="Mentori visszajelzések sheetje"
@@ -584,6 +647,24 @@ export function EventForm(props: EventFormProps) {
 									/>
 								)}
 							</FormField>
+							<Controller
+								control={control}
+								name="mentorFeedbackSheetMapping"
+								render={({ field: { value, onChange } }) => (
+									<SheetMappingEditor
+										kind="MENTOR"
+										value={value}
+										onChange={onChange}
+										error={message(
+											"mentorFeedbackSheetMapping",
+										)}
+										triggerId={inputId(
+											"mentorFeedbackSheetMapping",
+										)}
+										{...sheetUrl("mentorFeedbackSheetUrl")}
+									/>
+								)}
+							/>
 						</FormSection>
 
 						<Card className="mt-5 flex items-center justify-end gap-2 p-4">

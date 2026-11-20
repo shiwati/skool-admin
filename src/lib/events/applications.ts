@@ -9,6 +9,7 @@ export type EventApplicationItem = {
 		id: string;
 		firstName: string;
 		lastName: string;
+		email: string | null;
 		birthYear: number | null;
 		hometown: string | null;
 		schoolName: string | null;

@@ -1,11 +1,19 @@
 "use client";
 
-import { ExternalLink, FileText, Plus, Star, Trash2 } from "lucide-react";
+import {
+	ExternalLink,
+	FileText,
+	Loader2,
+	Plus,
+	Star,
+	Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { DetailCard } from "@/components/applicants/detail/detail-card";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -332,7 +340,7 @@ export function ReportEditor({
 															!quote.highlighted,
 													})
 												}
-												className="rounded p-1 focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+												className="rounded p-1 disabled:cursor-not-allowed disabled:opacity-40"
 											>
 												<Star
 													aria-hidden="true"
@@ -425,8 +433,32 @@ export function ReportEditor({
 				</ul>
 			</DetailCard>
 
+			<Card className="flex flex-wrap items-center justify-end gap-3 p-4">
+				{invalid && (
+					<p className="grow text-sm text-error-fg">
+						Töltsd ki a közreműködők szerepét és nevét, és ne hagyj
+						üres idézetet.
+					</p>
+				)}
+				<Button
+					type="button"
+					disabled={pending !== null || invalid}
+					aria-busy={pending === "save" || undefined}
+					onClick={() => void save()}
+					className="h-11 px-6 font-mono text-[13px]"
+				>
+					{pending === "save" && (
+						<Loader2
+							aria-hidden="true"
+							className="animate-spin motion-reduce:animate-none"
+						/>
+					)}
+					Sablon mentése
+				</Button>
+			</Card>
+
 			<DetailCard
-				title="Google Doc"
+				title="Exportálás"
 				subtitle="Minden generálás új dokumentumot hoz létre a saját Google Drive-odban. A szabad szövegeket (bevezető, „Mit csináltunk?”, fotók) a Docsban kell megírni; PDF-et is onnan exportálj."
 			>
 				{created && (
@@ -454,31 +486,23 @@ export function ReportEditor({
 				<div className="flex flex-wrap gap-2">
 					<Button
 						type="button"
-						variant="surface"
-						disabled={pending !== null || invalid}
-						aria-busy={pending === "save" || undefined}
-						onClick={() => void save()}
-					>
-						Mentés
-					</Button>
-					<Button
-						type="button"
 						disabled={pending !== null || invalid}
 						aria-busy={pending === "generate" || undefined}
 						onClick={() => void generate()}
 					>
-						<FileText aria-hidden="true" />
+						{pending === "generate" ? (
+							<Loader2
+								aria-hidden="true"
+								className="animate-spin motion-reduce:animate-none"
+							/>
+						) : (
+							<FileText aria-hidden="true" />
+						)}
 						{pending === "generate"
 							? "Google Doc létrehozása…"
 							: "Google Doc generálása"}
 					</Button>
 				</div>
-				{invalid && (
-					<p className="text-sm text-error-fg">
-						Töltsd ki a közreműködők szerepét és nevét, és ne hagyj
-						üres idézetet.
-					</p>
-				)}
 				{documents.length > 0 && (
 					<div className="flex flex-col gap-2">
 						<h3 className="text-sm font-semibold">

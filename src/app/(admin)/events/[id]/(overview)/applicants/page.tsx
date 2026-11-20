@@ -33,7 +33,7 @@ export default async function EventApplicantsPage({ params }: Props) {
 			<div className="flex flex-wrap items-center justify-between gap-3">
 				<p className="text-sm text-text-secondary">
 					A program jelentkezései. Jelöld ki a sorokat a státusz
-					egyszerre állításához.
+					tömeges állításához.
 				</p>
 				<Link
 					href={applicantsHref(event.id)}
@@ -47,6 +47,7 @@ export default async function EventApplicantsPage({ params }: Props) {
 				eventId={event.id}
 				capacity={event.capacity}
 				counts={counts}
+				applicationSheetUrl={event.applicationSheetUrl}
 			/>
 		</>
 	);

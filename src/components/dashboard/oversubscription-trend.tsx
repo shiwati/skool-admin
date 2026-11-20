@@ -60,7 +60,7 @@ function TrendTooltip({
 					<p>{formatRatio(point.ratio)}</p>
 					<p className="text-text-secondary">
 						{formatCount(point.applications)} jelentkezés /{" "}
-						{formatCount(point.capacity)} férőhely
+						{formatCount(point.capacity)} kapacitás
 					</p>
 				</>
 			)}
@@ -75,7 +75,7 @@ export function OversubscriptionTrend({ points }: { points: MonthlyRatio[] }) {
 		<Card className="flex min-w-0 flex-col gap-4 p-5">
 			<SectionHeader
 				title="Túljelentkezés alakulása"
-				subtitle="Jelentkezők / férőhely az adott hónapban induló programokon · elmúlt 6 hónap"
+				subtitle="Jelentkezők / kapacitás az adott hónapban induló programokon · elmúlt 6 hónap"
 			/>
 			<ChartContainer
 				label={`Túljelentkezés havonta. ${summary}`}

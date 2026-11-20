@@ -277,7 +277,7 @@ function RowActions({
 			<DropdownMenuTrigger
 				aria-label={`Műveletek: ${item.name}`}
 				className={cn(
-					"flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+					"flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-surface-subtle",
 					className,
 				)}
 			>
@@ -352,7 +352,7 @@ function EventCard({
 				<div className="flex min-w-0 flex-1 flex-col gap-1">
 					<Link
 						href={eventHref(item.id)}
-						className="font-medium hover:underline focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+						className="font-medium hover:underline"
 					>
 						{item.name}
 					</Link>
@@ -440,7 +440,7 @@ function SortHeader({
 		>
 			<button
 				type="button"
-				className="inline-flex items-center gap-1 uppercase hover:text-text-primary focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+				className="inline-flex items-center gap-1 uppercase hover:text-text-primary"
 				onClick={() =>
 					onSort(
 						column,

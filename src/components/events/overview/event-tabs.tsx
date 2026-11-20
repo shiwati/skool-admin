@@ -59,7 +59,7 @@ export function EventTabs({
 						aria-current={overviewActive ? "page" : undefined}
 						className={cn(
 							tabClass,
-							"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							"",
 							overviewActive
 								? "border-ink text-text-primary"
 								: "border-transparent text-text-secondary hover:text-text-primary",
@@ -74,7 +74,7 @@ export function EventTabs({
 						aria-current={applicantsActive ? "page" : undefined}
 						className={cn(
 							tabClass,
-							"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							"",
 							applicantsActive
 								? "border-ink text-text-primary"
 								: "border-transparent text-text-secondary hover:text-text-primary",
@@ -92,7 +92,7 @@ export function EventTabs({
 						aria-current={feedbackActive ? "page" : undefined}
 						className={cn(
 							tabClass,
-							"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							"",
 							feedbackActive
 								? "border-ink text-text-primary"
 								: "border-transparent text-text-secondary hover:text-text-primary",
@@ -107,7 +107,7 @@ export function EventTabs({
 						aria-current={reportActive ? "page" : undefined}
 						className={cn(
 							tabClass,
-							"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							"",
 							reportActive
 								? "border-ink text-text-primary"
 								: "border-transparent text-text-secondary hover:text-text-primary",

@@ -21,17 +21,21 @@ import {
 import { Input } from "@/components/ui/input";
 import {
 	ageRangeError,
+	historyRangeError,
 	hasActiveFilters,
 	type ListFilters,
 } from "@/lib/applicants/list-params";
 import type { EventOption } from "@/lib/applicants/types";
 import { BooleanOptions, FilterChip } from "./filter-chip";
+import { YearChip } from "./year-chip";
 
 export const SEARCH_DEBOUNCE_MS = 300;
 
 type Props = {
 	filters: ListFilters;
 	events: EventOption[];
+	/** A „Program éve” választó évei (a DB-ből). */
+	years: number[];
 	onChange: (patch: Partial<ListFilters>) => void;
 	onClearAll: () => void;
 	/** Jobb oldali elem (oszlopválasztó), tablettől. */
@@ -44,10 +48,11 @@ type Props = {
 export function activeFilterCount(filters: ListFilters): number {
 	return [
 		filters.eventIds.length > 0,
+		filters.programYear !== undefined,
 		filters.ageFrom !== undefined || filters.ageTo !== undefined,
 		!!filters.hometown,
 		filters.newsletter !== undefined,
-		filters.attended !== undefined,
+		filters.historyFrom !== undefined || filters.historyTo !== undefined,
 	].filter(Boolean).length;
 }
 
@@ -58,6 +63,7 @@ export function activeFilterCount(filters: ListFilters): number {
 export function ApplicantsToolbar({
 	filters,
 	events,
+	years,
 	onChange,
 	onClearAll,
 	trailing,
@@ -67,6 +73,7 @@ export function ApplicantsToolbar({
 		<FilterChips
 			filters={filters}
 			events={events}
+			years={years}
 			onChange={onChange}
 			onClearAll={onClearAll}
 		/>
@@ -106,7 +113,7 @@ export function MobileFiltersDialog({
 		<Dialog>
 			<DialogTrigger
 				aria-label={count > 0 ? `Szűrők (${count} aktív)` : "Szűrők"}
-				className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-border-strong bg-white focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none md:hidden"
+				className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-border-strong bg-white md:hidden"
 			>
 				<SlidersHorizontal aria-hidden="true" className="size-[18px]" />
 				{count > 0 && (
@@ -135,6 +142,7 @@ export function MobileFiltersDialog({
 function FilterChips({
 	filters,
 	events,
+	years,
 	onChange,
 	onClearAll,
 }: Omit<Props, "trailing">) {
@@ -145,9 +153,18 @@ function FilterChips({
 				selected={filters.eventIds}
 				onChange={(eventIds) => onChange({ eventIds })}
 			/>
-			<AgeChip
-				ageFrom={filters.ageFrom}
-				ageTo={filters.ageTo}
+			<YearChip
+				year={filters.programYear}
+				years={years}
+				onChange={(programYear) => onChange({ programYear })}
+			/>
+			<RangeChip
+				label="Életkor"
+				unit="év"
+				max={120}
+				from={filters.ageFrom}
+				to={filters.ageTo}
+				validate={ageRangeError}
 				onChange={(ageFrom, ageTo) => onChange({ ageFrom, ageTo })}
 			/>
 			<TextChip
@@ -174,24 +191,17 @@ function FilterChips({
 					onChange={(newsletter) => onChange({ newsletter })}
 				/>
 			</FilterChip>
-			<FilterChip
-				label="Részt vett"
-				value={
-					filters.attended === undefined
-						? undefined
-						: filters.attended
-							? "igen"
-							: "nem"
+			<RangeChip
+				label="Előzmény"
+				unit="program"
+				max={1000}
+				from={filters.historyFrom}
+				to={filters.historyTo}
+				validate={historyRangeError}
+				onChange={(historyFrom, historyTo) =>
+					onChange({ historyFrom, historyTo })
 				}
-				onClear={() => onChange({ attended: undefined })}
-			>
-				<BooleanOptions
-					value={filters.attended}
-					trueLabel="Volt már programon"
-					falseLabel="Még nem vett részt"
-					onChange={(attended) => onChange({ attended })}
-				/>
-			</FilterChip>
+			/>
 			{hasActiveFilters(filters) && (
 				<Button variant="ghost" size="sm" onClick={onClearAll}>
 					Szűrők törlése
@@ -236,7 +246,7 @@ export function SearchField({
 	}, [draft]);
 
 	return (
-		<label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary focus-within:ring-2 focus-within:ring-ink md:h-8 md:w-64 md:flex-none">
+		<label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary md:h-8 md:w-64 md:flex-none">
 			<Search aria-hidden="true" className="size-4" />
 			<input
 				type="search"
@@ -244,7 +254,7 @@ export function SearchField({
 				placeholder={placeholder}
 				value={draft}
 				onChange={(e) => setDraft(e.target.value)}
-				className="min-w-0 flex-1 bg-transparent text-sm text-text-primary outline-none md:text-xs"
+				className="min-w-0 flex-1 bg-transparent text-sm text-text-primary md:text-xs"
 			/>
 		</label>
 	);
@@ -307,46 +317,71 @@ function ProgramChip({
 	);
 }
 
-function parseAge(raw: string): number | undefined {
+function parseCount(raw: string, max: number): number | undefined {
 	if (raw.trim() === "") return undefined;
 	const n = Number(raw);
-	return Number.isInteger(n) && n >= 0 && n <= 120 ? n : undefined;
+	return Number.isInteger(n) && n >= 0 && n <= max ? n : undefined;
 }
 
-function AgeChip({
-	ageFrom,
-	ageTo,
+/** Tól–ig számszűrő (életkor, előzmény). */
+function RangeChip({
+	label,
+	unit,
+	max,
+	from: valueFrom,
+	to: valueTo,
+	validate,
 	onChange,
 }: {
-	ageFrom?: number;
-	ageTo?: number;
-	onChange: (ageFrom?: number, ageTo?: number) => void;
+	label: string;
+	unit: string;
+	max: number;
+	from?: number;
+	to?: number;
+	validate: (from?: number, to?: number) => string | null;
+	onChange: (from?: number, to?: number) => void;
 }) {
 	const [open, setOpen] = useState(false);
-	const [from, setFrom] = useState(ageFrom?.toString() ?? "");
-	const [to, setTo] = useState(ageTo?.toString() ?? "");
+	const [from, setFrom] = useState(valueFrom?.toString() ?? "");
+	const [to, setTo] = useState(valueTo?.toString() ?? "");
 	const [error, setError] = useState<string | null>(null);
 	const errorId = useId();
 
 	const value =
-		ageFrom === undefined && ageTo === undefined
+		valueFrom === undefined && valueTo === undefined
 			? undefined
-			: ageFrom !== undefined && ageTo !== undefined
-				? `${ageFrom}–${ageTo} év`
-				: ageFrom !== undefined
-					? `${ageFrom}+ év`
-					: `legfeljebb ${ageTo} év`;
+			: valueFrom !== undefined && valueTo !== undefined
+				? `${valueFrom}–${valueTo} ${unit}`
+				: valueFrom !== undefined
+					? `${valueFrom}+ ${unit}`
+					: `legfeljebb ${valueTo} ${unit}`;
+
+	const input = (name: string, draft: string, set: (v: string) => void) => (
+		<label className="flex flex-1 flex-col gap-1 text-xs font-medium">
+			{name}
+			<Input
+				type="number"
+				min={0}
+				max={max}
+				inputMode="numeric"
+				value={draft}
+				aria-invalid={error ? true : undefined}
+				aria-describedby={error ? errorId : undefined}
+				onChange={(e) => set(e.target.value)}
+			/>
+		</label>
+	);
 
 	return (
 		<FilterChip
-			label="Életkor"
+			label={label}
 			value={value}
 			open={open}
 			onOpenChange={(next) => {
 				setOpen(next);
 				if (next) {
-					setFrom(ageFrom?.toString() ?? "");
-					setTo(ageTo?.toString() ?? "");
+					setFrom(valueFrom?.toString() ?? "");
+					setTo(valueTo?.toString() ?? "");
 					setError(null);
 				}
 			}}
@@ -356,9 +391,9 @@ function AgeChip({
 				className="flex flex-col gap-3"
 				onSubmit={(e) => {
 					e.preventDefault();
-					const nextFrom = parseAge(from);
-					const nextTo = parseAge(to);
-					const rangeError = ageRangeError(nextFrom, nextTo);
+					const nextFrom = parseCount(from, max);
+					const nextTo = parseCount(to, max);
+					const rangeError = validate(nextFrom, nextTo);
 					if (rangeError) {
 						setError(rangeError);
 						return;
@@ -368,32 +403,8 @@ function AgeChip({
 				}}
 			>
 				<div className="flex gap-2">
-					<label className="flex flex-1 flex-col gap-1 text-xs font-medium">
-						Minimum
-						<Input
-							type="number"
-							min={0}
-							max={120}
-							inputMode="numeric"
-							value={from}
-							aria-invalid={error ? true : undefined}
-							aria-describedby={error ? errorId : undefined}
-							onChange={(e) => setFrom(e.target.value)}
-						/>
-					</label>
-					<label className="flex flex-1 flex-col gap-1 text-xs font-medium">
-						Maximum
-						<Input
-							type="number"
-							min={0}
-							max={120}
-							inputMode="numeric"
-							value={to}
-							aria-invalid={error ? true : undefined}
-							aria-describedby={error ? errorId : undefined}
-							onChange={(e) => setTo(e.target.value)}
-						/>
-					</label>
+					{input("Minimum", from, setFrom)}
+					{input("Maximum", to, setTo)}
 				</div>
 				{error && (
 					<p

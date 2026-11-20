@@ -1,8 +1,9 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+const push = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({
-	useRouter: () => ({ replace: vi.fn(), push: vi.fn(), refresh: vi.fn() }),
+	useRouter: () => ({ replace: vi.fn(), push, refresh: vi.fn() }),
 	usePathname: () => "/feedback",
 }));
 
@@ -59,6 +60,16 @@ describe("FeedbackView responsive variants (07.1)", () => {
 			"hidden",
 			"md:block",
 		);
+	});
+
+	it("opens the details when any cell of the table row is clicked", () => {
+		push.mockClear();
+		renderView();
+		const table = within(screen.getByTestId("feedback-table-frame"));
+		fireEvent.click(table.getByText("4,8"));
+		expect(push).toHaveBeenCalledWith("/feedback?open=f1", {
+			scroll: false,
+		});
 	});
 
 	it("uses a two-column KPI grid on mobile", () => {

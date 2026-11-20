@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+	applicationSheetMappingSchema,
+	feedbackSheetMappingSchema,
+} from "@/lib/sheet-mapping/schema";
 import { tagListSchema } from "./tags";
 
 const optionalField = z
@@ -18,6 +22,10 @@ const shape = {
 	applicationSheetUrl: z.url().nullish(),
 	participantFeedbackSheetUrl: z.url().nullish(),
 	mentorFeedbackSheetUrl: z.url().nullish(),
+	applicationSheetMapping: applicationSheetMappingSchema.nullish(),
+	participantFeedbackSheetMapping:
+		feedbackSheetMappingSchema("PARTICIPANT").nullish(),
+	mentorFeedbackSheetMapping: feedbackSheetMappingSchema("MENTOR").nullish(),
 	ageRange: optionalField,
 	instructor: optionalField,
 	mentors: z.array(z.string().trim().min(1)),

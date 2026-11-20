@@ -1,5 +1,6 @@
 "use client";
 
+import { ALUMNI_LABEL, ALUMNI_MIN_ATTENDED } from "@/lib/applicants/format";
 import { RotateCcw, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -325,9 +326,10 @@ export function ApplicantEditForm({
 						</p>
 						<p className="flex items-center gap-2 text-sm text-text-secondary">
 							<span className="rounded-full bg-sage px-2.5 text-xs leading-6 font-medium text-text-primary">
-								Alumni
+								{ALUMNI_LABEL}
 							</span>
-							elvégzett program esetén
+							legalább {ALUMNI_MIN_ATTENDED} elvégzett program
+							esetén
 						</p>
 					</Card>
 				</aside>

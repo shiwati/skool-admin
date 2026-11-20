@@ -35,7 +35,7 @@ function ApplicantCard({
 	return (
 		<Link
 			href={applicantHref(item.id)}
-			className="flex min-h-11 gap-3 px-4 py-3.5 hover:bg-canvas focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none focus-visible:ring-inset"
+			className="flex min-h-11 gap-3 px-4 py-3.5 hover:bg-canvas"
 		>
 			<span
 				aria-hidden="true"
@@ -72,7 +72,9 @@ function ApplicantCard({
 								className="grid grid-cols-[112px_minmax(0,1fr)] items-baseline gap-x-3"
 							>
 								<dt className="text-text-tertiary">
-									{COLUMNS[id].label}
+									{COLUMNS[id].subLabel
+										? `${COLUMNS[id].label} / ${COLUMNS[id].subLabel.toLowerCase()}`
+										: COLUMNS[id].label}
 								</dt>
 								<dd className="min-w-0 break-words">
 									{cardValue(id, item, now)}

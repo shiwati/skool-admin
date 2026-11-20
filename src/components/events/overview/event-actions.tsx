@@ -35,7 +35,7 @@ export function EventActions({ target }: { target: EventDeleteTarget }) {
 			<DropdownMenu>
 				<DropdownMenuTrigger
 					aria-label="További műveletek"
-					className="flex size-9 items-center justify-center rounded-full border border-border-default bg-white hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+					className="flex size-9 items-center justify-center rounded-full border border-border-default bg-white hover:bg-surface-subtle"
 				>
 					<MoreHorizontal
 						aria-hidden="true"

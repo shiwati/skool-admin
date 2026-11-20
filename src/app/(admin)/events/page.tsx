@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { PageShell } from "@/components/admin-shell/page-shell";
 import { EventsView } from "@/components/events/events-view";
 import type { EventListItem } from "@/components/events/events-table";
+import { programYears } from "@/lib/events/program-years";
+import { eventYearBounds } from "@/lib/dashboard/first-year";
 import {
 	countEventsByPhase,
 	eventsQuerySchema,
@@ -31,9 +33,10 @@ export default async function EventsPage({ searchParams }: Props) {
 	const query = eventsQuerySchema.parse(toEventsQueryInput(state));
 	const now = new Date();
 
-	const [page, counts] = await Promise.all([
+	const [page, counts, bounds] = await Promise.all([
 		listEvents(query, now),
 		countEventsByPhase(query, now),
+		eventYearBounds(),
 	]);
 	// Same shape as the JSON API response (dates as ISO strings).
 	const items = JSON.parse(JSON.stringify(page.items)) as EventListItem[];
@@ -47,6 +50,7 @@ export default async function EventsPage({ searchParams }: Props) {
 					total={page.total}
 					counts={counts}
 					now={now.toISOString()}
+					years={programYears(bounds, now)}
 				/>
 			</Suspense>
 		</PageShell>

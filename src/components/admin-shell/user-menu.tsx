@@ -39,7 +39,7 @@ export function UserMenu({
 			<DropdownMenuTrigger
 				aria-label="Felhasználói menü"
 				className={cn(
-					"flex items-center gap-2.5 rounded-full text-left focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+					"flex items-center gap-2.5 rounded-full text-left",
 					compact && "size-11 justify-center",
 				)}
 			>

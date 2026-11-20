@@ -11,6 +11,7 @@
 	--color-lemon: #fbf3a3;
 	--color-pink: #f8c8dc;
 	--color-pink-strong: #ee9fc2;
+	--color-pink-soft: #fdeaf3;
 	--color-lavender: #c3b1e1;
 	--color-sage: #cee4c4;
 	--color-coral: #e27979;
@@ -130,6 +131,11 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+	}
+	/* One focus indicator for every interactive element (keyboard focus). */
+	:focus-visible {
+		outline: 2px solid var(--color-coral);
+		outline-offset: 0;
 	}
 	button:not(:disabled),
 	[role="button"]:not([aria-disabled="true"]),

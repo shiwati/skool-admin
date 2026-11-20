@@ -1,5 +1,11 @@
 import { z } from "zod";
+import type { FeedbackSheetMapping } from "@/lib/feedback/questions";
 import { parseSheetUrl } from "@/lib/google/sheet-url";
+import type { ApplicationSheetMapping } from "@/lib/sheet-import/mapping";
+import {
+	applicationSheetMappingSchema,
+	feedbackSheetMappingSchema,
+} from "@/lib/sheet-mapping/schema";
 import { tagListSchema } from "./tags";
 
 export const REQUIRED_MESSAGE = "Kötelező mező";
@@ -38,6 +44,19 @@ const sheetUrlField = z
 		SHEET_URL_MESSAGE,
 	);
 
+/** `null` = alapértelmezett; egyébként a szerver sémájával ellenőrizve, egy üzenetben. */
+const mappingField = <T>(schema: z.ZodType) =>
+	z.custom<T | null>().superRefine((value, ctx) => {
+		if (value === null || value === undefined) return;
+		const result = schema.safeParse(value);
+		if (!result.success) {
+			ctx.addIssue({
+				code: "custom",
+				message: result.error.issues.map((i) => i.message).join(" "),
+			});
+		}
+	});
+
 /** Az űrlap értékei: minden szám és dátum szövegként, ahogy a mezők adják. */
 export const eventFormSchema = z
 	.object({
@@ -61,6 +80,15 @@ export const eventFormSchema = z
 		applicationSheetUrl: sheetUrlField,
 		participantFeedbackSheetUrl: sheetUrlField,
 		mentorFeedbackSheetUrl: sheetUrlField,
+		applicationSheetMapping: mappingField<ApplicationSheetMapping>(
+			applicationSheetMappingSchema,
+		),
+		participantFeedbackSheetMapping: mappingField<FeedbackSheetMapping>(
+			feedbackSheetMappingSchema("PARTICIPANT"),
+		),
+		mentorFeedbackSheetMapping: mappingField<FeedbackSheetMapping>(
+			feedbackSheetMappingSchema("MENTOR"),
+		),
 		instructor: z.string().trim().max(200),
 		mentors: z.array(tag).max(MAX_MENTORS),
 	})
@@ -91,6 +119,9 @@ export type CreateEventInput = {
 	applicationSheetUrl?: string;
 	participantFeedbackSheetUrl?: string;
 	mentorFeedbackSheetUrl?: string;
+	applicationSheetMapping?: ApplicationSheetMapping;
+	participantFeedbackSheetMapping?: FeedbackSheetMapping;
+	mentorFeedbackSheetMapping?: FeedbackSheetMapping;
 	instructor?: string;
 	mentors: string[];
 };
@@ -109,6 +140,9 @@ export type UpdateEventInput = {
 	applicationSheetUrl: string | null;
 	participantFeedbackSheetUrl: string | null;
 	mentorFeedbackSheetUrl: string | null;
+	applicationSheetMapping: ApplicationSheetMapping | null;
+	participantFeedbackSheetMapping: FeedbackSheetMapping | null;
+	mentorFeedbackSheetMapping: FeedbackSheetMapping | null;
 	instructor: string | null;
 	mentors: string[];
 };
@@ -128,6 +162,9 @@ export type EventFormSource = {
 	applicationSheetUrl: string | null;
 	participantFeedbackSheetUrl: string | null;
 	mentorFeedbackSheetUrl: string | null;
+	applicationSheetMapping: ApplicationSheetMapping | null;
+	participantFeedbackSheetMapping: FeedbackSheetMapping | null;
+	mentorFeedbackSheetMapping: FeedbackSheetMapping | null;
 	instructor: string | null;
 	mentors: string[];
 };
@@ -158,6 +195,9 @@ export function toEventFormValues(event: EventFormSource): EventFormValues {
 		applicationSheetUrl: event.applicationSheetUrl ?? "",
 		participantFeedbackSheetUrl: event.participantFeedbackSheetUrl ?? "",
 		mentorFeedbackSheetUrl: event.mentorFeedbackSheetUrl ?? "",
+		applicationSheetMapping: event.applicationSheetMapping,
+		participantFeedbackSheetMapping: event.participantFeedbackSheetMapping,
+		mentorFeedbackSheetMapping: event.mentorFeedbackSheetMapping,
 		instructor: event.instructor ?? "",
 		mentors: event.mentors,
 	};
@@ -174,6 +214,10 @@ export function toUpdateEventInput(values: EventFormValues): UpdateEventInput {
 		applicationSheetUrl: create.applicationSheetUrl ?? null,
 		participantFeedbackSheetUrl: create.participantFeedbackSheetUrl ?? null,
 		mentorFeedbackSheetUrl: create.mentorFeedbackSheetUrl ?? null,
+		applicationSheetMapping: create.applicationSheetMapping ?? null,
+		participantFeedbackSheetMapping:
+			create.participantFeedbackSheetMapping ?? null,
+		mentorFeedbackSheetMapping: create.mentorFeedbackSheetMapping ?? null,
 		instructor: create.instructor ?? null,
 	};
 }
@@ -198,6 +242,18 @@ export function toCreateEventInput(values: EventFormValues): CreateEventInput {
 		participantFeedbackSheetUrl:
 			values.participantFeedbackSheetUrl || undefined,
 		mentorFeedbackSheetUrl: values.mentorFeedbackSheetUrl || undefined,
+		// A link nélküli sheet megfeleltetése nem marad meg.
+		applicationSheetMapping:
+			(values.applicationSheetUrl && values.applicationSheetMapping) ||
+			undefined,
+		participantFeedbackSheetMapping:
+			(values.participantFeedbackSheetUrl &&
+				values.participantFeedbackSheetMapping) ||
+			undefined,
+		mentorFeedbackSheetMapping:
+			(values.mentorFeedbackSheetUrl &&
+				values.mentorFeedbackSheetMapping) ||
+			undefined,
 		instructor: values.instructor || undefined,
 		mentors: values.mentors,
 	};

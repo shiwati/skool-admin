@@ -13,6 +13,9 @@ export const TRACKED_EVENT_FIELDS = [
 	"applicationSheetUrl",
 	"participantFeedbackSheetUrl",
 	"mentorFeedbackSheetUrl",
+	"applicationSheetMapping",
+	"participantFeedbackSheetMapping",
+	"mentorFeedbackSheetMapping",
 	"ageRange",
 	"instructor",
 	"mentors",
@@ -21,7 +24,18 @@ export const TRACKED_EVENT_FIELDS = [
 
 export type TrackedEventField = (typeof TRACKED_EVENT_FIELDS)[number];
 
-export type EventPatch = Partial<Pick<Event, TrackedEventField>>;
+export const SHEET_MAPPING_FIELDS = [
+	"applicationSheetMapping",
+	"participantFeedbackSheetMapping",
+	"mentorFeedbackSheetMapping",
+] as const;
+
+type SheetMappingField = (typeof SHEET_MAPPING_FIELDS)[number];
+
+export type EventPatch = Partial<
+	Pick<Event, Exclude<TrackedEventField, SheetMappingField>> &
+		Record<SheetMappingField, unknown>
+>;
 
 /** A History `oldValue`/`newValue` szöveges alakja; az üres érték `null`. */
 function serialize(value: unknown): string | null {
@@ -29,6 +43,7 @@ function serialize(value: unknown): string | null {
 	if (value instanceof Date) return value.toISOString();
 	if (Array.isArray(value))
 		return value.length ? JSON.stringify(value) : null;
+	if (typeof value === "object") return JSON.stringify(value);
 	return String(value);
 }
 
@@ -40,7 +55,7 @@ export type EventFieldChange = {
 
 /** A ténylegesen módosuló mezők; a változatlanok (és a nem küldöttek) kimaradnak. */
 export function diffEvent(
-	current: Pick<Event, TrackedEventField>,
+	current: Pick<Event, TrackedEventField> | EventPatch,
 	patch: EventPatch,
 ): EventFieldChange[] {
 	const changes: EventFieldChange[] = [];

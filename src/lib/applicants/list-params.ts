@@ -9,18 +9,27 @@ import { z } from "zod";
 export const PAGE_SIZES = [10, 25, 50, 100] as const;
 export type PageSize = (typeof PAGE_SIZES)[number];
 
-export const SORT_KEYS = ["name", "age", "location", "createdAt"] as const;
+export const SORT_KEYS = [
+	"name",
+	"age",
+	"location",
+	"history",
+	"createdAt",
+] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
 export type SortOrder = "asc" | "desc";
 
 export type ListFilters = {
 	q?: string;
 	eventIds: string[];
+	programYear?: number;
 	ageFrom?: number;
 	ageTo?: number;
 	hometown?: string;
 	newsletter?: boolean;
-	attended?: boolean;
+	/** Elvégzett („Részt vett”) programok száma, tól–ig. */
+	historyFrom?: number;
+	historyTo?: number;
 };
 
 export type ListState = ListFilters & {
@@ -43,11 +52,26 @@ const API_SORT: Record<SortKey, { key: string; invert: boolean }> = {
 	name: { key: "lastName", invert: false },
 	age: { key: "birthYear", invert: true },
 	location: { key: "hometown", invert: false },
+	history: { key: "history", invert: false },
 	createdAt: { key: "createdAt", invert: false },
 };
 
 const text = z.string().trim().min(1).max(200).optional().catch(undefined);
+const year = z.coerce
+	.number()
+	.int()
+	.min(2000)
+	.max(2100)
+	.optional()
+	.catch(undefined);
 const age = z.coerce.number().int().min(0).max(120).optional().catch(undefined);
+const count = z.coerce
+	.number()
+	.int()
+	.min(0)
+	.max(1000)
+	.optional()
+	.catch(undefined);
 const bool = z
 	.enum(["true", "false"])
 	.transform((v) => v === "true")
@@ -60,6 +84,20 @@ export function ageRangeError(
 ): string | null {
 	if (ageFrom !== undefined && ageTo !== undefined && ageFrom > ageTo) {
 		return "A minimum életkor nem lehet nagyobb a maximumnál.";
+	}
+	return null;
+}
+
+export function historyRangeError(
+	historyFrom: number | undefined,
+	historyTo: number | undefined,
+): string | null {
+	if (
+		historyFrom !== undefined &&
+		historyTo !== undefined &&
+		historyFrom > historyTo
+	) {
+		return "A minimum programszám nem lehet nagyobb a maximumnál.";
 	}
 	return null;
 }
@@ -82,6 +120,13 @@ export function parseListState(params: URLSearchParams): ListState {
 	if (ageRangeError(ageFrom, ageTo)) {
 		ageFrom = undefined;
 		ageTo = undefined;
+	}
+
+	let historyFrom = count.parse(get("historyFrom"));
+	let historyTo = count.parse(get("historyTo"));
+	if (historyRangeError(historyFrom, historyTo)) {
+		historyFrom = undefined;
+		historyTo = undefined;
 	}
 
 	const sort = z.enum(SORT_KEYS).catch(DEFAULT_STATE.sort).parse(get("sort"));
@@ -108,11 +153,13 @@ export function parseListState(params: URLSearchParams): ListState {
 	return {
 		q: text.parse(get("q")),
 		eventIds,
+		programYear: year.parse(get("programYear")),
 		ageFrom,
 		ageTo,
 		hometown: text.parse(get("hometown")),
 		newsletter: bool.parse(get("newsletter")),
-		attended: bool.parse(get("attended")),
+		historyFrom,
+		historyTo,
 		sort,
 		order,
 		page,
@@ -124,14 +171,18 @@ function setFilters(params: URLSearchParams, filters: ListFilters) {
 	if (filters.q) params.set("q", filters.q);
 	if (filters.eventIds.length)
 		params.set("eventIds", filters.eventIds.join(","));
+	if (filters.programYear !== undefined)
+		params.set("programYear", String(filters.programYear));
 	if (filters.ageFrom !== undefined)
 		params.set("ageFrom", String(filters.ageFrom));
 	if (filters.ageTo !== undefined) params.set("ageTo", String(filters.ageTo));
 	if (filters.hometown) params.set("hometown", filters.hometown);
 	if (filters.newsletter !== undefined)
 		params.set("newsletter", String(filters.newsletter));
-	if (filters.attended !== undefined)
-		params.set("attended", String(filters.attended));
+	if (filters.historyFrom !== undefined)
+		params.set("historyFrom", String(filters.historyFrom));
+	if (filters.historyTo !== undefined)
+		params.set("historyTo", String(filters.historyTo));
 }
 
 /** Állapot → URL query; az alapértelmezett értékek kimaradnak. */
@@ -186,11 +237,13 @@ export function hasActiveFilters(state: ListFilters): boolean {
 	return Boolean(
 		state.q ||
 		state.eventIds.length ||
+		state.programYear !== undefined ||
 		state.ageFrom !== undefined ||
 		state.ageTo !== undefined ||
 		state.hometown ||
 		state.newsletter !== undefined ||
-		state.attended !== undefined,
+		state.historyFrom !== undefined ||
+		state.historyTo !== undefined,
 	);
 }
 
@@ -198,10 +251,12 @@ export function clearFilters(state: ListState): ListState {
 	return updateListState(state, {
 		q: undefined,
 		eventIds: [],
+		programYear: undefined,
 		ageFrom: undefined,
 		ageTo: undefined,
 		hometown: undefined,
 		newsletter: undefined,
-		attended: undefined,
+		historyFrom: undefined,
+		historyTo: undefined,
 	});
 }

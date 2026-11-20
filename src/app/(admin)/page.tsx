@@ -69,7 +69,7 @@ function oversubscriptionKpi({
 		value: formatRatio(current),
 		badge: formatSignedDecimal(current - previous),
 		tone: "info" as Tone,
-		note: `jelentkezés / férőhely · ${period.previousLabel}: ${formatRatio(previous)}`,
+		note: `jelentkezők / kapacitás · ${period.previousLabel}: ${formatRatio(previous)}`,
 	};
 }
 

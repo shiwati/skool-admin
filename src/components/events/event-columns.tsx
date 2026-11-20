@@ -1,5 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { EMPTY, formatCount } from "@/lib/applicants/format";
 import { AVATAR_CLASSES, tagClass } from "@/lib/events/colors";
 import type { EventColumnId } from "@/lib/events/column-settings";
@@ -53,12 +59,21 @@ export const EVENT_COLUMNS: Record<EventColumnId, EventColumnDef> = {
 		sortKey: "name",
 		cell: (item) => (
 			<div className="flex min-w-0 flex-col gap-1">
-				<Link
-					href={eventHref(item.id)}
-					className="truncate font-medium hover:underline focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
-				>
-					{item.name}
-				</Link>
+				<TooltipProvider delayDuration={300}>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Link
+								href={eventHref(item.id)}
+								className="truncate font-medium hover:underline"
+							>
+								{item.name}
+							</Link>
+						</TooltipTrigger>
+						<TooltipContent className="max-w-xs break-words">
+							{item.name}
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 				<EventTags tags={item.tags} />
 			</div>
 		),
@@ -79,27 +94,25 @@ export const EVENT_COLUMNS: Record<EventColumnId, EventColumnDef> = {
 	location: {
 		id: "location",
 		label: "Helyszín",
-		pickerLabel: "Helyszín / partner",
+		pickerLabel: "Helyszín",
 		cardLabel: "Helyszín",
 		width: 190,
 		cell: (item) => (
-			<div className="min-w-0 text-xs">
-				<div className="truncate">{item.location ?? EMPTY}</div>
-				{item.companyName && (
-					<div className="truncate text-text-tertiary">
-						{item.companyName}
-					</div>
-				)}
+			<div className="min-w-0 truncate text-xs">
+				{item.location ?? EMPTY}
 			</div>
 		),
-		card: (item) => (
-			<div className="min-w-0">
-				<span className="block">{item.location ?? EMPTY}</span>
-				{item.companyName && (
-					<span className="block text-text-tertiary">
-						{item.companyName}
-					</span>
-				)}
+	},
+	company: {
+		id: "company",
+		label: "Cég",
+		pickerLabel: "Cég / partner",
+		cardLabel: "Cég",
+		sortKey: "companyName",
+		width: 160,
+		cell: (item) => (
+			<div className="min-w-0 truncate text-xs">
+				{item.companyName ?? EMPTY}
 			</div>
 		),
 	},

@@ -21,7 +21,7 @@ const TAB_LABELS: Record<ReportTab, string> = {
 };
 
 const tabClass =
-	"-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none";
+	"-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap";
 
 // Access is enforced by the (admin) layout.
 export default async function ReportsPage({

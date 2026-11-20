@@ -5,6 +5,7 @@ import {
 	updateEventSchema,
 } from "@/lib/events/api-schema";
 import { diffEvent, EVENT_TABLE } from "@/lib/events/changes";
+import { withJsonNulls } from "@/lib/events/prisma-data";
 import { getEvent } from "@/lib/events/queries";
 import { logger } from "@/lib/logger";
 import { getAdminSession } from "@/lib/session";
@@ -130,7 +131,10 @@ export async function PATCH(
 			const changes = diffEvent(current, patch);
 			if (changes.length === 0) return 0;
 
-			await tx.event.update({ where: { id }, data: patch });
+			await tx.event.update({
+				where: { id },
+				data: withJsonNulls(patch),
+			});
 			await tx.history.createMany({
 				data: changes.map((change) => ({
 					tableName: EVENT_TABLE,

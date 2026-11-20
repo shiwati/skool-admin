@@ -38,6 +38,7 @@ export function EventsView({
 	total,
 	counts,
 	now,
+	years = [],
 }: {
 	items: EventListItem[];
 	/** Az aktuális fül és szűrők szerinti találatok száma. */
@@ -45,6 +46,8 @@ export function EventsView({
 	counts: PhaseCounts;
 	/** A szerver által használt „most” (ISO), hogy a státusz egyezzen. */
 	now: string;
+	/** A „Program éve” választó évei (a szerver a DB-ből adja). */
+	years?: number[];
 }) {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -136,6 +139,7 @@ export function EventsView({
 			/>
 			<EventsToolbar
 				filters={state}
+				years={years}
 				onChange={change}
 				onClearAll={clearFilters}
 				trailing={

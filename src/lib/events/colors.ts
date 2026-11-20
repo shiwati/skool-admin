@@ -34,4 +34,7 @@ export function tagClass(tag: string): string {
 	return TAG_CLASSES[tag] ?? TAG_PALETTE[hash(tag) % TAG_PALETTE.length];
 }
 
-export const AVATAR_CLASSES = ["bg-pink-strong", "bg-pink"];
+export const AVATAR_CLASSES = [
+	"bg-pink-strong",
+	"bg-pink-soft ring-1 ring-pink ring-inset",
+];

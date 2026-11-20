@@ -47,7 +47,7 @@ export function AdminSidebar({ className }: { className?: string }) {
 						aria-current={active ? "page" : undefined}
 						className={cn(
 							itemBase,
-							"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							"",
 							active ? "bg-ink text-white" : "hover:bg-white/40",
 						)}
 					>

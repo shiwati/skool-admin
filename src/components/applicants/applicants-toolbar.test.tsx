@@ -16,6 +16,7 @@ function renderToolbar(filters: Partial<ListFilters> = {}) {
 		<ApplicantsToolbar
 			filters={{ eventIds: [], ...filters }}
 			events={events}
+			years={[2026, 2025, 2024]}
 			onChange={onChange}
 			onClearAll={onClearAll}
 		/>,
@@ -48,6 +49,7 @@ describe("ApplicantsToolbar", () => {
 			<ApplicantsToolbar
 				filters={{ eventIds: [] }}
 				events={events}
+				years={[2026, 2025, 2024]}
 				onChange={vi.fn()}
 				onClearAll={vi.fn()}
 			/>,
@@ -57,11 +59,24 @@ describe("ApplicantsToolbar", () => {
 
 	it("filters by program and shows the selected program on the chip", async () => {
 		const { onChange } = renderToolbar();
-		await userEvent.click(screen.getByRole("button", { name: /^Program/ }));
+		await userEvent.click(
+			screen.getByRole("button", { name: /^Program(?! éve)/ }),
+		);
 		await userEvent.click(
 			await screen.findByRole("checkbox", { name: "Robotika tábor" }),
 		);
 		expect(onChange).toHaveBeenCalledWith({ eventIds: ["e2"] });
+	});
+
+	it("filters by the year of the program start", async () => {
+		const { onChange } = renderToolbar();
+		await userEvent.click(
+			screen.getByRole("button", { name: /^Program éve/ }),
+		);
+		await userEvent.click(
+			await screen.findByRole("radio", { name: "2025" }),
+		);
+		expect(onChange).toHaveBeenCalledWith({ programYear: 2025 });
 	});
 
 	it("shows active values and removes a single filter", async () => {
@@ -103,7 +118,7 @@ describe("ApplicantsToolbar", () => {
 		);
 	});
 
-	it("sets the hometown, newsletter and attended filters", async () => {
+	it("sets the hometown, newsletter and history filters", async () => {
 		const { onChange } = renderToolbar();
 		await userEvent.click(
 			screen.getByRole("button", { name: /^Település/ }),
@@ -125,12 +140,15 @@ describe("ApplicantsToolbar", () => {
 
 		await userEvent.keyboard("{Escape}");
 		await userEvent.click(
-			screen.getByRole("button", { name: /^Részt vett/ }),
+			screen.getByRole("button", { name: /^Előzmény/ }),
 		);
-		await userEvent.click(
-			await screen.findByRole("radio", { name: "Volt már programon" }),
-		);
-		expect(onChange).toHaveBeenCalledWith({ attended: true });
+		await userEvent.type(await screen.findByLabelText("Minimum"), "2");
+		await userEvent.type(screen.getByLabelText("Maximum"), "5");
+		await userEvent.click(screen.getByRole("button", { name: "Alkalmaz" }));
+		expect(onChange).toHaveBeenCalledWith({
+			historyFrom: 2,
+			historyTo: 5,
+		});
 	});
 
 	it("offers clearing all filters only when some are active", async () => {
@@ -141,7 +159,7 @@ describe("ApplicantsToolbar", () => {
 	});
 
 	it("clears all filters", async () => {
-		const { onClearAll } = renderToolbar({ attended: false });
+		const { onClearAll } = renderToolbar({ historyFrom: 1 });
 		await userEvent.click(
 			screen.getByRole("button", { name: "Szűrők törlése" }),
 		);
@@ -155,6 +173,7 @@ describe("ApplicantsToolbar on mobile", () => {
 			<ApplicantsToolbar
 				filters={{ eventIds: [] }}
 				events={events}
+				years={[2026, 2025, 2024]}
 				onChange={vi.fn()}
 				onClearAll={vi.fn()}
 				trailing={<button>Oszlopok</button>}
@@ -206,6 +225,7 @@ describe("ApplicantsToolbar mobile trailing slot", () => {
 			<ApplicantsToolbar
 				filters={{ eventIds: [] }}
 				events={events}
+				years={[2026, 2025, 2024]}
 				onChange={vi.fn()}
 				onClearAll={vi.fn()}
 				mobileTrailing={<button>Oszlopok</button>}

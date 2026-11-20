@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /** A design szerinti űrlapmezők közös megjelenése (Input, Textarea, TagInput). */
 export const fieldControlClass =
-	"rounded-lg border-border-strong bg-white px-3.5 text-sm shadow-none focus-visible:border-ink focus-visible:ring-sky/70 aria-invalid:border-error-fg aria-invalid:ring-error-fg/15";
+	"rounded-lg border-border-strong bg-white px-3.5 text-sm shadow-none aria-invalid:border-error-fg";
 
 export type FieldControlProps = {
 	id: string;

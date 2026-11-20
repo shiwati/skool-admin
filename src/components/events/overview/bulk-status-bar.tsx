@@ -44,7 +44,7 @@ export function BulkStatusBar({
 						disabled={pending}
 						onClick={() => onSetStatus(status)}
 						className={cn(
-							"inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono text-[13px] whitespace-nowrap hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none disabled:opacity-50",
+							"inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono text-[13px] whitespace-nowrap hover:bg-white/10 disabled:opacity-50",
 						)}
 					>
 						<span
@@ -62,7 +62,7 @@ export function BulkStatusBar({
 					aria-label="Kijelölés megszüntetése"
 					disabled={pending}
 					onClick={onClear}
-					className="flex size-8 items-center justify-center rounded-full bg-white/12 hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+					className="flex size-8 items-center justify-center rounded-full bg-white/12 hover:bg-white/20"
 				>
 					<X aria-hidden="true" className="size-4" />
 				</button>

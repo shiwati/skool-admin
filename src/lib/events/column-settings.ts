@@ -5,6 +5,7 @@ export const EVENT_COLUMN_IDS = [
 	"name",
 	"date",
 	"location",
+	"company",
 	"demand",
 	"people",
 	"status",

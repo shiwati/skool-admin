@@ -14,6 +14,7 @@ import {
 } from "@/lib/google/token";
 import { logger } from "@/lib/logger";
 import { getAdminSession } from "@/lib/session";
+import { readFeedbackMapping } from "@/lib/sheet-mapping/schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,18 +41,32 @@ export async function POST(
 				id: true,
 				participantFeedbackSheetUrl: true,
 				mentorFeedbackSheetUrl: true,
+				participantFeedbackSheetMapping: true,
+				mentorFeedbackSheetMapping: true,
 			},
 		});
 		if (!event) return jsonResponse({ error: "Event not found" }, 404);
 
 		const sources = (
 			[
-				["PARTICIPANT", event.participantFeedbackSheetUrl],
-				["MENTOR", event.mentorFeedbackSheetUrl],
+				[
+					"PARTICIPANT",
+					event.participantFeedbackSheetUrl,
+					event.participantFeedbackSheetMapping,
+				],
+				[
+					"MENTOR",
+					event.mentorFeedbackSheetUrl,
+					event.mentorFeedbackSheetMapping,
+				],
 			] as const
 		)
 			.filter(([, url]) => url)
-			.map(([role, url]) => ({ role, ref: parseSheetUrl(url!) }));
+			.map(([role, url, mapping]) => ({
+				role,
+				ref: parseSheetUrl(url!),
+				headerMapping: readFeedbackMapping(role, mapping),
+			}));
 
 		if (sources.length === 0 || sources.some(({ ref }) => !ref)) {
 			return jsonResponse(
@@ -66,13 +81,14 @@ export async function POST(
 		const accessToken = await getGoogleAccessToken(userId);
 		const results: Partial<Record<FeedbackRoleKey, FeedbackImportResult>> =
 			{};
-		for (const { role, ref } of sources) {
+		for (const { role, ref, headerMapping } of sources) {
 			const sheet = await fetchSheet(ref!, accessToken);
 			results[role] = await importFeedbackRows({
 				eventId: event.id,
 				role,
 				rows: sheet.rows,
 				timeZone: sheet.timeZone,
+				headerMapping,
 			});
 		}
 

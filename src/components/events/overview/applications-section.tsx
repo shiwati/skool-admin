@@ -1,7 +1,8 @@
 "use client";
 
+import { Copy } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
 	AlertDialog,
@@ -24,8 +25,13 @@ import {
 	type EventApplicationsPage,
 } from "@/lib/events/applications";
 import type { StatusCounts } from "@/lib/events/list";
+import {
+	EmailListDialog,
+	type EmailPageFetcher,
+} from "@/components/applicants/email-list-dialog";
 import { ApplicationsTable, type ApplicationsData } from "./applications-table";
 import { BulkStatusBar } from "./bulk-status-bar";
+import { SheetSyncButton } from "./sheet-sync-button";
 import { StatusFilterChips } from "./status-filter-chips";
 
 const DEFAULT_QUERY: ApplicationsQuery = {
@@ -61,10 +67,13 @@ export function ApplicationsSection({
 	eventId,
 	capacity,
 	counts,
+	applicationSheetUrl = null,
 }: {
 	eventId: string;
 	capacity: number;
 	counts: StatusCounts;
+	/** Ha meg van adva, a szakasz fejlécében szinkronizálás gomb is van. */
+	applicationSheetUrl?: string | null;
 }) {
 	const router = useRouter();
 	const [query, setQuery] = useState<ApplicationsQuery>(DEFAULT_QUERY);
@@ -118,6 +127,35 @@ export function ApplicationsSection({
 		selection.key === requestKey ? selection.ids : new Set<string>();
 	const selectedItems = items.filter((item) => selected.has(item.id));
 
+	const [emailListOpen, setEmailListOpen] = useState(false);
+	const [emailListRun, setEmailListRun] = useState(0);
+	const selectedEmails = selectedItems.map((item) => item.applicant.email);
+	const selectedKey = selectedEmails.join("\n");
+	// Kijelölés esetén csak a kijelöltek címe, különben az aktuális
+	// státuszszűrés összes találata (minden oldalról).
+	const emailPages = useMemo<EmailPageFetcher>(() => {
+		if (selectedKey) {
+			const emails = selectedKey.split("\n");
+			return async () => ({ emails, total: emails.length });
+		}
+		const status = query.status;
+		return async (page, pageSize, signal) => {
+			const data = await apiFetch<EventApplicationsPage>(
+				`/api/events/${eventId}/applicants?${applicationsQueryString({
+					...DEFAULT_QUERY,
+					status,
+					page,
+					pageSize,
+				})}`,
+				{ signal },
+			);
+			return {
+				emails: data.items.map((item) => item.applicant.email),
+				total: data.total,
+			};
+		};
+	}, [eventId, query.status, selectedKey]);
+
 	function change(patch: Partial<ApplicationsQuery>) {
 		setQuery((current) => ({ ...current, ...patch }));
 	}
@@ -169,9 +207,29 @@ export function ApplicationsSection({
 			aria-labelledby="applications-heading"
 			className="flex flex-col gap-3"
 		>
-			<h2 id="applications-heading" className="text-lg font-semibold">
-				Jelentkezések
-			</h2>
+			<div className="flex flex-wrap items-center justify-between gap-3">
+				<h2 id="applications-heading" className="text-lg font-semibold">
+					Jelentkezések
+				</h2>
+				<div className="flex flex-wrap gap-2">
+					{applicationSheetUrl && (
+						<SheetSyncButton
+							eventId={eventId}
+							onSynced={() => setAttempt((n) => n + 1)}
+						/>
+					)}
+					<Button
+						variant="surface"
+						onClick={() => {
+							setEmailListRun((n) => n + 1);
+							setEmailListOpen(true);
+						}}
+					>
+						<Copy aria-hidden="true" />
+						E-mail lista
+					</Button>
+				</div>
+			</div>
 			<StatusFilterChips
 				counts={counts}
 				value={query.status}
@@ -235,6 +293,17 @@ export function ApplicationsSection({
 				onSetStatus={(status) => requestStatus(selectedItems, status)}
 				onClear={() => select(new Set())}
 			/>
+			<EmailListDialog
+				key={`email-${emailListRun}`}
+				open={emailListOpen}
+				onOpenChange={setEmailListOpen}
+				fetchPage={emailPages}
+				description={
+					selectedEmails.length > 0
+						? "A kijelölt jelentkezők e-mail címe, vesszővel elválasztva."
+						: undefined
+				}
+			/>
 			<AlertDialog
 				open={confirm !== null}
 				onOpenChange={(open) => !open && setConfirm(null)}
@@ -242,11 +311,11 @@ export function ApplicationsSection({
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>
-							Túlléped a férőhelyet?
+							Túlléped a kapacitást?
 						</AlertDialogTitle>
 						<AlertDialogDescription>
 							A művelet után {formatCount(confirm?.accepted ?? 0)}{" "}
-							elfogadott jelentkező lenne, a program férőhelye{" "}
+							elfogadott jelentkező lenne, a program kapacitása{" "}
 							{formatCount(capacity)}.
 						</AlertDialogDescription>
 					</AlertDialogHeader>

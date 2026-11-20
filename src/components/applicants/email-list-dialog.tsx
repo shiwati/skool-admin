@@ -26,40 +26,75 @@ type LoadState =
 	| { status: "error" }
 	| { status: "done"; text: string; count: number };
 
-/**
- * Az aktuális szűrés összes találatának e-mail címe (minden oldalról),
- * lapozva gyűjtve a `GET /api/applicants`-ből.
- */
-export async function collectEmails(
-	state: ListState,
+/** Egy lap e-mail címe és a találatok teljes száma. */
+export type EmailPage = { emails: (string | null)[]; total: number };
+
+/** Egy lap lekérése (1-től számozva, `FETCH_PAGE_SIZE` mérettel). */
+export type EmailPageFetcher = (
+	page: number,
+	pageSize: number,
+	signal: AbortSignal,
+) => Promise<EmailPage>;
+
+/** Lapozva összegyűjti egy lista összes e-mail címét. */
+export async function collectEmailPages(
+	fetchPage: EmailPageFetcher,
 	signal: AbortSignal,
 	onProgress: (loaded: number, total: number) => void,
 ): Promise<{ text: string; count: number }> {
 	const emails: (string | null)[] = [];
 	let page = 1;
 	for (;;) {
-		const data = await apiFetch<ApplicantsPage>(
-			`/api/applicants?${toApiQuery(state, { page, pageSize: FETCH_PAGE_SIZE })}`,
-			{ signal },
-		);
-		emails.push(...data.items.map((item) => item.email));
+		const data = await fetchPage(page, FETCH_PAGE_SIZE, signal);
+		emails.push(...data.emails);
 		const loaded = Math.min(page * FETCH_PAGE_SIZE, data.total);
 		onProgress(loaded, data.total);
-		if (data.items.length === 0 || loaded >= data.total) break;
+		if (data.emails.length === 0 || loaded >= data.total) break;
 		page += 1;
 	}
 	return buildEmailList(emails);
+}
+
+/** A Jelentkezők lista szűrésének lapjai a `GET /api/applicants`-ből. */
+export function applicantsEmailPages(state: ListState): EmailPageFetcher {
+	return async (page, pageSize, signal) => {
+		const data = await apiFetch<ApplicantsPage>(
+			`/api/applicants?${toApiQuery(state, { page, pageSize })}`,
+			{ signal },
+		);
+		return {
+			emails: data.items.map((item) => item.email),
+			total: data.total,
+		};
+	};
+}
+
+/**
+ * Az aktuális szűrés összes találatának e-mail címe (minden oldalról),
+ * lapozva gyűjtve a `GET /api/applicants`-ből.
+ */
+export function collectEmails(
+	state: ListState,
+	signal: AbortSignal,
+	onProgress: (loaded: number, total: number) => void,
+): Promise<{ text: string; count: number }> {
+	return collectEmailPages(applicantsEmailPages(state), signal, onProgress);
 }
 
 export function EmailListDialog({
 	open,
 	onOpenChange,
 	state,
+	fetchPage,
+	description = "Az aktuális szűrésnek megfelelő összes jelentkező e-mail címe, vesszővel elválasztva.",
 }: {
 	open: boolean;
+	description?: string;
 	onOpenChange: (open: boolean) => void;
-	state: ListState;
-}) {
+} & (
+	| { state: ListState; fetchPage?: never }
+	| { state?: never; fetchPage: EmailPageFetcher }
+)) {
 	const [load, setLoad] = useState<LoadState>({
 		status: "loading",
 		loaded: 0,
@@ -74,7 +109,8 @@ export function EmailListDialog({
 	useEffect(() => {
 		if (!open) return;
 		const controller = new AbortController();
-		collectEmails(state, controller.signal, (loaded, total) => {
+		const source = fetchPage ?? applicantsEmailPages(state as ListState);
+		collectEmailPages(source, controller.signal, (loaded, total) => {
 			if (!controller.signal.aborted)
 				setLoad({ status: "loading", loaded, total });
 		})
@@ -88,7 +124,7 @@ export function EmailListDialog({
 			});
 		// Closing the dialog (Mégse / Esc) cancels the remaining requests.
 		return () => controller.abort();
-	}, [open, state, attempt]);
+	}, [open, state, fetchPage, attempt]);
 
 	async function copy(text: string, count: number) {
 		if (await copyText(text)) {
@@ -107,10 +143,7 @@ export function EmailListDialog({
 			<DialogContent className="sm:max-w-xl">
 				<DialogHeader>
 					<DialogTitle>E-mail lista</DialogTitle>
-					<DialogDescription>
-						Az aktuális szűrésnek megfelelő összes jelentkező e-mail
-						címe, vesszővel elválasztva.
-					</DialogDescription>
+					<DialogDescription>{description}</DialogDescription>
 				</DialogHeader>
 
 				{load.status === "loading" && (

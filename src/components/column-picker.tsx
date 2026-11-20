@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 export type PickerColumn = { pickerLabel: string; locked?: boolean };
 
 const iconButton =
-	"flex size-6 items-center justify-center rounded-md text-text-secondary hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none disabled:opacity-30";
+	"flex size-6 items-center justify-center rounded-md text-text-secondary hover:bg-surface-subtle disabled:opacity-30";
 
 /**
  * Az „Oszlopok a listában” panel bármelyik listához. `compact` (mobil):
@@ -55,7 +55,7 @@ export function ColumnPicker<Id extends string>({
 					<button
 						type="button"
 						aria-label="Oszlopok"
-						className="flex size-11 shrink-0 items-center justify-center rounded-full border border-border-strong bg-white focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+						className="flex size-11 shrink-0 items-center justify-center rounded-full border border-border-strong bg-white"
 					>
 						<Columns3 aria-hidden="true" className="size-[18px]" />
 					</button>

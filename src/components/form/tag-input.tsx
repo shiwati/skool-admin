@@ -51,7 +51,7 @@ export function TagInput({
 	return (
 		<div
 			className={cn(
-				"flex min-h-10 flex-wrap items-center gap-1.5 rounded-lg border border-border-strong bg-white px-2 py-1.5 transition-[color,box-shadow] focus-within:border-ink focus-within:ring-[3px] focus-within:ring-sky/70 has-[[aria-invalid=true]]:border-error-fg",
+				"flex min-h-10 flex-wrap items-center gap-1.5 rounded-lg border border-border-strong bg-white px-2 py-1.5 transition-[color,box-shadow] has-[[aria-invalid=true]]:border-error-fg",
 				className,
 			)}
 		>
@@ -83,7 +83,7 @@ export function TagInput({
 				onKeyDown={onKeyDown}
 				onBlur={commit}
 				placeholder={placeholder}
-				className="min-w-32 flex-1 bg-transparent px-1.5 text-sm outline-none placeholder:text-muted-foreground"
+				className="min-w-32 flex-1 bg-transparent px-1.5 text-sm placeholder:text-muted-foreground"
 				{...aria}
 			/>
 		</div>

@@ -91,6 +91,7 @@ describe("POST /api/events/[id]/sync", () => {
 			rows: [],
 			timeZone: "Europe/Budapest",
 			userId: "u1",
+			headerMapping: null,
 		});
 	});
 

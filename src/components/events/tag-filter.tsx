@@ -149,7 +149,7 @@ export function TagFilter({
 						setActive(0);
 					}}
 					onKeyDown={handleKeyDown}
-					className="h-8 w-full rounded-md border border-border-strong bg-white px-2 text-sm focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
+					className="h-8 w-full rounded-md border border-border-strong bg-white px-2 text-sm"
 				/>
 
 				{(options.status === "loading" ||

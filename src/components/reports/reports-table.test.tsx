@@ -1,5 +1,9 @@
-import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
+const push = vi.hoisted(() => vi.fn());
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+
 import type { ReportListItem } from "@/lib/reports/list";
 import { ReportsTable } from "./reports-table";
 
@@ -69,5 +73,21 @@ describe("ReportsTable", () => {
 			"Utolsó generálás",
 			"Művelet",
 		]);
+	});
+
+	it("opens the report page when a table row is clicked", () => {
+		push.mockClear();
+		render(<ReportsTable rows={[done]} />);
+		const table = within(screen.getByTestId("reports-table-frame"));
+		fireEvent.click(table.getByText("Docs kész (2)"));
+		expect(push).toHaveBeenCalledWith(expect.stringContaining("e1"), {
+			scroll: true,
+		});
+		// The program name link keeps its own target.
+		push.mockClear();
+		fireEvent.click(
+			table.getByRole("link", { name: "Python alapok – ősz" }),
+		);
+		expect(push).not.toHaveBeenCalled();
 	});
 });

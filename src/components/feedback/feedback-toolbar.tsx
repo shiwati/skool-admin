@@ -89,7 +89,7 @@ export function FeedbackToolbar({
 					go({ q: q.trim() || undefined });
 				}}
 			>
-				<label className="flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary focus-within:ring-2 focus-within:ring-ink md:h-8 md:w-72">
+				<label className="flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary md:h-8 md:w-72">
 					<Search aria-hidden="true" className="size-4" />
 					<input
 						type="search"
@@ -97,7 +97,7 @@ export function FeedbackToolbar({
 						onChange={(e) => setQ(e.target.value)}
 						aria-label="Keresés a szöveges válaszokban"
 						placeholder="Keresés a szöveges válaszokban…"
-						className="min-w-0 flex-1 bg-transparent text-sm text-text-primary outline-none md:text-xs"
+						className="min-w-0 flex-1 bg-transparent text-sm text-text-primary md:text-xs"
 					/>
 				</label>
 			</form>
@@ -156,7 +156,7 @@ export function FeedbackToolbar({
 						))}
 					</fieldset>
 					<p className="mt-2 px-2 text-xs text-text-tertiary">
-						A program kezdete szerint, mint az Áttekintésen.
+						A program kezdete szerint.
 					</p>
 				</FilterChip>
 			)}

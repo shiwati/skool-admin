@@ -5,6 +5,7 @@ import {
 	duplicateKey,
 	mapHeaders,
 	parseRow,
+	type ApplicationSheetMapping,
 	type HeaderMapping,
 } from "./mapping";
 
@@ -38,10 +39,12 @@ export async function importSheetRows(options: {
 	rows: SheetCell[][];
 	timeZone: string;
 	userId: string;
+	/** Az event mentett megfeleltetése; `null` = alapértelmezett. */
+	headerMapping?: ApplicationSheetMapping | null;
 }): Promise<ImportResult> {
-	const { eventId, rows, timeZone, userId } = options;
+	const { eventId, rows, timeZone, userId, headerMapping } = options;
 	const [headers = [], ...data] = rows;
-	const mapping = mapHeaders(headers);
+	const mapping = mapHeaders(headers, headerMapping);
 	if (mapping.missingRequired.length) {
 		throw new SheetHeaderError(mapping.missingRequired);
 	}

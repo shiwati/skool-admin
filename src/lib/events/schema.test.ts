@@ -25,6 +25,9 @@ const values: EventFormValues = {
 	applicationSheetUrl: "",
 	participantFeedbackSheetUrl: "",
 	mentorFeedbackSheetUrl: "",
+	applicationSheetMapping: null,
+	participantFeedbackSheetMapping: null,
+	mentorFeedbackSheetMapping: null,
 	instructor: "",
 	mentors: [],
 };
@@ -127,6 +130,9 @@ describe("toEventFormValues", () => {
 			applicationSheetUrl: null,
 			participantFeedbackSheetUrl: null,
 			mentorFeedbackSheetUrl: null,
+			applicationSheetMapping: null,
+			participantFeedbackSheetMapping: null,
+			mentorFeedbackSheetMapping: null,
 			instructor: null,
 			mentors: [],
 		});
