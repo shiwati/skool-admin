@@ -62,12 +62,13 @@ export function EventsView({
 		null,
 	);
 
-	function navigate(next: EventListState) {
+	function hrefFor(next: EventListState) {
 		const query = toEventSearchParams(next).toString();
+		return query ? `${pathname}?${query}` : pathname;
+	}
+	function navigate(next: EventListState) {
 		startTransition(() => {
-			router.replace(query ? `${pathname}?${query}` : pathname, {
-				scroll: false,
-			});
+			router.replace(hrefFor(next), { scroll: false });
 		});
 	}
 	const change = (patch: Partial<EventListState>) =>
@@ -130,6 +131,7 @@ export function EventsView({
 			<EventsTabs
 				tab={state.tab}
 				counts={counts}
+				hrefFor={(tab) => hrefFor(updateEventListState(state, { tab }))}
 				onChange={(tab) => change({ tab })}
 			/>
 			<EventsToolbar

@@ -34,7 +34,6 @@ describe("AdminRail", () => {
 			"Programok",
 			"Visszajelzések",
 			"Riportok",
-			"Adatok",
 		]);
 		expect(within(nav).getByText("Visszajelz.")).toBeInTheDocument();
 		expect(within(nav).getByText("admin")).toBeInTheDocument();
@@ -46,53 +45,30 @@ describe("AdminRail", () => {
 			screen.getByRole("link", { name: "Jelentkezők" }),
 		).toHaveAttribute("aria-current", "page");
 	});
-
-	it("renders unavailable items as disabled non-links", () => {
-		render(<AdminRail />);
-		const data = screen.getByRole("link", { name: "Adatok" });
-		expect(data).toHaveAttribute("aria-disabled", "true");
-		expect(data).not.toHaveAttribute("href");
-	});
 });
 
 describe("MobileTabBar", () => {
 	beforeEach(() => usePathname.mockReturnValue("/events"));
 
-	it("shows four tabs and Több, with the active one marked", () => {
+	it("shows the five tabs, with the active one marked", () => {
 		render(<MobileTabBar />);
 		const nav = screen.getByRole("navigation", { name: "Főmenü" });
 		const tabs = within(nav).getAllByRole("link");
 		expect(
 			tabs.map((l) => l.getAttribute("aria-label") ?? l.textContent),
-		).toEqual(["Áttekintés", "Jelentkezők", "Programok", "Visszajelzések"]);
+		).toEqual([
+			"Áttekintés",
+			"Jelentkezők",
+			"Programok",
+			"Visszajelzések",
+			"Riportok",
+		]);
 		expect(
 			within(nav).getByRole("link", { name: "Programok" }),
 		).toHaveAttribute("aria-current", "page");
 		expect(
 			within(nav).getByRole("link", { name: "Visszajelzések" }),
 		).toHaveAttribute("href", "/feedback");
-		expect(
-			within(nav).getByRole("button", { name: "Több" }),
-		).toBeInTheDocument();
-	});
-
-	it("opens the more sheet with the remaining items", async () => {
-		render(<MobileTabBar />);
-		await userEvent.click(screen.getByRole("button", { name: "Több" }));
-		const sheet = screen.getByRole("dialog", { name: "Több" });
-		const items = within(sheet).getAllByRole("link");
-		expect(
-			items.map((i) => i.getAttribute("aria-label") ?? i.textContent),
-		).toEqual([
-			"Riportok",
-			"Adatforrások",
-			"Adatmigráció",
-			"Változásnapló",
-		]);
-		expect(items[0]).toHaveAttribute("href", "/reports");
-		for (const item of items.slice(1)) {
-			expect(item).toHaveAttribute("aria-disabled", "true");
-		}
 	});
 });
 

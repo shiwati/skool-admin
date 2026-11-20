@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { ApplicantCardList } from "./applicant-card-list";
 import { applicantHref, COLUMNS, type ColumnId } from "./columns";
 import { ListEmptyState, ListErrorState } from "./list-state";
-import { Pager } from "./pager";
+import { Pager } from "@/components/shared/pager";
 
 export type TableData =
 	| { status: "loading" }

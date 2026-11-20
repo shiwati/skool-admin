@@ -4,12 +4,11 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { CompactNavItem } from "./compact-nav-item";
-import { isActive, railItems } from "./nav-items";
+import { isActive, navItems } from "./nav-items";
 
 /** Tablet (768–1279 px) ikonos oldalsáv, a „Tablet oldalsáv” terv szerint. */
 export function AdminRail({ className }: { className?: string }) {
 	const pathname = usePathname();
-	const active = (href?: string) => !!href && isActive(href, pathname);
 
 	return (
 		<nav
@@ -30,20 +29,14 @@ export function AdminRail({ className }: { className?: string }) {
 				admin
 			</span>
 			<div className="h-1" />
-			{railItems.main.map((item) => (
+			{navItems.map((item) => (
 				<CompactNavItem
 					key={item.label}
 					item={item}
-					active={active(item.href)}
+					active={isActive(item.href, pathname)}
 					className="w-full"
 				/>
 			))}
-			<span aria-hidden="true" className="h-px w-10 bg-text-primary/20" />
-			<CompactNavItem
-				item={railItems.data}
-				active={active(railItems.data.href)}
-				className="w-full"
-			/>
 		</nav>
 	);
 }

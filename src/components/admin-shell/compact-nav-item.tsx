@@ -5,7 +5,7 @@ import { shortLabel, type NavItem } from "./nav-items";
 
 /**
  * Ikon + rövid felirat (tablet ikonsáv, mobil alsó navigáció). Az
- * akadálymentes név mindig a teljes felirat; `href` nélkül letiltott.
+ * akadálymentes név mindig a teljes felirat.
  */
 export function CompactNavItem({
 	item,
@@ -45,19 +45,6 @@ export function CompactNavItem({
 	);
 	const name = short !== item.label ? item.label : undefined;
 
-	if (!item.href) {
-		return (
-			<span
-				role="link"
-				aria-disabled="true"
-				aria-label={item.label}
-				title="Hamarosan"
-				className={cn(base, "cursor-not-allowed opacity-45")}
-			>
-				{content}
-			</span>
-		);
-	}
 	return (
 		<Link
 			href={item.href}

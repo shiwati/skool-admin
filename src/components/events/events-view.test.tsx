@@ -53,8 +53,8 @@ describe("EventsView", () => {
 		).toBeInTheDocument();
 		expect(screen.queryByText(/Találatok száma/)).not.toBeInTheDocument();
 		expect(
-			screen.getByRole("tab", { name: /^Összes\s*15$/ }),
-		).toHaveAttribute("aria-selected", "true");
+			screen.getByRole("link", { name: /^Összes\s*15$/ }),
+		).toHaveAttribute("aria-current", "page");
 		// Header button (md+) and the mobile floating button.
 		const newLinks = screen.getAllByRole("link", { name: "Új program" });
 		expect(newLinks).toHaveLength(2);
@@ -89,7 +89,7 @@ describe("EventsView", () => {
 	it("switches tab through the URL and resets the page", async () => {
 		nav.search = "page=2";
 		render(<EventsView items={[]} total={0} counts={counts} now={now} />);
-		await userEvent.click(screen.getByRole("tab", { name: /^Múltbeli/ }));
+		await userEvent.click(screen.getByRole("link", { name: /^Múltbeli/ }));
 		expect(nav.replace).toHaveBeenCalledWith("/events?tab=closed", {
 			scroll: false,
 		});
@@ -284,7 +284,11 @@ describe("EventsView on mobile (05.1 M)", () => {
 		const fab = screen.getByTestId("new-event-fab");
 		expect(fab).toHaveAttribute("href", "/events/new");
 		expect(fab).toHaveClass("fixed", "md:hidden");
-		expect(screen.getByRole("tablist")).toHaveClass("overflow-x-auto");
+		expect(
+			screen.getByRole("navigation", {
+				name: "Programok szakasz szerint",
+			}),
+		).toHaveClass("overflow-x-auto");
 		expect(screen.getByTestId("event-filter-chips")).toHaveClass(
 			"overflow-x-auto",
 			"md:contents",
