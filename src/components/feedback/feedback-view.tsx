@@ -22,6 +22,7 @@ import { RECOMMEND_LABELS } from "@/lib/feedback/questions";
 import { pageNumbers } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 import { FeedbackDrawer } from "./feedback-drawer";
+import { FeedbackRow } from "./feedback-row";
 import { FeedbackToolbar } from "./feedback-toolbar";
 import { RecommendBadge } from "./recommend-badge";
 
@@ -117,7 +118,7 @@ function Row({
 }) {
 	const note = feedbackNote(item.role, item.answers);
 	return (
-		<tr className="border-b border-border-default last:border-0 hover:bg-surface-subtle/60">
+		<FeedbackRow href={href}>
 			<td className="px-3 py-3">
 				<Link
 					href={href}
@@ -168,7 +169,7 @@ function Row({
 			<td className="truncate px-3 py-3 text-text-secondary" title={note}>
 				{note || <span className="text-text-tertiary">{EMPTY}</span>}
 			</td>
-		</tr>
+		</FeedbackRow>
 	);
 }
 
