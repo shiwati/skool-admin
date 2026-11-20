@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD - created by archiving change make-admin-responsive. Update Purpose after archive.
+Makes the admin interface usable on desktop, tablet and phone: shared breakpoint ranges, no horizontal page scroll, touch-friendly controls, and responsive page frames, floating bars, login page, dashboard and forms.
 
 ## Requirements
 
