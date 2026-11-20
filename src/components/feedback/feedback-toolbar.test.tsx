@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({
 import { FeedbackToolbar } from "./feedback-toolbar";
 
 const periods = [
-	{ key: "2026", label: "2026 (idei év)" },
+	{ key: "2026", label: "2026" },
 	{ key: "2025", label: "2025" },
 ];
 
@@ -37,7 +37,7 @@ describe("FeedbackToolbar period filter", () => {
 		const { unmount } = render(
 			<FeedbackToolbar state={{ period: "2026" }} periods={periods} />,
 		);
-		expect(screen.getByText(": 2026 (idei év)")).toBeInTheDocument();
+		expect(screen.getByText(": 2026")).toBeInTheDocument();
 		unmount();
 		render(<FeedbackToolbar state={{}} />);
 		expect(

@@ -4,7 +4,7 @@ import { PageShell } from "@/components/admin-shell/page-shell";
 import { FeedbackView } from "@/components/feedback/feedback-view";
 import { formatCount, formatDateTime } from "@/lib/applicants/format";
 import { firstEventYear } from "@/lib/dashboard/first-year";
-import { periodOptions } from "@/lib/dashboard/period";
+import { periodYears } from "@/lib/dashboard/period";
 import {
 	feedbackEventOptions,
 	parseFeedbackQuery,
@@ -35,7 +35,10 @@ export default async function FeedbackPage({
 				state={query}
 				basePath="/feedback"
 				events={events}
-				periods={periodOptions(new Date(), firstYear)}
+				periods={periodYears(new Date(), firstYear).map((y) => ({
+					key: String(y),
+					label: String(y),
+				}))}
 				openItem={openItem}
 				header={
 					<PageHeader

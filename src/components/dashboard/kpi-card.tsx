@@ -6,6 +6,7 @@ import { StatBadge, type Tone } from "./stat-badge";
 export function KpiCard({
 	label,
 	value,
+	icon,
 	badge,
 	tone = "neutral",
 	note,
@@ -13,6 +14,8 @@ export function KpiCard({
 }: {
 	label: string;
 	value: string;
+	/** Az érték előtt álló jel (pl. csillag az értékelésnél). */
+	icon?: ReactNode;
 	badge?: ReactNode;
 	tone?: Tone;
 	note: ReactNode;
@@ -29,14 +32,17 @@ export function KpiCard({
 			<h2 className="font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase">
 				{label}
 			</h2>
-			<p className="text-2xl leading-[30px] font-bold tracking-tight md:text-[32px] md:leading-10">
+			<p className="flex items-center gap-2 text-2xl leading-[30px] font-bold tracking-tight md:text-[32px] md:leading-10">
+				{icon}
 				{value}
 			</p>
 			<div className="flex flex-wrap items-center gap-2">
 				{badge !== undefined && (
 					<StatBadge tone={tone}>{badge}</StatBadge>
 				)}
-				<span className="text-xs text-text-tertiary">{note}</span>
+				<span className="min-w-0 text-xs text-text-tertiary">
+					{note}
+				</span>
 			</div>
 		</Card>
 	);
@@ -64,12 +70,24 @@ export function SectionHeader({
 	);
 }
 
-/** KPI-rács: mobilon 2 oszlop (a `wide` kártya teljes széles), tablettől 3. */
-export function KpiGrid({ children }: { children: ReactNode }) {
+/**
+ * KPI-rács: mobilon 2 oszlop (a `wide` kártya teljes széles), tablettől 3;
+ * `columns={5}` esetén nagy képernyőn 5 oszlop.
+ */
+export function KpiGrid({
+	children,
+	columns = 3,
+}: {
+	children: ReactNode;
+	columns?: 3 | 5;
+}) {
 	return (
 		<div
 			data-testid="kpi-grid"
-			className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-4"
+			className={cn(
+				"grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-4",
+				columns === 5 && "xl:grid-cols-5",
+			)}
 		>
 			{children}
 		</div>

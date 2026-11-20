@@ -25,9 +25,9 @@ const STATUS_ORDER: ApplicationStatus[] = [
 type Filter = "upcoming" | "past" | "all";
 
 const FILTERS = [
-	{ value: "upcoming", label: "Jövőbeli" },
-	{ value: "past", label: "Múltbeli" },
 	{ value: "all", label: "Mind" },
+	{ value: "past", label: "Múltbeli" },
+	{ value: "upcoming", label: "Jövőbeli" },
 ] as const satisfies readonly { value: Filter; label: string }[];
 
 const EMPTY_TEXT: Record<Filter, string> = {
@@ -37,18 +37,14 @@ const EMPTY_TEXT: Record<Filter, string> = {
 	all: "Nincs megjeleníthető program.",
 };
 
-/** Programonként váltakozó jelölőszínek (design: pasztell paletta). */
-const DOT_COLORS = [
-	"bg-lavender",
-	"bg-sky",
-	"bg-pink",
-	"bg-peach",
-	"bg-lemon",
-	"bg-sage",
-];
-
 export function CapacityChart({ rows }: { rows: CapacityRow[] }) {
-	const [filter, setFilter] = useState<Filter>("upcoming");
+	const [selected, setFilter] = useState<Filter>("all");
+	// Ha minden program ugyanabban az állapotban van (pl. régi évben mind
+	// lezárult), a szűrők a Mind listát ismételnék: ilyenkor nincs fülsor.
+	const mixed =
+		rows.some((r) => r.state === "upcoming") &&
+		rows.some((r) => r.state === "past");
+	const filter = mixed ? selected : "all";
 	const visible =
 		filter === "all" ? rows : rows.filter((r) => r.state === filter);
 	const pct = (value: number, row: CapacityRow) =>
@@ -60,12 +56,14 @@ export function CapacityChart({ rows }: { rows: CapacityRow[] }) {
 				title="Kapacitás vs. jelentkezők programonként"
 				subtitle="A kiválasztott időszakban induló programok · a fekete jel a maximális létszám"
 				actions={
-					<Segmented
-						label="Programok szűrése"
-						options={FILTERS}
-						value={filter}
-						onChange={setFilter}
-					/>
+					mixed && (
+						<Segmented
+							label="Programok szűrése"
+							options={FILTERS}
+							value={filter}
+							onChange={setFilter}
+						/>
+					)
 				}
 			/>
 
@@ -75,19 +73,16 @@ export function CapacityChart({ rows }: { rows: CapacityRow[] }) {
 				</p>
 			) : (
 				<ul className="flex min-h-52 flex-1 flex-col gap-3">
-					{visible.map((row, index) => (
+					{visible.map((row) => (
 						<li
 							key={row.id}
 							className="flex flex-wrap items-center gap-x-4 gap-y-1.5"
 						>
-							<span className="flex w-full min-w-0 items-center gap-2 text-sm md:w-56">
-								<span
-									aria-hidden="true"
-									className={`size-2.5 shrink-0 rounded-full ${DOT_COLORS[index % DOT_COLORS.length]}`}
-								/>
-								<span className="truncate" title={row.name}>
-									{row.name}
-								</span>
+							<span
+								className="w-full min-w-0 truncate text-sm md:w-56"
+								title={row.name}
+							>
+								{row.name}
 							</span>
 							<span
 								aria-hidden="true"

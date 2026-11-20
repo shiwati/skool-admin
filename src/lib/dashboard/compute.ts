@@ -280,6 +280,17 @@ export function hometownDistribution(
 	return rows;
 }
 
+/**
+ * Darabszám szerint csökkenő sorrend (az „Egyéb” sor is a számával áll
+ * sorba); a „Nincs adat” sor mindig a végén marad. Egyező darabszámnál az
+ * eredeti sorrend marad.
+ */
+export function orderByCount(rows: CountRow[]): CountRow[] {
+	const known = rows.filter((r) => r.label !== MISSING_LABEL);
+	const missing = rows.filter((r) => r.label === MISSING_LABEL);
+	return [...known.sort((a, b) => b.count - a.count), ...missing];
+}
+
 const ratioFormat = new Intl.NumberFormat("hu-HU", {
 	minimumFractionDigits: 1,
 	maximumFractionDigits: 1,
@@ -316,6 +327,12 @@ export type FeedbackStat = {
 	recommend: string | null;
 };
 
+/** Az átlagolt mezők: a program azonosítása nélkül is összesíthető. */
+export type FeedbackScore = Pick<
+	FeedbackStat,
+	"role" | "overallScore" | "recommend"
+>;
+
 /** Átlag (1–5) és az átlagba számító kitöltések száma; üresen `average: null`. */
 export type ScoreSummary = { average: number | null; count: number };
 
@@ -342,7 +359,7 @@ export type ProgramSatisfaction = {
 	mentor: ScoreSummary;
 };
 
-function scoreSummary(rows: FeedbackStat[]): ScoreSummary {
+function scoreSummary(rows: FeedbackScore[]): ScoreSummary {
 	let sum = 0;
 	let count = 0;
 	for (const row of rows) {
@@ -353,7 +370,7 @@ function scoreSummary(rows: FeedbackStat[]): ScoreSummary {
 	return { average: count ? sum / count : null, count };
 }
 
-function recommendSummary(rows: FeedbackStat[]): RecommendSummary {
+function recommendSummary(rows: FeedbackScore[]): RecommendSummary {
 	const out = { yes: 0, maybe: 0, no: 0, total: 0 };
 	for (const row of rows) {
 		if (
@@ -369,7 +386,7 @@ function recommendSummary(rows: FeedbackStat[]): RecommendSummary {
 }
 
 /** Szerepkörönkénti elégedettség (résztvevő / mentor külön). */
-export function satisfactionByRole(rows: FeedbackStat[]): Satisfaction {
+export function satisfactionByRole(rows: FeedbackScore[]): Satisfaction {
 	const of = (role: FeedbackRoleKey): RoleSatisfaction => {
 		const own = rows.filter((r) => r.role === role);
 		return {

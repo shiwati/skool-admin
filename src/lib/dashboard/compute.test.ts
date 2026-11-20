@@ -18,6 +18,7 @@ import {
 	oversubscription,
 	percentChange,
 	type EventStat,
+	orderByCount,
 } from "./compute";
 
 const event = (overrides: Partial<EventStat>): EventStat => ({
@@ -262,5 +263,27 @@ describe("satisfaction", () => {
 		expect(formatScore(4.63)).toBe("4,6");
 		expect(share(1, 3)).toBe(33);
 		expect(share(1, 0)).toBe(0);
+	});
+});
+
+describe("orderByCount", () => {
+	it("sorts by count, ranking 'Egyéb' too, with 'Nincs adat' last", () => {
+		expect(
+			orderByCount([
+				{ label: "iskola", count: 5 },
+				{ label: "barát", count: 2 },
+				{ label: "Egyéb", count: 9 },
+				{ label: "Nincs adat", count: 30 },
+			]).map((r) => r.label),
+		).toEqual(["Egyéb", "iskola", "barát", "Nincs adat"]);
+	});
+
+	it("keeps the order of equal counts and does not mutate the input", () => {
+		const rows = [
+			{ label: "a", count: 1 },
+			{ label: "b", count: 1 },
+		];
+		expect(orderByCount(rows).map((r) => r.label)).toEqual(["a", "b"]);
+		expect(rows.map((r) => r.label)).toEqual(["a", "b"]);
 	});
 });
