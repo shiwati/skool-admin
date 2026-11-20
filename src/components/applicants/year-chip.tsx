@@ -3,23 +3,40 @@
 import { cn } from "@/lib/utils";
 import { FilterChip } from "./filter-chip";
 
-/** Választható évek: a következő évtől visszafelé öt évig. */
-export function yearOptions(now = new Date()): number[] {
+/**
+ * Választható évek csökkenő sorrendben: a legkésőbbi program évétől (akár
+ * jövőbeli) a legkorábbiig. Az idei év mindig szerepel, akkor is, ha még
+ * nincs program. Az évhatárokat a szerver adja (`loadProgramYears`).
+ */
+export function programYears(
+	bounds: { first: number | null; last: number | null },
+	now = new Date(),
+): number[] {
 	const current = now.getFullYear();
-	return Array.from({ length: 7 }, (_, i) => current + 1 - i);
+	const newest = Math.max(bounds.last ?? current, current);
+	const oldest = Math.min(bounds.first ?? current, current);
+	return Array.from({ length: newest - oldest + 1 }, (_, i) => newest - i);
 }
 
 /** „Program éve” szűrő: a program kezdési évére szűr. */
 export function YearChip({
 	year,
+	years,
 	onChange,
 }: {
 	year?: number;
+	/** A választható évek (lásd `programYears`). */
+	years: number[];
 	onChange: (year: number | undefined) => void;
 }) {
+	// Az URL-ből jövő, listán kívüli év se tűnjön el a választóból.
+	const shown =
+		year === undefined || years.includes(year)
+			? years
+			: [...years, year].sort((a, b) => b - a);
 	const options: [string, number | undefined][] = [
 		["Bármikor", undefined],
-		...yearOptions().map((y): [string, number] => [String(y), y]),
+		...shown.map((y): [string, number] => [String(y), y]),
 	];
 	return (
 		<FilterChip

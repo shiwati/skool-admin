@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { yearOptions } from "@/components/applicants/year-chip";
+import { programYears } from "@/components/applicants/year-chip";
 import { EventsToolbar } from "./events-toolbar";
 
 function setup(filters = {}) {
@@ -10,6 +10,7 @@ function setup(filters = {}) {
 	render(
 		<EventsToolbar
 			filters={{ tags: [], ...filters }}
+			years={[new Date().getFullYear(), 2025, 2024]}
 			onChange={onChange}
 			onClearAll={onClearAll}
 		/>,
@@ -17,10 +18,19 @@ function setup(filters = {}) {
 	return { onChange, onClearAll };
 }
 
-describe("yearOptions", () => {
-	it("starts with next year and goes back", () => {
-		expect(yearOptions(new Date("2026-11-19T12:00:00Z"))).toEqual([
-			2027, 2026, 2025, 2024, 2023, 2022, 2021,
+describe("programYears", () => {
+	const now = new Date("2026-11-19T12:00:00Z");
+
+	it("spans from the latest to the earliest program year", () => {
+		expect(programYears({ first: 2024, last: 2027 }, now)).toEqual([
+			2027, 2026, 2025, 2024,
+		]);
+	});
+
+	it("always includes the current year", () => {
+		expect(programYears({ first: null, last: null }, now)).toEqual([2026]);
+		expect(programYears({ first: 2023, last: 2024 }, now)).toEqual([
+			2026, 2025, 2024, 2023,
 		]);
 	});
 });
@@ -65,5 +75,17 @@ describe("EventsToolbar", () => {
 		expect(
 			screen.queryByRole("button", { name: "Szűrők törlése" }),
 		).not.toBeInTheDocument();
+	});
+});
+
+describe("YearChip", () => {
+	it("keeps an out-of-range selected year visible", async () => {
+		const { onChange } = setup({ year: 2019 });
+		await userEvent.click(
+			screen.getByRole("button", { name: /^Program éve(?! szűrő)/ }),
+		);
+		expect(screen.getByRole("radio", { name: "2019" })).toBeChecked();
+		await userEvent.click(screen.getByRole("radio", { name: "2024" }));
+		expect(onChange).toHaveBeenCalledWith({ year: 2024 });
 	});
 });

@@ -74,7 +74,14 @@ function useDuplicateCount() {
 /** A szerveren már lekért első oldal, és a query, amire válaszol. */
 export type InitialApplicants = { apiQuery: string; data: ApplicantsPage };
 
-export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
+export function ApplicantsView({
+	initial,
+	years = [],
+}: {
+	initial?: InitialApplicants;
+	/** A „Program éve” választó évei (a szerver a DB-ből adja). */
+	years?: number[];
+}) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
@@ -161,6 +168,7 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 			<ApplicantsToolbar
 				filters={state}
 				events={events}
+				years={years}
 				onChange={change}
 				onClearAll={() => navigate(clearFilters(state))}
 				trailing={
