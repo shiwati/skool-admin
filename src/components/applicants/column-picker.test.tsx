@@ -4,6 +4,7 @@ import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useColumnSettings } from "@/hooks/use-column-settings";
 import {
+	APPLICANT_COLUMN_CONFIG,
 	COLUMN_SETTINGS_KEY,
 	visibleColumns,
 } from "@/lib/applicants/column-settings";
@@ -15,7 +16,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 /** Picker + table wired through the real browser-storage hook. */
 function Harness() {
-	const [settings, setSettings] = useColumnSettings();
+	const [settings, setSettings] = useColumnSettings(APPLICANT_COLUMN_CONFIG);
 	const [, rerender] = useState(0);
 	return (
 		<>
@@ -125,5 +126,23 @@ describe("ColumnPicker", () => {
 		unmount();
 		render(<Harness />);
 		expect(tableHeaders()).not.toContain("Hírlevél");
+	});
+});
+
+describe("ColumnPicker compact (mobile)", () => {
+	it("opens the same panel from a 44 px icon button", async () => {
+		render(
+			<ColumnPicker
+				compact
+				settings={{ order: ["name", "age"], hidden: [] }}
+				onChange={() => {}}
+			/>,
+		);
+		const trigger = screen.getByRole("button", { name: "Oszlopok" });
+		expect(trigger).toHaveClass("size-11");
+		await userEvent.click(trigger);
+		expect(
+			screen.getByRole("dialog", { name: "Oszlopok a listában" }),
+		).toBeInTheDocument();
 	});
 });

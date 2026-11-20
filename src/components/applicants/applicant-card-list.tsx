@@ -3,13 +3,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
 	ageFromBirthYear,
 	applicantInitials,
-	attendedCount,
 	fullName,
 	isOver16,
 } from "@/lib/applicants/format";
 import type { ApplicantListItem } from "@/lib/applicants/types";
 import { cn } from "@/lib/utils";
-import { applicantHref } from "./columns";
+import { applicantHref, cardValue, COLUMNS } from "./columns";
+import { LOCKED_COLUMN, type ColumnId } from "@/lib/applicants/column-settings";
 import type { TableData } from "./applicants-table";
 import { ListEmptyState, ListErrorState } from "./list-state";
 
@@ -18,18 +18,20 @@ const SKELETON_CARDS = 5;
 const badge =
 	"inline-flex items-center gap-1.5 rounded-full px-2.5 text-xs leading-6 font-medium whitespace-nowrap";
 
-/** „{életkor} év · {település}”, a hiányzó részek nélkül. */
-export function ageAndPlace(item: ApplicantListItem, now: Date): string | null {
-	const age = ageFromBirthYear(item.birthYear, now);
-	const parts = [age === null ? null : `${age} év`, item.hometown].filter(
-		Boolean,
-	);
-	return parts.length > 0 ? parts.join(" · ") : null;
-}
-
-function ApplicantCard({ item, now }: { item: ApplicantListItem; now: Date }) {
-	const attended = attendedCount(item.applications);
-	const meta = ageAndPlace(item, now);
+/**
+ * A fejléc a rögzített „Név / e-mail” oszlop; alatta minden más látható
+ * oszlop egy címkézett sor, az oszlopválasztó sorrendjében.
+ */
+function ApplicantCard({
+	item,
+	now,
+	columns,
+}: {
+	item: ApplicantListItem;
+	now: Date;
+	columns: ColumnId[];
+}) {
+	const lines = columns.filter((id) => id !== LOCKED_COLUMN);
 	return (
 		<Link
 			href={applicantHref(item.id)}
@@ -62,30 +64,23 @@ function ApplicantCard({ item, now }: { item: ApplicantListItem; now: Date }) {
 						{item.email}
 					</span>
 				)}
-				{meta && (
-					<span className="text-sm text-text-secondary">{meta}</span>
+				{lines.length > 0 && (
+					<dl className="mt-1.5 flex flex-col gap-1.5 text-sm">
+						{lines.map((id) => (
+							<div
+								key={id}
+								className="grid grid-cols-[112px_minmax(0,1fr)] items-baseline gap-x-3"
+							>
+								<dt className="text-text-tertiary">
+									{COLUMNS[id].label}
+								</dt>
+								<dd className="min-w-0 break-words">
+									{cardValue(id, item, now)}
+								</dd>
+							</div>
+						))}
+					</dl>
 				)}
-				<span className="flex flex-wrap gap-1.5">
-					{attended > 0 ? (
-						<span className={cn(badge, "bg-sage")}>
-							Korábban részt vett · {attended} program
-						</span>
-					) : (
-						<span className={cn(badge, "bg-surface-subtle")}>
-							Első jelentkezés
-						</span>
-					)}
-					{item.newsletter && (
-						<span
-							className={cn(
-								badge,
-								"bg-success-bg text-success-fg",
-							)}
-						>
-							Hírlevél
-						</span>
-					)}
-				</span>
 			</span>
 		</Link>
 	);
@@ -98,6 +93,7 @@ function ApplicantCard({ item, now }: { item: ApplicantListItem; now: Date }) {
 export function ApplicantCardList({
 	data,
 	now,
+	columns,
 	filtersActive,
 	onClearFilters,
 	onReload,
@@ -105,6 +101,8 @@ export function ApplicantCardList({
 }: {
 	data: TableData;
 	now: Date;
+	/** A látható oszlopok sorrendben (`visibleColumns`); a kártyasorokat adják. */
+	columns: ColumnId[];
 	filtersActive: boolean;
 	onClearFilters: () => void;
 	onReload: () => void;
@@ -149,7 +147,11 @@ export function ApplicantCardList({
 					))
 				: data.items.map((item) => (
 						<li key={item.id}>
-							<ApplicantCard item={item} now={now} />
+							<ApplicantCard
+								item={item}
+								now={now}
+								columns={columns}
+							/>
 						</li>
 					))}
 		</ul>

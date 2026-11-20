@@ -11,6 +11,7 @@ import {
 	Users,
 } from "lucide-react";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { Pager } from "@/components/applicants/pager";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,15 +22,12 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { PageSize } from "@/lib/applicants/list-params";
-import { EMPTY, formatCount, programColorClass } from "@/lib/applicants/format";
-import { AVATAR_CLASSES, tagClass } from "@/lib/events/colors";
+import { programColorClass } from "@/lib/applicants/format";
+import { defaultColumnSettings, visibleColumns } from "@/lib/column-settings";
 import {
-	demandRatio,
-	formatDateRange,
-	formatRatio,
-	ratioBadgeClass,
-	ratioBarClass,
-} from "@/lib/events/format";
+	EVENT_COLUMN_CONFIG,
+	type EventColumnId,
+} from "@/lib/events/column-settings";
 import { applicantsHref, eventEditHref, eventHref } from "@/lib/events/links";
 import {
 	defaultOrder,
@@ -37,15 +35,15 @@ import {
 	type EventTab,
 	type SortOrder,
 } from "@/lib/events/list-params";
-import {
-	EVENT_STATUS_BADGE_CLASSES,
-	EVENT_STATUS_LABELS,
-	eventStatus,
-	PHASE_LABELS,
-} from "@/lib/events/phase";
-import { initials } from "@/lib/initials";
+import { PHASE_LABELS } from "@/lib/events/phase";
 import { cn } from "@/lib/utils";
 import type { EventDeleteTarget } from "./event-delete-dialog";
+import {
+	EVENT_COLUMNS,
+	eventCardValue,
+	eventTableMinWidth,
+	EventTags,
+} from "./event-columns";
 import { EVENTS_TABLE_ID } from "./events-tabs";
 
 /** Egy lista-elem a `GET /api/events` válaszának alakjában (ISO dátumok). */
@@ -67,6 +65,10 @@ export type EventListItem = {
 const headClass =
 	"px-3 py-2.5 font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase";
 
+const DEFAULT_COLUMNS = visibleColumns(
+	defaultColumnSettings(EVENT_COLUMN_CONFIG),
+);
+
 type Props = {
 	items: EventListItem[];
 	total: number;
@@ -76,6 +78,8 @@ type Props = {
 	page: number;
 	pageSize: PageSize;
 	now: Date;
+	/** Látható oszlopok sorrendben (oszlopbeállítás); a kártyák is ezt követik. */
+	columns?: EventColumnId[];
 	/** Új URL-állapot betöltése folyamatban. */
 	pending?: boolean;
 	filtersActive: boolean;
@@ -95,6 +99,7 @@ export function EventsTable({
 	page,
 	pageSize,
 	now,
+	columns = DEFAULT_COLUMNS,
 	pending = false,
 	filtersActive,
 	onSort,
@@ -133,6 +138,7 @@ export function EventsTable({
 							<EventCard
 								item={item}
 								now={now}
+								columns={columns}
 								onDelete={onDelete}
 							/>
 						</li>
@@ -146,49 +152,41 @@ export function EventsTable({
 				<table
 					id={EVENTS_TABLE_ID}
 					className={cn(
-						"w-full min-w-[1000px] table-fixed border-collapse text-sm transition-opacity",
+						"w-full table-fixed border-collapse text-sm transition-opacity",
 						pending && "opacity-60",
 					)}
+					// Narrower viewports scroll inside the frame instead of
+					// squeezing the columns.
+					style={{ minWidth: `${eventTableMinWidth(columns)}px` }}
 					aria-busy={pending || undefined}
 				>
 					<caption className="sr-only">Programok</caption>
 					<thead className="bg-surface-subtle text-left">
 						<tr className="border-b border-border-default">
-							<SortHeader
-								{...sortProps}
-								column="name"
-								label="Program"
-							/>
-							<SortHeader
-								{...sortProps}
-								column="from"
-								label="Időpont"
-								className="w-[150px]"
-							/>
-							<th
-								scope="col"
-								className={cn(headClass, "w-[190px]")}
-							>
-								Helyszín
-							</th>
-							<SortHeader
-								{...sortProps}
-								column="capacity"
-								label="Kapacitás · jelentkezők"
-								className="w-[220px]"
-							/>
-							<th
-								scope="col"
-								className={cn(headClass, "w-[110px]")}
-							>
-								Oktatók
-							</th>
-							<th
-								scope="col"
-								className={cn(headClass, "w-[170px]")}
-							>
-								Státusz
-							</th>
+							{columns.map((id) => {
+								const column = EVENT_COLUMNS[id];
+								const style = column.width
+									? { width: `${column.width}px` }
+									: undefined;
+								return column.sortKey ? (
+									<SortHeader
+										key={id}
+										{...sortProps}
+										column={column.sortKey}
+										label={column.label}
+										style={style}
+									/>
+								) : (
+									<th
+										key={id}
+										scope="col"
+										className={headClass}
+										style={style}
+									>
+										{column.label}
+									</th>
+								);
+							})}
 							<th scope="col" className="w-12 px-2 py-2.5">
 								<span className="sr-only">Műveletek</span>
 							</th>
@@ -197,7 +195,10 @@ export function EventsTable({
 					<tbody>
 						{items.length === 0 && (
 							<tr>
-								<td colSpan={7} className="px-6 py-12">
+								<td
+									colSpan={columns.length + 1}
+									className="px-6 py-12"
+								>
 									<EventsEmptyState
 										filtersActive={filtersActive}
 										onClearFilters={onClearFilters}
@@ -206,12 +207,25 @@ export function EventsTable({
 							</tr>
 						)}
 						{items.map((item) => (
-							<EventRow
+							<tr
 								key={item.id}
-								item={item}
-								now={now}
-								onDelete={onDelete}
-							/>
+								className="border-b border-border-default last:border-0 hover:bg-canvas"
+							>
+								{columns.map((id) => (
+									<td
+										key={id}
+										className="px-3 py-2.5 align-middle"
+									>
+										{EVENT_COLUMNS[id].cell(item, now)}
+									</td>
+								))}
+								<td className="px-2 py-2.5">
+									<RowActions
+										item={item}
+										onDelete={onDelete}
+									/>
+								</td>
+							</tr>
 						))}
 					</tbody>
 				</table>
@@ -227,132 +241,6 @@ export function EventsTable({
 				/>
 			)}
 		</Card>
-	);
-}
-
-/* Cell renderers, shared by the table row and the mobile card. */
-
-function people(item: EventListItem) {
-	return [item.instructor, ...item.mentors].filter((name): name is string =>
-		Boolean(name?.trim()),
-	);
-}
-
-function EventTags({ tags }: { tags: string[] }) {
-	if (tags.length === 0) return null;
-	return (
-		<div className="flex flex-wrap gap-1">
-			{tags.map((tag) => (
-				<span
-					key={tag}
-					className={cn(
-						"rounded-full px-2 text-xs leading-5 font-medium",
-						tagClass(tag),
-					)}
-				>
-					{tag}
-				</span>
-			))}
-		</div>
-	);
-}
-
-function DemandCell({ item }: { item: EventListItem }) {
-	const applications = item.applicationCounts.total;
-	const ratio = demandRatio(applications, item.capacity);
-	return (
-		<div className="flex flex-col gap-1.5">
-			<div className="flex items-center gap-2">
-				<span className="flex-1 font-mono text-xs">
-					{item.capacity > 0
-						? `${formatCount(applications)} / ${formatCount(item.capacity)} fő`
-						: `${formatCount(applications)} jelentkező`}
-				</span>
-				{ratio !== null && (
-					<span
-						className={cn(
-							"rounded-full px-2 font-mono text-xs leading-5 font-medium",
-							ratioBadgeClass(ratio),
-						)}
-						aria-label={`Túljelentkezés: ${formatRatio(ratio)}`}
-					>
-						{formatRatio(ratio)}
-					</span>
-				)}
-			</div>
-			{ratio !== null && (
-				<div
-					aria-hidden="true"
-					className="h-1.5 overflow-hidden rounded-full bg-surface-subtle"
-				>
-					<span
-						className={cn(
-							"block h-full rounded-full",
-							ratioBarClass(ratio),
-						)}
-						style={{
-							width: `${Math.min(100, Math.round(ratio * 100))}%`,
-						}}
-					/>
-				</div>
-			)}
-		</div>
-	);
-}
-
-function PeopleCell({ item }: { item: EventListItem }) {
-	const all = people(item);
-	const shown = all.slice(0, 2);
-	const more = all.length - shown.length;
-	if (shown.length === 0) {
-		return <span className="text-text-tertiary">{EMPTY}</span>;
-	}
-	return (
-		<div
-			className="flex items-center"
-			aria-label={all.join(", ")}
-			role="img"
-		>
-			{shown.map((name, i) => (
-				<span
-					key={`${name}-${i}`}
-					title={name}
-					className={cn(
-						"flex size-[26px] items-center justify-center rounded-full border-2 border-white text-[11px] font-semibold",
-						AVATAR_CLASSES[i % AVATAR_CLASSES.length],
-						i > 0 && "-ml-1.5",
-					)}
-				>
-					{initials(name)}
-				</span>
-			))}
-			{more > 0 && (
-				<span className="ml-1.5 text-xs text-text-tertiary">
-					+{more}
-				</span>
-			)}
-		</div>
-	);
-}
-
-function StatusBadge({ item, now }: { item: EventListItem; now: Date }) {
-	const status = eventStatus(
-		{ ...item, applications: item.applicationCounts.total },
-		now,
-	);
-	return (
-		<span
-			className={cn(
-				"inline-flex items-center gap-1.5 rounded-full px-2 text-xs leading-5 font-medium whitespace-nowrap",
-				EVENT_STATUS_BADGE_CLASSES[status],
-			)}
-		>
-			<span
-				aria-hidden="true"
-				className="size-1.5 rounded-full bg-current"
-			/>
-			{EVENT_STATUS_LABELS[status]}
-		</span>
 	);
 }
 
@@ -409,67 +297,23 @@ function RowActions({
 	);
 }
 
-function EventRow({
-	item,
-	now,
-	onDelete,
-}: {
-	item: EventListItem;
-	now: Date;
-	onDelete?: (target: EventDeleteTarget) => void;
-}) {
-	return (
-		<tr className="border-b border-border-default last:border-0 hover:bg-canvas">
-			<td className="px-3 py-2.5 align-middle">
-				<div className="flex min-w-0 flex-col gap-1">
-					<Link
-						href={eventHref(item.id)}
-						className="truncate font-medium hover:underline focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
-					>
-						{item.name}
-					</Link>
-					<EventTags tags={item.tags} />
-				</div>
-			</td>
-			<td className="px-3 py-2.5 align-middle">
-				<div className="font-mono text-xs">
-					{formatDateRange(item.from, item.to)}
-				</div>
-			</td>
-			<td className="px-3 py-2.5 align-middle text-xs">
-				<div className="truncate">{item.location ?? EMPTY}</div>
-				{item.companyName && (
-					<div className="truncate text-text-tertiary">
-						{item.companyName}
-					</div>
-				)}
-			</td>
-			<td className="px-3 py-2.5 align-middle">
-				<DemandCell item={item} />
-			</td>
-			<td className="px-3 py-2.5 align-middle">
-				<PeopleCell item={item} />
-			</td>
-			<td className="px-3 py-2.5 align-middle">
-				<StatusBadge item={item} now={now} />
-			</td>
-			<td className="px-2 py-2.5">
-				<RowActions item={item} onDelete={onDelete} />
-			</td>
-		</tr>
-	);
-}
-
-/** Mobil programkártya (terv: 05.1 M), a táblázatsor celláiból. */
+/**
+ * Mobil programkártya (terv: 05.1 M). A fejléc (név, címkék, műveletek)
+ * mindig látszik; alatta minden további látható oszlop egy sor, az
+ * oszlopbeállítás sorrendjében.
+ */
 function EventCard({
 	item,
 	now,
+	columns,
 	onDelete,
 }: {
 	item: EventListItem;
 	now: Date;
+	columns: EventColumnId[];
 	onDelete?: (target: EventDeleteTarget) => void;
 }) {
+	const lines = columns.filter((id) => id !== EVENT_COLUMN_CONFIG.locked);
 	return (
 		<div className="flex flex-col gap-2.5 px-4 py-3.5">
 			<div className="flex items-start gap-2">
@@ -495,32 +339,20 @@ function EventCard({
 					className="size-11"
 				/>
 			</div>
-			<dl className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-2 gap-y-1.5 text-sm">
-				<dt className="text-text-tertiary">Időpont</dt>
-				<dd className="font-mono text-xs leading-5">
-					{formatDateRange(item.from, item.to)}
-				</dd>
-				<dt className="text-text-tertiary">Helyszín</dt>
-				<dd className="min-w-0">
-					<span className="block">{item.location ?? EMPTY}</span>
-					{item.companyName && (
-						<span className="block text-text-tertiary">
-							{item.companyName}
-						</span>
-					)}
-				</dd>
-				<dt className="text-text-tertiary">Igény</dt>
-				<dd>
-					<DemandCell item={item} />
-				</dd>
-				<dt className="text-text-tertiary">Oktatók</dt>
-				<dd>
-					<PeopleCell item={item} />
-				</dd>
-			</dl>
-			<div>
-				<StatusBadge item={item} now={now} />
-			</div>
+			{lines.length > 0 && (
+				<dl className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-2 gap-y-1.5 text-sm">
+					{lines.map((id) => (
+						<div key={id} className="contents">
+							<dt className="text-text-tertiary">
+								{EVENT_COLUMNS[id].cardLabel}
+							</dt>
+							<dd className="min-w-0">
+								{eventCardValue(id, item, now)}
+							</dd>
+						</div>
+					))}
+				</dl>
+			)}
 		</div>
 	);
 }
@@ -561,11 +393,11 @@ function SortHeader({
 	onSort,
 	column,
 	label,
-	className,
+	style,
 }: {
 	column: EventSortKey;
 	label: string;
-	className?: string;
+	style?: CSSProperties;
 	sort: EventSortKey;
 	order: SortOrder;
 	onSort: (sort: EventSortKey, order: SortOrder) => void;
@@ -575,7 +407,8 @@ function SortHeader({
 	return (
 		<th
 			scope="col"
-			className={cn(headClass, className)}
+			className={headClass}
+			style={style}
 			aria-sort={
 				active ? (order === "asc" ? "ascending" : "descending") : "none"
 			}

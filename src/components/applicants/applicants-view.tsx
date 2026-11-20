@@ -6,7 +6,10 @@ import { toast } from "sonner";
 import { useApplicants } from "@/hooks/use-applicants";
 import { useColumnSettings } from "@/hooks/use-column-settings";
 import { apiFetch } from "@/lib/api/client";
-import { visibleColumns } from "@/lib/applicants/column-settings";
+import {
+	APPLICANT_COLUMN_CONFIG,
+	visibleColumns,
+} from "@/lib/applicants/column-settings";
 import { buildEmailList, formatCount, fullName } from "@/lib/applicants/format";
 import {
 	clearFilters,
@@ -91,7 +94,9 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 	const [duplicateCount, setDuplicateCount] = useDuplicateCount();
 	const [duplicatesOpen, setDuplicatesOpen] = useState(false);
 	const [duplicatesRun, setDuplicatesRun] = useState(0);
-	const [columnSettings, setColumnSettings] = useColumnSettings();
+	const [columnSettings, setColumnSettings] = useColumnSettings(
+		APPLICANT_COLUMN_CONFIG,
+	);
 
 	// The selection belongs to one result set: any change to page, sort,
 	// search or filters starts a fresh, empty selection.
@@ -188,6 +193,14 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 				onClearAll={() => navigate(clearFilters(state))}
 				trailing={
 					<ColumnPicker
+						settings={columnSettings}
+						onChange={setColumnSettings}
+					/>
+				}
+				// Same settings: the mobile cards follow them too.
+				mobileTrailing={
+					<ColumnPicker
+						compact
 						settings={columnSettings}
 						onChange={setColumnSettings}
 					/>

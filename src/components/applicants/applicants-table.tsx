@@ -109,6 +109,7 @@ export function ApplicantsTable({
 				className="md:hidden"
 				data={data}
 				now={now}
+				columns={columns}
 				filtersActive={filtersActive}
 				onClearFilters={onClearFilters}
 				onReload={onReload}

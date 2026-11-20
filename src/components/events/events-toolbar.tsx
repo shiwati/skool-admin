@@ -12,6 +12,7 @@ import {
 } from "@/lib/events/list-params";
 import type { EventTag } from "@/lib/events/tags";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 import { TagFilter } from "./tag-filter";
 
 /** Választható évek: a következő évtől visszafelé öt évig. */
@@ -24,10 +25,16 @@ export function EventsToolbar({
 	filters,
 	onChange,
 	onClearAll,
+	trailing,
+	mobileTrailing,
 }: {
 	filters: EventListFilters;
 	onChange: (patch: Partial<EventListFilters>) => void;
 	onClearAll: () => void;
+	/** Tablettől: a sor végére igazítva (pl. „Oszlopok”). */
+	trailing?: ReactNode;
+	/** Mobilon: a keresőmező mellett (pl. az oszlopok ikongombja). */
+	mobileTrailing?: ReactNode;
 }) {
 	return (
 		<div className="flex flex-wrap items-center gap-2">
@@ -37,6 +44,14 @@ export function EventsToolbar({
 				label="Keresés a programok között"
 				placeholder="Program neve…"
 			/>
+			{mobileTrailing && (
+				<div
+					data-testid="events-mobile-trailing"
+					className="flex md:hidden"
+				>
+					{mobileTrailing}
+				</div>
+			)}
 			{/* Mobile (board 05.1 M): the chips form one horizontally scrollable row. */}
 			<div
 				data-testid="event-filter-chips"
@@ -73,6 +88,14 @@ export function EventsToolbar({
 					</Button>
 				)}
 			</div>
+			{trailing && (
+				<div
+					data-testid="events-trailing"
+					className="hidden md:ml-auto md:flex"
+				>
+					{trailing}
+				</div>
+			)}
 		</div>
 	);
 }

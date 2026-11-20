@@ -34,6 +34,12 @@ export type ColumnDef = {
 	sortKey?: SortKey;
 	widthClass?: string;
 	cell: (item: ApplicantListItem, now: Date) => ReactNode;
+	/**
+	 * Az érték a mobil kártyán (terv: 03.1 M), ha a táblázatcella ott nem
+	 * megfelelő; hiányában a `cell`. Nem lehet benne interaktív elem, mert
+	 * az egész kártya egy link.
+	 */
+	card?: (item: ApplicantListItem, now: Date) => ReactNode;
 };
 
 /** Az adatlap útvonala. */
@@ -78,6 +84,11 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		pickerLabel: "Életkor (16+ címke)",
 		sortKey: "age",
 		widthClass: "w-[90px]",
+		// The 16+ badge is already in the card header.
+		card: (item, now) => {
+			const age = ageFromBirthYear(item.birthYear, now);
+			return age === null ? dash : `${age} év`;
+		},
 		cell: (item, now) => {
 			const age = ageFromBirthYear(item.birthYear, now);
 			if (age === null) return dash;
@@ -147,6 +158,10 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		id: "location",
 		label: "Település / iskola",
 		pickerLabel: "Település / iskola",
+		card: (item) => {
+			const parts = [item.hometown, item.schoolName].filter(Boolean);
+			return parts.length > 0 ? parts.join(" · ") : dash;
+		},
 		sortKey: "location",
 		widthClass: "w-[160px]",
 		cell: (item) =>
@@ -167,6 +182,12 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		id: "newsletter",
 		label: "Hírlevél",
 		pickerLabel: "Hírlevél",
+		card: (item) =>
+			item.newsletter ? (
+				<span className="text-success-fg">Feliratkozott</span>
+			) : (
+				dash
+			),
 		widthClass: "w-[84px]",
 		cell: (item) =>
 			item.newsletter ? (
@@ -183,6 +204,11 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		id: "history",
 		label: "Előzmény",
 		pickerLabel: "Előzmény (elvégzett programok)",
+		// Plain text "N program", or "—" without attended programs.
+		card: (item) => {
+			const label = historyLabel(item.applications);
+			return label === EMPTY ? dash : label;
+		},
 		widthClass: "w-[92px]",
 		cell: (item) => {
 			const label = historyLabel(item.applications);
@@ -209,6 +235,15 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		id: "parent",
 		label: "Szülő",
 		pickerLabel: "Szülő neve és e-mail",
+		card: (item) => {
+			const parent = parentLabel(item);
+			const parts = [parent.name, parent.email].filter(Boolean);
+			return parts.length > 0 ? (
+				<span className="break-words">{parts.join(" · ")}</span>
+			) : (
+				dash
+			);
+		},
 		widthClass: "w-[200px]",
 		cell: (item) => {
 			const parent = parentLabel(item);
@@ -238,3 +273,13 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 			),
 	},
 };
+
+/** Egy oszlop értéke a mobil kártyán: a `card` renderer, vagy a táblázatcella. */
+export function cardValue(
+	id: ColumnId,
+	item: ApplicantListItem,
+	now: Date,
+): ReactNode {
+	const column = COLUMNS[id];
+	return (column.card ?? column.cell)(item, now);
+}

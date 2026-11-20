@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as core from "@/lib/column-settings";
 
 /** A Jelentkezők tábla konfigurálható oszlopai, alapértelmezett sorrendben. */
 export const COLUMN_IDS = [
@@ -19,91 +19,36 @@ export type ColumnId = (typeof COLUMN_IDS)[number];
 export const LOCKED_COLUMN: ColumnId = "name";
 export const DEFAULT_HIDDEN: readonly ColumnId[] = ["parent", "phone"];
 
-export type ColumnSettings = { order: ColumnId[]; hidden: ColumnId[] };
-
-export const DEFAULT_COLUMN_SETTINGS: ColumnSettings = {
-	order: [...COLUMN_IDS],
-	hidden: [...DEFAULT_HIDDEN],
-};
+export type ColumnSettings = core.ColumnSettings<ColumnId>;
 
 export const COLUMN_SETTINGS_KEY = "skool-admin:applicants:columns:v1";
 
-const isColumnId = (value: unknown): value is ColumnId =>
-	typeof value === "string" &&
-	(COLUMN_IDS as readonly string[]).includes(value);
+export const APPLICANT_COLUMN_CONFIG: core.ColumnSettingsConfig<ColumnId> = {
+	ids: COLUMN_IDS,
+	locked: LOCKED_COLUMN,
+	defaultHidden: DEFAULT_HIDDEN,
+	storageKey: COLUMN_SETTINGS_KEY,
+};
 
-const storedSchema = z.object({
-	order: z.array(z.unknown()),
-	hidden: z.array(z.unknown()),
-});
+export const DEFAULT_COLUMN_SETTINGS: ColumnSettings =
+	core.defaultColumnSettings(APPLICANT_COLUMN_CONFIG);
 
-/**
- * Bármilyen (akár sérült) tárolt értékből érvényes beállítást készít:
- * ismeretlen id-k kimaradnak, a hiányzók az alapértelmezett helyükre
- * kerülnek, a "Név / e-mail" sosem rejtett.
- */
-export function normalizeColumnSettings(raw: unknown): ColumnSettings {
-	const parsed = storedSchema.safeParse(raw);
-	if (!parsed.success) return structuredClone(DEFAULT_COLUMN_SETTINGS);
+export const normalizeColumnSettings = (raw: unknown): ColumnSettings =>
+	core.normalizeColumnSettings(APPLICANT_COLUMN_CONFIG, raw);
 
-	const order = [...new Set(parsed.data.order.filter(isColumnId))];
-	for (const [index, id] of COLUMN_IDS.entries()) {
-		if (order.includes(id)) continue;
-		// Insert after the nearest preceding default column that is present.
-		const before = COLUMN_IDS.slice(0, index)
-			.reverse()
-			.find((prev) => order.includes(prev));
-		order.splice(before ? order.indexOf(before) + 1 : 0, 0, id);
-	}
+export const visibleColumns = core.visibleColumns<ColumnId>;
 
-	const hidden = [...new Set(parsed.data.hidden.filter(isColumnId))].filter(
-		(id) => id !== LOCKED_COLUMN,
-	);
-	return { order, hidden };
-}
+export const loadColumnSettings = (): ColumnSettings =>
+	core.loadColumnSettings(APPLICANT_COLUMN_CONFIG);
 
-export function visibleColumns(settings: ColumnSettings): ColumnId[] {
-	return settings.order.filter((id) => !settings.hidden.includes(id));
-}
+export const saveColumnSettings = (settings: ColumnSettings): void =>
+	core.saveColumnSettings(APPLICANT_COLUMN_CONFIG, settings);
 
-export function loadColumnSettings(): ColumnSettings {
-	try {
-		const raw = window.localStorage.getItem(COLUMN_SETTINGS_KEY);
-		return normalizeColumnSettings(raw === null ? null : JSON.parse(raw));
-	} catch {
-		return structuredClone(DEFAULT_COLUMN_SETTINGS);
-	}
-}
-
-export function saveColumnSettings(settings: ColumnSettings): void {
-	try {
-		window.localStorage.setItem(
-			COLUMN_SETTINGS_KEY,
-			JSON.stringify(settings),
-		);
-	} catch {
-		// Storage unavailable (private mode, quota): settings last for the visit.
-	}
-}
-
-export function setColumnVisible(
+export const setColumnVisible = (
 	settings: ColumnSettings,
 	id: ColumnId,
 	visible: boolean,
-): ColumnSettings {
-	if (id === LOCKED_COLUMN) return settings;
-	const hidden = settings.hidden.filter((h) => h !== id);
-	return { ...settings, hidden: visible ? hidden : [...hidden, id] };
-}
+): ColumnSettings =>
+	core.setColumnVisible(APPLICANT_COLUMN_CONFIG, settings, id, visible);
 
-/** Oszlop áthelyezése a `to` indexre (húzás vagy fel/le gomb). */
-export function moveColumn(
-	settings: ColumnSettings,
-	id: ColumnId,
-	to: number,
-): ColumnSettings {
-	const order = settings.order.filter((c) => c !== id);
-	const target = Math.max(0, Math.min(to, order.length));
-	order.splice(target, 0, id);
-	return { ...settings, order };
-}
+export const moveColumn = core.moveColumn<ColumnId>;

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApplicantsView } from "./applicants-view";
@@ -183,5 +183,51 @@ describe("ApplicantsView", () => {
 				screen.queryByRole("toolbar", { name: "Tömeges műveletek" }),
 			).not.toBeInTheDocument(),
 		);
+	});
+});
+
+describe("ApplicantsView column settings on mobile", () => {
+	const fetchMock = vi.fn();
+
+	beforeEach(() => {
+		nav.search = "";
+		vi.stubGlobal("fetch", fetchMock);
+		fetchMock.mockImplementation(async (url: string) =>
+			url.startsWith("/api/events")
+				? jsonResponse({ items: [] })
+				: jsonResponse(pageOf(items, 3)),
+		);
+	});
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.resetAllMocks();
+		window.localStorage.clear();
+	});
+
+	it("hides a column in both the cards and the table from the compact picker", async () => {
+		render(<ApplicantsView />);
+		const list = await screen.findByRole("list", { name: "Jelentkezők" });
+		await waitFor(() =>
+			expect(
+				within(list).getAllByText("Hírlevél").length,
+			).toBeGreaterThan(0),
+		);
+		const mobile = screen.getByTestId("mobile-trailing");
+		expect(mobile).toHaveClass("md:hidden");
+		await userEvent.click(
+			within(mobile).getByRole("button", { name: "Oszlopok" }),
+		);
+		const panel = await screen.findByRole("dialog", {
+			name: "Oszlopok a listában",
+		});
+		await userEvent.click(
+			within(panel).getByRole("checkbox", { name: /^Hírlevél/ }),
+		);
+		expect(within(list).queryByText("Hírlevél")).not.toBeInTheDocument();
+		expect(
+			within(screen.getByRole("table"))
+				.getAllByRole("columnheader")
+				.map((th) => th.textContent),
+		).not.toContain("Hírlevél");
 	});
 });

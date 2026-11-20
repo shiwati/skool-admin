@@ -199,3 +199,24 @@ describe("ApplicantsToolbar on mobile", () => {
 		expect(onClearAll).toHaveBeenCalledOnce();
 	});
 });
+
+describe("ApplicantsToolbar mobile trailing slot", () => {
+	it("renders the mobile slot after the Szűrők button, hidden from md", () => {
+		render(
+			<ApplicantsToolbar
+				filters={{ eventIds: [] }}
+				events={events}
+				onChange={vi.fn()}
+				onClearAll={vi.fn()}
+				mobileTrailing={<button>Oszlopok</button>}
+			/>,
+		);
+		const slot = screen.getByTestId("mobile-trailing");
+		expect(slot).toHaveClass("md:hidden");
+		const filters = screen.getByRole("button", { name: "Szűrők" });
+		expect(
+			filters.compareDocumentPosition(slot) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+	});
+});

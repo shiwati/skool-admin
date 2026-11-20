@@ -34,8 +34,10 @@ type Props = {
 	events: EventOption[];
 	onChange: (patch: Partial<ListFilters>) => void;
 	onClearAll: () => void;
-	/** Jobb oldali elem (oszlopválasztó). */
+	/** Jobb oldali elem (oszlopválasztó), tablettől. */
 	trailing?: ReactNode;
+	/** Mobilon (< md) a „Szűrők” gomb után (kompakt oszlopválasztó). */
+	mobileTrailing?: ReactNode;
 };
 
 /** Az aktív szűrők száma (a keresés nélkül), a mobil „Szűrők” gombhoz. */
@@ -59,6 +61,7 @@ export function ApplicantsToolbar({
 	onChange,
 	onClearAll,
 	trailing,
+	mobileTrailing,
 }: Props) {
 	const chips = (
 		<FilterChips
@@ -77,6 +80,11 @@ export function ApplicantsToolbar({
 			<MobileFiltersDialog count={activeFilterCount(filters)}>
 				<div className="flex flex-col items-start gap-2">{chips}</div>
 			</MobileFiltersDialog>
+			{mobileTrailing && (
+				<div data-testid="mobile-trailing" className="flex md:hidden">
+					{mobileTrailing}
+				</div>
+			)}
 			<div data-testid="inline-filters" className="hidden md:contents">
 				{chips}
 				<span className="flex-1" />

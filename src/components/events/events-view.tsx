@@ -5,8 +5,12 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { PageHeader } from "@/components/admin-shell/page-header";
+import { ColumnPicker } from "@/components/column-picker";
 import { Button } from "@/components/ui/button";
+import { useColumnSettings } from "@/hooks/use-column-settings";
 import { formatCount } from "@/lib/applicants/format";
+import { visibleColumns } from "@/lib/column-settings";
+import { EVENT_COLUMN_CONFIG } from "@/lib/events/column-settings";
 import type { PhaseCounts } from "@/lib/events/list";
 import {
 	clearEventFilters,
@@ -20,6 +24,7 @@ import {
 	EventDeleteDialog,
 	type EventDeleteTarget,
 } from "./event-delete-dialog";
+import { EVENT_COLUMNS } from "./event-columns";
 import { EventsTable, type EventListItem } from "./events-table";
 import { EventsTabs } from "./events-tabs";
 import { EventsToolbar } from "./events-toolbar";
@@ -46,6 +51,8 @@ export function EventsView({
 		[searchKey],
 	);
 	const [pending, startTransition] = useTransition();
+	const [columnSettings, setColumnSettings] =
+		useColumnSettings(EVENT_COLUMN_CONFIG);
 	const [deleteTarget, setDeleteTarget] = useState<EventDeleteTarget | null>(
 		null,
 	);
@@ -100,6 +107,24 @@ export function EventsView({
 				filters={state}
 				onChange={change}
 				onClearAll={clearFilters}
+				trailing={
+					<ColumnPicker
+						config={EVENT_COLUMN_CONFIG}
+						columns={EVENT_COLUMNS}
+						settings={columnSettings}
+						onChange={setColumnSettings}
+					/>
+				}
+				// Same settings: the mobile cards follow them too.
+				mobileTrailing={
+					<ColumnPicker
+						compact
+						config={EVENT_COLUMN_CONFIG}
+						columns={EVENT_COLUMNS}
+						settings={columnSettings}
+						onChange={setColumnSettings}
+					/>
+				}
 			/>
 			<EventsTable
 				items={items}
@@ -110,6 +135,7 @@ export function EventsView({
 				page={state.page}
 				pageSize={state.pageSize}
 				now={new Date(now)}
+				columns={visibleColumns(columnSettings)}
 				pending={pending}
 				filtersActive={hasActiveEventFilters(state)}
 				onSort={(sort, order) => change({ sort, order })}

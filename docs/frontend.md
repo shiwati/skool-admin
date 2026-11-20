@@ -47,6 +47,8 @@ A tervek: „Reszponzív nézetek” oldal (tablet 820 px, mobil 390 px). Három
     - **Demográfia:** nincs külön év választó, a fejléc időszakát követi. Életkor (a program kezdő éve − `birthYear`, sávok) és Település (`hometown`, top 8 + Egyéb) fül.
     - **Elégedettség:** üres állapot; később programonkénti feedback-átlag.
     - Az elvégzési arány, a tanulói útvonal, a megye és az iskola szándékosan kimaradt.
+- `/events`: Programok lista (`src/components/events/events-view.tsx`, `events-table.tsx`).
+    - **Oszlopválasztó:** mint a Jelentkezőknél, saját `localStorage` kulccsal (`src/lib/events/column-settings.ts`; oszlopok: `event-columns.tsx`). A „Program” oszlop zárolt; tablettől „Oszlopok” gomb a szűrősor végén, mobilon ikongomb a keresőmező mellett. A mobil kártyán a fejléc (név, címkék, műveletek) fix, alatta minden további látható oszlop egy címkézett sor, a beállított sorrendben.
 - `/events/new`: új program felvétele (`src/components/events/new-event-form.tsx`, séma: `src/lib/events/schema.ts`). Szekciók: alapadatok (név, címkék a fix listából, leírás), időpont és helyszín (`datetime-local` mezők: dátum + óra:perc), kapacitás (létszám ≥ 1, korosztály tól–ig → `ageRange` `"12-18"`), oktató és mentorok. Mentés: `POST /api/events`, siker után átirányítás a `/events/:id`-re. Nincs vázlatmentés, alkalom-lista és záró riport szekció.
 - `/events/[id]`: Program áttekintés (`src/app/(admin)/events/[id]/(overview)/`, komponensek: `src/components/events/overview/`). Az `(overview)` route group az URL-t nem változtatja, de a szerkesztő oldal (`/events/[id]/edit`) így nem kapja meg a közös fejlécet; a `not-found.tsx` mindkettőre vonatkozik.
     - **Adat:** nincs külön olvasó végpont; a Server Component maga kérdez az adatbázisba (`getEventOverview`, `src/lib/events/overview.ts`, `React.cache`-elve, így layout, oldal és `generateMetadata` egy lekérdezéssort használ). A layout és az oldal is hívja a `requireAdmin`-t, mert párhuzamosan renderelődnek. Ismeretlen id → `notFound()`.
@@ -55,7 +57,7 @@ A tervek: „Reszponzív nézetek” oldal (tablet 820 px, mobil 390 px). Három
 - `/applicants`: Jelentkezők lista (`src/components/applicants/`), a `GET /api/applicants`-ből, kliensoldalon.
     - **Állapot:** a szűrés, rendezés és lapozás az URL-ben él (`src/lib/applicants/list-params.ts`).
     - **Tábla:** sima `<table>` oszlopkonfigurációval (`columns.tsx`), nem a `DataTable`.
-    - **Oszlopválasztó:** a beállítás `localStorage`-ban mentődik (`column-settings.ts`, `use-column-settings.ts`).
+    - **Oszlopválasztó:** a beállítás `localStorage`-ban mentődik (közös mag: `src/lib/column-settings.ts`, `src/hooks/use-column-settings.ts`, `src/components/column-picker.tsx`; listánkénti konfiguráció: `src/lib/applicants/column-settings.ts`), és a mobil kártyákra is vonatkozik: mobilon ikongomb a „Szűrők” mellett, a kártyán minden látható oszlop egy címkézett sor (érték: `ColumnDef.card`, hiányában a `cell`), az oszlopok sorrendjében.
     - **Kijelölés és tömeges műveletek:** e-mail másolás és törlés (`POST /api/applicants/delete`), valamint e-mail lista a teljes szűrésről.
     - **Helyőrzők:** a duplikáció-banner funkció nélkül. A Google Sheet szinkron nem itt van, hanem a program oldalán (`/events/[id]`, „Jelentkezők forrása”).
     - **Navigáció:** a sorra kattintva (a checkbox és a „Műveletek” menü kivételével) az adatlap nyílik; a név link is (billentyűzet, új lap).
