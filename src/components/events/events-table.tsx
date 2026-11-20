@@ -21,13 +21,14 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { PageSize } from "@/lib/applicants/list-params";
-import { EMPTY, formatCount, programColorClass } from "@/lib/applicants/format";
+import { EMPTY, formatCount } from "@/lib/applicants/format";
 import { AVATAR_CLASSES, tagClass } from "@/lib/events/colors";
 import {
 	demandRatio,
 	formatDateRange,
 	formatRatio,
 	ratioBadgeClass,
+	ratioBarClass,
 } from "@/lib/events/format";
 import { applicantsHref, eventEditHref, eventHref } from "@/lib/events/links";
 import {
@@ -307,7 +308,7 @@ function EventRow({
 							<span
 								className={cn(
 									"block h-full rounded-full",
-									programColorClass(item.id),
+									ratioBarClass(ratio),
 								)}
 								style={{
 									width: `${Math.min(100, Math.round(ratio * 100))}%`,

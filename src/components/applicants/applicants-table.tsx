@@ -5,21 +5,13 @@ import {
 	ArrowUp,
 	ArrowUpDown,
 	CircleAlert,
-	MoreHorizontal,
 	SearchX,
-	Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fullName } from "@/lib/applicants/format";
 import type {
@@ -52,7 +44,6 @@ type Props = {
 	onPageSize: (size: PageSize) => void;
 	onToggleRow: (id: string) => void;
 	onToggleAll: (ids: string[], select: boolean) => void;
-	onDeleteRow: (item: ApplicantListItem) => void;
 	onClearFilters: () => void;
 	onReload: () => void;
 };
@@ -90,7 +81,6 @@ export function ApplicantsTable({
 	onPageSize,
 	onToggleRow,
 	onToggleAll,
-	onDeleteRow,
 	onClearFilters,
 	onReload,
 }: Props) {
@@ -115,7 +105,7 @@ export function ApplicantsTable({
 			: selectedOnPage > 0
 				? "indeterminate"
 				: false;
-	const colSpan = columns.length + 2;
+	const colSpan = columns.length + 1;
 
 	return (
 		<Card className="overflow-hidden">
@@ -198,9 +188,6 @@ export function ApplicantsTable({
 									</th>
 								);
 							})}
-							<th scope="col" className="w-12 px-2 py-2.5">
-								<span className="sr-only">Műveletek</span>
-							</th>
 						</tr>
 					</thead>
 					<tbody aria-busy={data.status === "loading" || undefined}>
@@ -219,7 +206,6 @@ export function ApplicantsTable({
 											<Skeleton className="h-3.5 w-3/4" />
 										</td>
 									))}
-									<td />
 								</tr>
 							))}
 
@@ -318,33 +304,6 @@ export function ApplicantsTable({
 											{COLUMNS[id].cell(item, now)}
 										</td>
 									))}
-									<td
-										className="px-2 py-2.5"
-										data-row-nav="off"
-									>
-										<DropdownMenu>
-											<DropdownMenuTrigger
-												aria-label={`Műveletek: ${name}`}
-												className="flex size-8 items-center justify-center rounded-full hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none"
-											>
-												<MoreHorizontal
-													aria-hidden="true"
-													className="size-[18px]"
-												/>
-											</DropdownMenuTrigger>
-											<DropdownMenuContent align="end">
-												<DropdownMenuItem
-													className="text-error-fg focus:text-error-fg [&_svg]:text-error-fg!"
-													onSelect={() =>
-														onDeleteRow(item)
-													}
-												>
-													<Trash2 aria-hidden="true" />
-													Jelentkező törlése
-												</DropdownMenuItem>
-											</DropdownMenuContent>
-										</DropdownMenu>
-									</td>
 								</tr>
 							);
 						})}

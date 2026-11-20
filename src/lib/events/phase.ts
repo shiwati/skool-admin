@@ -10,8 +10,8 @@ export const EVENT_PHASES = ["planned", "closed"] as const;
 export type EventPhase = (typeof EVENT_PHASES)[number];
 
 export const PHASE_LABELS: Record<EventPhase | "all", string> = {
-	planned: "Tervezett",
-	closed: "Lezárt",
+	planned: "Jövőbeli",
+	closed: "Múltbeli",
 	all: "Összes",
 };
 

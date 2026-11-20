@@ -24,7 +24,6 @@ function renderTable(
 		onPageSize: vi.fn(),
 		onToggleRow: vi.fn(),
 		onToggleAll: vi.fn(),
-		onDeleteRow: vi.fn(),
 		onClearFilters: vi.fn(),
 		onReload: vi.fn(),
 	};
@@ -62,7 +61,6 @@ describe("ApplicantsTable", () => {
 			"Hírlevél",
 			"Előzmény",
 			"Jelentkezett",
-			"Műveletek",
 		]);
 	});
 
@@ -161,12 +159,7 @@ describe("ApplicantsTable", () => {
 
 	it("renders hidden columns only when enabled", () => {
 		renderTable({ columns: ["name", "phone"] });
-		expect(headers()).toEqual([
-			"",
-			"Név / e-mail",
-			"Telefonszám",
-			"Műveletek",
-		]);
+		expect(headers()).toEqual(["", "Név / e-mail", "Telefonszám"]);
 		expect(
 			screen.getByRole("row", { name: /Nagy Luca/ }),
 		).toHaveTextContent("+36 30 123 4567");
@@ -200,15 +193,11 @@ describe("ApplicantsTable", () => {
 		expect(onToggleAll).toHaveBeenCalledWith(["a1", "a2"], false);
 	});
 
-	it("offers deletion from the row actions menu", async () => {
-		const { onDeleteRow } = renderTable();
-		await userEvent.click(
-			screen.getByRole("button", { name: "Műveletek: Kiss Boróka" }),
-		);
-		await userEvent.click(
-			await screen.findByRole("menuitem", { name: "Jelentkező törlése" }),
-		);
-		expect(onDeleteRow).toHaveBeenCalledWith(boroka);
+	it("has no per-row actions menu", () => {
+		renderTable();
+		expect(
+			screen.queryByRole("button", { name: /Műveletek/ }),
+		).not.toBeInTheDocument();
 	});
 });
 
@@ -275,19 +264,12 @@ describe("ApplicantsTable row navigation", () => {
 		).toHaveAttribute("href", "/applicants/a2");
 	});
 
-	it("does not navigate from the checkbox or the row menu", async () => {
-		const { onToggleRow, onDeleteRow } = renderTable();
+	it("does not navigate from the checkbox", async () => {
+		const { onToggleRow } = renderTable();
 		await userEvent.click(
 			screen.getByRole("checkbox", { name: "Nagy Luca kijelölése" }),
 		);
 		expect(onToggleRow).toHaveBeenCalledWith("a1");
-		await userEvent.click(
-			screen.getByRole("button", { name: "Műveletek: Nagy Luca" }),
-		);
-		await userEvent.click(
-			screen.getByRole("menuitem", { name: "Jelentkező törlése" }),
-		);
-		expect(onDeleteRow).toHaveBeenCalled();
 		expect(router.push).not.toHaveBeenCalled();
 	});
 

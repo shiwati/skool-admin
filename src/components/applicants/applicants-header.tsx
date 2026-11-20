@@ -7,10 +7,13 @@ import { formatCount } from "@/lib/applicants/format";
 
 export function ApplicantsHeader({
 	total,
+	filtered = false,
 	onEmailList,
 }: {
 	/** `null`, amíg az első lekérés nem fejeződött be. */
 	total: number | null;
+	/** Szűrt állapotban a szám a találatok száma, nem az összes profilé. */
+	filtered?: boolean;
 	onEmailList: () => void;
 }) {
 	return (
@@ -18,10 +21,8 @@ export function ApplicantsHeader({
 			eyebrow="Jelentkezők"
 			title="Jelentkezők"
 			description={
-				<>
-					Google Formból érkező jelentkezések
-					{total !== null && <> · {formatCount(total)} fő</>}
-				</>
+				total !== null &&
+				`${filtered ? "Találatok száma" : "Összes jelentkező"}: ${formatCount(total)} fő`
 			}
 			actions={
 				<Button variant="surface" onClick={onEmailList}>

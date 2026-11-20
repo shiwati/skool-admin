@@ -66,5 +66,10 @@ export function formatRatio(ratio: number) {
 export function ratioBadgeClass(ratio: number) {
 	if (ratio >= 2) return "bg-coral";
 	if (ratio >= 1) return "bg-peach";
-	return "bg-sage";
+	return "bg-sky";
+}
+
+/** A telítettségi sáv színe: mint a badge, de 1× alatt kék (sky) a zöld helyett. */
+export function ratioBarClass(ratio: number) {
+	return ratio < 1 ? "bg-sky" : ratioBadgeClass(ratio);
 }

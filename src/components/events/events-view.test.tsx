@@ -49,9 +49,9 @@ describe("EventsView", () => {
 			/>,
 		);
 		expect(
-			screen.getByRole("heading", { name: "Programok és események" }),
+			screen.getByRole("heading", { name: "Programok" }),
 		).toBeInTheDocument();
-		expect(screen.getByText(/15 program/)).toBeInTheDocument();
+		expect(screen.queryByText(/Találatok száma/)).not.toBeInTheDocument();
 		expect(
 			screen.getByRole("tab", { name: /^Összes\s*15$/ }),
 		).toHaveAttribute("aria-selected", "true");
@@ -70,10 +70,23 @@ describe("EventsView", () => {
 		expect(within(row).getByText("+1")).toBeInTheDocument();
 	});
 
+	it("shows the result count only while a filter is active", () => {
+		nav.search = "place=Budapest";
+		render(
+			<EventsView
+				items={[event()]}
+				total={7}
+				counts={counts}
+				now={now}
+			/>,
+		);
+		expect(screen.getByText("Találatok száma: 7 db")).toBeInTheDocument();
+	});
+
 	it("switches tab through the URL and resets the page", async () => {
 		nav.search = "page=2";
 		render(<EventsView items={[]} total={0} counts={counts} now={now} />);
-		await userEvent.click(screen.getByRole("tab", { name: /^Lezárt/ }));
+		await userEvent.click(screen.getByRole("tab", { name: /^Múltbeli/ }));
 		expect(nav.replace).toHaveBeenCalledWith("/events?tab=closed", {
 			scroll: false,
 		});
@@ -194,7 +207,7 @@ describe("EventsView", () => {
 			/>,
 		);
 		expect(
-			screen.getByText(/1–1 \/ 1 tervezett program/),
+			screen.getByText(/1–1 \/ 1 jövőbeli program/),
 		).toBeInTheDocument();
 	});
 });

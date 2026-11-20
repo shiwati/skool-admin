@@ -6,6 +6,7 @@ import {
 	formatDateRange,
 	formatRatio,
 	ratioBadgeClass,
+	ratioBarClass,
 } from "./format";
 
 describe("formatAgeRange", () => {
@@ -71,6 +72,13 @@ describe("demand ratio", () => {
 		expect(formatRatio(ratio)).toBe("3,1×");
 		expect(ratioBadgeClass(ratio)).toBe("bg-coral");
 		expect(ratioBadgeClass(1.6)).toBe("bg-peach");
-		expect(ratioBadgeClass(0.9)).toBe("bg-sage");
+		expect(ratioBadgeClass(0.9)).toBe("bg-sky");
+	});
+
+	it("colors the bar like the badge, but blue below 1×", () => {
+		expect(ratioBarClass(0.9)).toBe("bg-sky");
+		expect(ratioBarClass(1)).toBe("bg-peach");
+		expect(ratioBarClass(1.6)).toBe("bg-peach");
+		expect(ratioBarClass(2)).toBe("bg-coral");
 	});
 });
