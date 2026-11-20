@@ -22,8 +22,6 @@ function renderTable(
 		onSort: vi.fn(),
 		onPage: vi.fn(),
 		onPageSize: vi.fn(),
-		onToggleRow: vi.fn(),
-		onToggleAll: vi.fn(),
 		onClearFilters: vi.fn(),
 		onReload: vi.fn(),
 	};
@@ -35,7 +33,6 @@ function renderTable(
 			order="desc"
 			page={1}
 			pageSize={25}
-			selected={new Set()}
 			filtersActive={false}
 			now={in2026}
 			{...handlers}
@@ -52,7 +49,6 @@ describe("ApplicantsTable", () => {
 	it("shows the default columns in order", () => {
 		renderTable();
 		expect(headers()).toEqual([
-			"",
 			"Név / e-mail",
 			"Életkor",
 			"Program",
@@ -68,18 +64,18 @@ describe("ApplicantsTable", () => {
 		renderTable();
 		const row = screen.getByRole("row", { name: /Nagy Luca/ });
 		const cells = within(row).getAllByRole("cell");
-		expect(cells[1]).toHaveTextContent("Nagy Luca");
-		expect(cells[1]).toHaveTextContent("nagy.luca@gmail.com");
-		expect(cells[2]).toHaveTextContent("16");
-		expect(cells[2]).toHaveTextContent("16+");
-		expect(cells[3]).toHaveTextContent("Python alapok – ősz");
-		expect(cells[3]).toHaveTextContent("+1");
-		expect(cells[4]).toHaveTextContent("Elfogadva");
-		expect(cells[5]).toHaveTextContent("Budapest");
-		expect(cells[5]).toHaveTextContent("Gimnázium");
-		expect(within(cells[6]).getByRole("img", { name: "Feliratkozott" }));
-		expect(cells[7]).toHaveTextContent("1 program");
-		expect(cells[8]).toHaveTextContent("2026.10.02");
+		expect(cells[0]).toHaveTextContent("Nagy Luca");
+		expect(cells[0]).toHaveTextContent("nagy.luca@gmail.com");
+		expect(cells[1]).toHaveTextContent("16");
+		expect(cells[1]).toHaveTextContent("16+");
+		expect(cells[2]).toHaveTextContent("Python alapok – ősz");
+		expect(cells[2]).toHaveTextContent("+1");
+		expect(cells[3]).toHaveTextContent("Elfogadva");
+		expect(cells[4]).toHaveTextContent("Budapest");
+		expect(cells[4]).toHaveTextContent("Gimnázium");
+		expect(within(cells[5]).getByRole("img", { name: "Feliratkozott" }));
+		expect(cells[6]).toHaveTextContent("1 program");
+		expect(cells[7]).toHaveTextContent("2026.10.02");
 	});
 
 	it("shows dashes for an applicant without applications", () => {
@@ -87,12 +83,12 @@ describe("ApplicantsTable", () => {
 		const cells = within(
 			screen.getByRole("row", { name: /Kiss Boróka/ }),
 		).getAllByRole("cell");
-		expect(cells[2]).toHaveTextContent("13");
-		expect(cells[2]).not.toHaveTextContent("16+");
+		expect(cells[1]).toHaveTextContent("13");
+		expect(cells[1]).not.toHaveTextContent("16+");
+		expect(cells[2]).toHaveTextContent("—");
 		expect(cells[3]).toHaveTextContent("—");
-		expect(cells[4]).toHaveTextContent("—");
+		expect(cells[5]).toHaveTextContent("—");
 		expect(cells[6]).toHaveTextContent("—");
-		expect(cells[7]).toHaveTextContent("—");
 	});
 
 	it("exposes the current sort and toggles direction", async () => {
@@ -161,38 +157,15 @@ describe("ApplicantsTable", () => {
 
 	it("renders hidden columns only when enabled", () => {
 		renderTable({ columns: ["name", "phone"] });
-		expect(headers()).toEqual(["", "Név / e-mail", "Telefonszám"]);
+		expect(headers()).toEqual(["Név / e-mail", "Telefonszám"]);
 		expect(
 			screen.getByRole("row", { name: /Nagy Luca/ }),
 		).toHaveTextContent("+36 30 123 4567");
 	});
 
-	it("selects rows and reflects partial selection in the header", async () => {
-		const { onToggleRow, onToggleAll } = renderTable({
-			selected: new Set(["a1"]),
-		});
-		const all = screen.getByRole("checkbox", { name: "Összes kijelölése" });
-		expect(all).toHaveAttribute("data-state", "indeterminate");
-		expect(screen.getByRole("row", { name: /Nagy Luca/ })).toHaveAttribute(
-			"aria-selected",
-			"true",
-		);
-		await userEvent.click(all);
-		expect(onToggleAll).toHaveBeenCalledWith(["a1", "a2"], true);
-		await userEvent.click(
-			screen.getByRole("checkbox", { name: "Kiss Boróka kijelölése" }),
-		);
-		expect(onToggleRow).toHaveBeenCalledWith("a2");
-	});
-
-	it("clears the page when everything is selected", async () => {
-		const { onToggleAll } = renderTable({
-			selected: new Set(["a1", "a2"]),
-		});
-		await userEvent.click(
-			screen.getByRole("checkbox", { name: "Összes kijelölése" }),
-		);
-		expect(onToggleAll).toHaveBeenCalledWith(["a1", "a2"], false);
+	it("has no selection checkboxes", () => {
+		renderTable();
+		expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 	});
 
 	it("has no per-row actions menu", () => {
@@ -255,7 +228,7 @@ describe("ApplicantsTable row navigation", () => {
 	it("opens the detail page when a cell is clicked", async () => {
 		renderTable();
 		const row = rowOf("Nagy Luca");
-		await userEvent.click(within(row).getAllByRole("cell")[5]);
+		await userEvent.click(within(row).getAllByRole("cell")[4]);
 		expect(router.push).toHaveBeenCalledWith("/applicants/a1");
 	});
 
@@ -264,15 +237,6 @@ describe("ApplicantsTable row navigation", () => {
 		expect(
 			screen.getByRole("link", { name: "Kiss Boróka" }),
 		).toHaveAttribute("href", "/applicants/a2");
-	});
-
-	it("does not navigate from the checkbox", async () => {
-		const { onToggleRow } = renderTable();
-		await userEvent.click(
-			screen.getByRole("checkbox", { name: "Nagy Luca kijelölése" }),
-		);
-		expect(onToggleRow).toHaveBeenCalledWith("a1");
-		expect(router.push).not.toHaveBeenCalled();
 	});
 
 	it("does not navigate from loading or empty rows", async () => {

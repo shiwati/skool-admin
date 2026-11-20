@@ -1,5 +1,4 @@
 import type { z } from "zod";
-import type { EventTag } from "./events/tags";
 import { overallScore } from "./feedback/parse";
 import {
 	type FeedbackRoleKey,
@@ -44,7 +43,7 @@ function random(seed: number) {
 	};
 }
 
-const PROGRAMS: { name: string; tags: EventTag[]; ageRange: string }[] = [
+const PROGRAMS: { name: string; tags: string[]; ageRange: string }[] = [
 	{
 		name: "Python alapok",
 		tags: ["programozás", "kezdő"],

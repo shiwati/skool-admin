@@ -69,7 +69,7 @@ describe("Programok column settings", () => {
 			"Program",
 			"Időpont",
 			"Helyszín",
-			"Kapacitás · jelentkezők",
+			"Jelentkezők · kapacitás",
 			"Oktatók",
 			"Státusz",
 			"Műveletek",
@@ -157,7 +157,7 @@ describe("Programok column settings", () => {
 			"Program",
 			"Időpont",
 			"Helyszín",
-			"Kapacitás · jelentkezők",
+			"Jelentkezők · kapacitás",
 			"Műveletek",
 		]);
 	});

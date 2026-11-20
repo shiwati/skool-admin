@@ -15,6 +15,7 @@ export function TagInput({
 	placeholder,
 	removeLabel,
 	className,
+	chipClassName = "bg-lavender/60",
 	...aria
 }: {
 	id: string;
@@ -24,6 +25,8 @@ export function TagInput({
 	/** Az eltávolító gomb címkéje a megadott elemmel, képernyőolvasóhoz. */
 	removeLabel: (item: string) => string;
 	className?: string;
+	/** A felvett elemek háttérszíne; alapból lila. */
+	chipClassName?: string;
 	"aria-invalid"?: boolean;
 	"aria-describedby"?: string;
 }) {
@@ -55,7 +58,10 @@ export function TagInput({
 			{value.map((item) => (
 				<span
 					key={item}
-					className="inline-flex items-center gap-1 rounded-full bg-lavender/60 py-0.5 pr-1 pl-2.5 text-xs font-medium"
+					className={cn(
+						"inline-flex items-center gap-1 rounded-full py-0.5 pr-1 pl-2.5 text-xs font-medium",
+						chipClassName,
+					)}
 				>
 					{item}
 					<button

@@ -20,6 +20,26 @@ vi.mock("@/lib/api/client", async (importOriginal) => ({
 import { ApiError } from "@/lib/api/client";
 import { EventForm } from "./event-form";
 
+const TAGS_URL = "/api/events/tags";
+
+/** The tag field loads its options from `TAGS_URL`; `save` answers the form's own request. */
+function mockApi(save: () => Promise<unknown>) {
+	apiFetch.mockImplementation((url: string) =>
+		url === TAGS_URL
+			? Promise.resolve({
+					items: [
+						{ name: "programozás", count: 3 },
+						{ name: "robotika", count: 1 },
+					],
+				})
+			: save(),
+	);
+}
+
+const saveCalls = () => apiFetch.mock.calls.filter(([url]) => url !== TAGS_URL);
+
+const tagField = () => screen.getByRole("combobox", { name: /Címkék/ });
+
 async function fillValid(user: ReturnType<typeof userEvent.setup>) {
 	await user.type(screen.getByLabelText(/Program neve/), "Python alapok");
 	await user.type(screen.getByLabelText(/Kezdés/), "2027-03-06T10:00");
@@ -84,22 +104,33 @@ describe("EventForm", () => {
 
 	it("posts the event and opens it by the returned id", async () => {
 		const user = userEvent.setup();
-		apiFetch.mockResolvedValue({ id: "ev1" });
+		mockApi(() => Promise.resolve({ id: "ev1" }));
 		render(<EventForm mode="create" />);
 		await fillValid(user);
-		await user.click(screen.getByRole("button", { name: "robotika" }));
+		// An existing tag picked from the suggestions…
+		await user.type(tagField(), "robot");
+		await user.click(
+			await screen.findByRole("option", { name: /^robotika/ }),
+		);
+		// …and a new one, normalized.
+		await user.type(tagField(), "  3D  Nyomtatás");
+		await user.click(
+			await screen.findByRole("option", {
+				name: "Új címke: „3d nyomtatás”",
+			}),
+		);
 		await user.type(screen.getByLabelText(/Mentorok/), "Szűcs Petra,");
 		await user.click(
 			screen.getByRole("button", { name: "Program mentése" }),
 		);
 
 		await waitFor(() => expect(push).toHaveBeenCalledWith("/events/ev1"));
-		const [url, init] = apiFetch.mock.calls[0];
+		const [url, init] = saveCalls()[0];
 		expect(url).toBe("/api/events");
 		expect(init.method).toBe("POST");
 		expect(JSON.parse(init.body)).toEqual({
 			name: "Python alapok",
-			tags: ["robotika"],
+			tags: ["robotika", "3d nyomtatás"],
 			from: new Date("2027-03-06T10:00").toISOString(),
 			to: new Date("2027-03-06T14:00").toISOString(),
 			capacity: 24,
@@ -108,14 +139,41 @@ describe("EventForm", () => {
 		expect(toastSuccess).toHaveBeenCalled();
 	});
 
+	it("shows a server error on the tags field", async () => {
+		const user = userEvent.setup();
+		mockApi(() =>
+			Promise.reject(
+				new ApiError(400, {
+					details: {
+						fieldErrors: {
+							tags: ["A címke legfeljebb 30 karakter lehet."],
+						},
+					},
+				}),
+			),
+		);
+		render(<EventForm mode="create" />);
+		await fillValid(user);
+		await user.click(
+			screen.getByRole("button", { name: "Program mentése" }),
+		);
+
+		expect(
+			await screen.findByText("A címke legfeljebb 30 karakter lehet."),
+		).toBeInTheDocument();
+		expect(tagField()).toHaveAttribute("aria-invalid", "true");
+	});
+
 	it("maps server field errors back onto the fields", async () => {
 		const user = userEvent.setup();
-		apiFetch.mockRejectedValue(
-			new ApiError(400, {
-				details: {
-					fieldErrors: { name: ["Már létezik ilyen program."] },
-				},
-			}),
+		mockApi(() =>
+			Promise.reject(
+				new ApiError(400, {
+					details: {
+						fieldErrors: { name: ["Már létezik ilyen program."] },
+					},
+				}),
+			),
 		);
 		render(<EventForm mode="create" />);
 		await fillValid(user);
@@ -170,7 +228,7 @@ describe("EventForm", () => {
 
 		it("patches the event and sends null for cleared optional fields", async () => {
 			const user = userEvent.setup();
-			apiFetch.mockResolvedValue({ id: "ev1" });
+			mockApi(() => Promise.resolve({ id: "ev1" }));
 			render(<EventForm mode="edit" event={event} />);
 			await user.clear(screen.getByLabelText(/Rövid leírás/));
 			await user.click(
@@ -180,7 +238,7 @@ describe("EventForm", () => {
 			await waitFor(() =>
 				expect(push).toHaveBeenCalledWith("/events/ev1"),
 			);
-			const [url, init] = apiFetch.mock.calls[0];
+			const [url, init] = saveCalls()[0];
 			expect(url).toBe("/api/events/ev1");
 			expect(init.method).toBe("PATCH");
 			expect(JSON.parse(init.body)).toEqual({
@@ -203,7 +261,7 @@ describe("EventForm", () => {
 
 		it("toasts when the event no longer exists", async () => {
 			const user = userEvent.setup();
-			apiFetch.mockRejectedValue(new ApiError(404));
+			mockApi(() => Promise.reject(new ApiError(404)));
 			render(<EventForm mode="edit" event={event} />);
 			await user.click(
 				screen.getByRole("button", { name: "Változtatások mentése" }),
@@ -220,7 +278,7 @@ describe("EventForm", () => {
 
 	it("toasts on unexpected failures and stays on the page", async () => {
 		const user = userEvent.setup();
-		apiFetch.mockRejectedValue(new ApiError(500));
+		mockApi(() => Promise.reject(new ApiError(500)));
 		render(<EventForm mode="create" />);
 		await fillValid(user);
 		await user.click(

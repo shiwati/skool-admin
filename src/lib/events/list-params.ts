@@ -1,6 +1,6 @@
 import { PAGE_SIZES, type PageSize } from "@/lib/applicants/list-params";
 import { EVENT_PHASES, type EventPhase } from "./phase";
-import { isEventTag, type EventTag } from "./tags";
+import { tagSchema } from "./tags";
 
 /**
  * A `/events` lista URL-állapota (kliensről is importálható). Az URL az
@@ -16,7 +16,7 @@ export const EVENT_TABS: EventTab[] = ["all", ...EVENT_PHASES];
 
 export type EventListFilters = {
 	q?: string;
-	tags: EventTag[];
+	tags: string[];
 	place?: string;
 	instructor?: string;
 	year?: number;
@@ -59,6 +59,15 @@ function oneOf<T extends string>(
 	return values.find((v) => v === value);
 }
 
+/** Érvényes címkék normalizálva, ismétlődés nélkül; a hibásak csendben kimaradnak. */
+function parseTags(values: string[]): string[] {
+	const tags = values.flatMap((value) => {
+		const parsed = tagSchema.safeParse(value);
+		return parsed.success ? [parsed.data] : [];
+	});
+	return [...new Set(tags)];
+}
+
 function positiveInt(value: string | null) {
 	if (value === null || !/^\d+$/.test(value)) return undefined;
 	const n = Number(value);
@@ -72,7 +81,7 @@ export function parseEventListState(params: URLSearchParams): EventListState {
 	return {
 		tab: oneOf(EVENT_TABS, params.get("tab")) ?? DEFAULT_TAB,
 		q: text(params.get("q")),
-		tags: [...new Set(params.getAll("tags"))].filter(isEventTag),
+		tags: parseTags(params.getAll("tags")),
 		place: text(params.get("place")),
 		instructor: text(params.get("instructor")),
 		year: year && year >= 2000 && year <= 2100 ? year : undefined,

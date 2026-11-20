@@ -18,12 +18,20 @@ describe("EventTabs", () => {
 		).toHaveAttribute("href", "/events/e1");
 	});
 
-	it("links the applicants tab to the filtered list with the count", () => {
+	it("links the applicants tab to the program's own page with the count", () => {
 		render(<EventTabs eventId="e1" applications={62} />);
 		const link = screen.getByRole("link", { name: /Jelentkezők/ });
-		expect(link).toHaveAttribute("href", "/applicants?eventIds=e1");
+		expect(link).toHaveAttribute("href", "/events/e1/applicants");
 		expect(link).toHaveTextContent("62");
 		expect(link).not.toHaveAttribute("aria-current");
+	});
+
+	it("marks the applicants tab current on its page", () => {
+		usePathname.mockReturnValue("/events/e1/applicants");
+		render(<EventTabs eventId="e1" applications={62} />);
+		expect(
+			screen.getByRole("link", { name: /Jelentkezők/ }),
+		).toHaveAttribute("aria-current", "page");
 	});
 
 	it("links the report tab and marks it current on its page", () => {

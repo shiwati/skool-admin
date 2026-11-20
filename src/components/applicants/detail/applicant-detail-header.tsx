@@ -3,8 +3,6 @@ import {
 	applicantInitials,
 	formatDateTime,
 	fullName,
-	STATUS_BADGE_CLASSES,
-	STATUS_LABELS,
 } from "@/lib/applicants/format";
 import type { ApplicantDetail } from "@/lib/applicants/detail";
 import { applicantTags } from "./applicant-tags";
@@ -19,7 +17,6 @@ export function ApplicantDetailHeader({
 	now: Date;
 	actions?: ReactNode;
 }) {
-	const latest = applicant.applications[0] ?? null;
 	const tags = applicantTags(applicant, now);
 	return (
 		// Mobile: centred (board 04.1 M). Below xl the actions take their own
@@ -44,17 +41,6 @@ export function ApplicantDetailHeader({
 							aria-label="Státusz és címkék"
 							className="flex flex-wrap justify-center gap-2"
 						>
-							{latest && (
-								<li>
-									<Pill
-										className={
-											STATUS_BADGE_CLASSES[latest.status]
-										}
-									>
-										{STATUS_LABELS[latest.status]}
-									</Pill>
-								</li>
-							)}
 							{tags.over16 && (
 								<li>
 									<Pill className="bg-info-bg text-info-fg">

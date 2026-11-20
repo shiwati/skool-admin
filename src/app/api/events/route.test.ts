@@ -77,8 +77,18 @@ describe("GET /api/events", () => {
 		expect(findMany).not.toHaveBeenCalled();
 	});
 
-	it("rejects a tag that is not in the fixed list", async () => {
-		const res = await call("?tags=robotika&tags=nemletezik");
+	it("accepts a well-formed tag that no program uses (it just matches nothing)", async () => {
+		findMany.mockResolvedValue([]);
+		count.mockResolvedValue(0);
+		const res = await call("?tags=Nemletezik");
+		expect(res.status).toBe(200);
+		expect(findMany.mock.calls[0][0].where.AND).toEqual([
+			{ tags: { hasSome: ["nemletezik"] } },
+		]);
+	});
+
+	it("rejects a malformed tag", async () => {
+		const res = await call(`?tags=${"a".repeat(31)}`);
 		expect(res.status).toBe(400);
 		expect((await res.json()).error).toBe("Invalid query parameters");
 		expect(findMany).not.toHaveBeenCalled();

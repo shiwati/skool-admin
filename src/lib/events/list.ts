@@ -13,7 +13,7 @@ import {
 	searchTokens,
 } from "@/lib/api/query";
 import { EVENT_PHASES, type EventPhase } from "./phase";
-import { eventTagSchema } from "./tags";
+import { tagSchema } from "./tags";
 
 /** A `GET /api/events` query sémája (a `/events` oldal is ezt használja). */
 export const eventsQuerySchema = z.object({
@@ -24,8 +24,8 @@ export const eventsQuerySchema = z.object({
 	place: optionalText,
 	instructor: optionalText,
 	q: optionalText,
-	/** Ismételt paraméter, csak a fix listából; legalább egy egyezzen. */
-	tags: repeatedList(eventTagSchema),
+	/** Ismételt paraméter, érvényes (normalizált) címkék; legalább egy egyezzen. */
+	tags: repeatedList(tagSchema),
 	/** Életciklus-szakasz (lásd `phase.ts`); hiányzik = mind. */
 	phase: z.enum(EVENT_PHASES).optional(),
 	sort: z.enum(["from", "name", "companyName", "capacity"]).default("from"),

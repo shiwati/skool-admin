@@ -1,28 +1,28 @@
 import "server-only";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { db } from "@/lib/db";
 import { EVENT_TABLE } from "@/lib/events/changes";
-import { createGoogleDocFromHtml } from "@/lib/google/drive";
+import {
+	batchUpdateDocument,
+	copyDriveFile,
+	getDocument,
+} from "@/lib/google/docs";
+import type { CreatedDoc } from "@/lib/google/drive";
 import {
 	getGoogleAccessToken,
 	GOOGLE_DRIVE_FILE_SCOPE,
+	GOOGLE_DRIVE_READONLY_SCOPE,
 } from "@/lib/google/token";
+import { env } from "@/lib/env";
 import type { ReportContent } from "./content";
 import { getEventReport, toDocumentData } from "./load";
-import { renderReportHtml, reportFileName } from "./render";
-
-/** A Skool-logó `data:` URI-ként (a Drive nem éri el a localhostot); hiba esetén szöveges logó. */
-async function skoolLogoDataUri(): Promise<string | null> {
-	try {
-		const file = await readFile(
-			path.join(process.cwd(), "public", "brand", "skool-logo.png"),
-		);
-		return `data:image/png;base64,${file.toString("base64")}`;
-	} catch {
-		return null;
-	}
-}
+import { reportFileName, type ReportDocumentData } from "./format";
+import {
+	findTemplateRow,
+	personRowFillRequests,
+	personRowStructureRequests,
+	replaceRequests,
+	templateValues,
+} from "./template";
 
 /** History `fieldName` a generált dokumentumhoz (`tableName: "event"`). */
 export const REPORT_DOCUMENT_HISTORY_FIELD = "reportDocument";
@@ -52,7 +52,53 @@ export async function saveReportContent(
 }
 
 /**
- * Elmenti a tartalmat, majd mindig új Google Docot hoz létre az admin saját
+ * Lemásolja a Google Doc sablont az admin Drive-jába, és kitölti: közreműködő
+ * sorok beszúrása, kitöltése, majd az összes helyőrző cseréje.
+ */
+async function createFromTemplate(
+	templateId: string,
+	title: string,
+	data: ReportDocumentData,
+	userId: string,
+): Promise<CreatedDoc> {
+	const accessToken = await getGoogleAccessToken(userId, [
+		GOOGLE_DRIVE_FILE_SCOPE,
+		GOOGLE_DRIVE_READONLY_SCOPE,
+	]);
+	const doc = await copyDriveFile(templateId, title, accessToken);
+
+	const people = data.people;
+	const row = findTemplateRow(await getDocument(doc.id, accessToken));
+	if (row) {
+		await batchUpdateDocument(
+			doc.id,
+			personRowStructureRequests(row, people.length),
+			accessToken,
+		);
+		if (people.length > 1) {
+			const expanded = findTemplateRow(
+				await getDocument(doc.id, accessToken),
+			);
+			if (expanded) {
+				await batchUpdateDocument(
+					doc.id,
+					personRowFillRequests(expanded, people),
+					accessToken,
+				);
+			}
+		}
+	}
+
+	await batchUpdateDocument(
+		doc.id,
+		replaceRequests(templateValues(data), people[0]),
+		accessToken,
+	);
+	return doc;
+}
+
+/**
+ * Elmenti a tartalmat, majd mindig új Google Docot hoz létre a sablonból az admin saját
  * Drive-jában, és naplózza (EventReportDocument + History).
  */
 export async function generateReportDocument(
@@ -66,14 +112,11 @@ export async function generateReportDocument(
 
 	const data = toDocumentData(report, content);
 	const title = reportFileName(data);
-	const accessToken = await getGoogleAccessToken(
-		userId,
-		GOOGLE_DRIVE_FILE_SCOPE,
-	);
-	const doc = await createGoogleDocFromHtml(
+	const doc = await createFromTemplate(
+		env.REPORT_TEMPLATE_DOC_ID,
 		title,
-		renderReportHtml(data, { logoDataUri: await skoolLogoDataUri() }),
-		accessToken,
+		data,
+		userId,
 	);
 
 	return db.$transaction(async (tx) => {

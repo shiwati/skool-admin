@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { formatCount } from "@/lib/applicants/format";
-import { applicantsHref, eventHref, eventReportHref } from "@/lib/events/links";
+import {
+	eventApplicantsHref,
+	eventHref,
+	eventReportHref,
+} from "@/lib/events/links";
 import { eventFeedbackHref } from "@/lib/feedback/format";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +39,7 @@ export function EventTabs({
 }) {
 	const pathname = usePathname();
 	const overviewActive = pathname === eventHref(eventId);
+	const applicantsActive = pathname === eventApplicantsHref(eventId);
 	const feedbackActive = pathname === eventFeedbackHref(eventId);
 	const reportActive = pathname === eventReportHref(eventId);
 
@@ -65,14 +70,20 @@ export function EventTabs({
 				</li>
 				<li>
 					<Link
-						href={applicantsHref(eventId)}
+						href={eventApplicantsHref(eventId)}
+						aria-current={applicantsActive ? "page" : undefined}
 						className={cn(
 							tabClass,
-							"border-transparent text-text-secondary hover:text-text-primary focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							applicantsActive
+								? "border-ink text-text-primary"
+								: "border-transparent text-text-secondary hover:text-text-primary",
 						)}
 					>
 						Jelentkezők
-						<Count>{formatCount(applications)}</Count>
+						<Count active={applicantsActive}>
+							{formatCount(applications)}
+						</Count>
 					</Link>
 				</li>
 				<li>

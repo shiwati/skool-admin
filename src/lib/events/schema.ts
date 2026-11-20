@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { parseSheetUrl } from "@/lib/google/sheet-url";
-import { eventTagSchema, type EventTag } from "./tags";
+import { tagListSchema } from "./tags";
 
 export const REQUIRED_MESSAGE = "Kötelező mező";
 export const SHEET_URL_MESSAGE = "Adj meg egy érvényes Google Sheets linket.";
@@ -42,7 +42,7 @@ const sheetUrlField = z
 export const eventFormSchema = z
 	.object({
 		name: z.string().trim().min(1, REQUIRED_MESSAGE).max(200),
-		tags: z.array(eventTagSchema),
+		tags: tagListSchema,
 		description: z.string().trim().max(2000),
 		from: localDateTime,
 		to: localDateTime,
@@ -80,7 +80,7 @@ export type EventFormValues = z.infer<typeof eventFormSchema>;
 /** A `POST /api/events` törzse; a szerver sémája az `api-schema.ts`-ben van. */
 export type CreateEventInput = {
 	name: string;
-	tags: EventTag[];
+	tags: string[];
 	description?: string;
 	from: string;
 	to: string;
@@ -98,7 +98,7 @@ export type CreateEventInput = {
 /** A `PATCH /api/events/[id]` törzse: minden mező megy, az üres választhatók `null`-ként törlődnek. */
 export type UpdateEventInput = {
 	name: string;
-	tags: EventTag[];
+	tags: string[];
 	description: string | null;
 	from: string;
 	to: string;
@@ -145,10 +145,8 @@ export function toEventFormValues(event: EventFormSource): EventFormValues {
 	const age = event.ageRange?.match(/^(\d{1,2})-(\d{1,2})$/);
 	return {
 		name: event.name,
-		tags: event.tags.filter(
-			(value): value is EventTag =>
-				eventTagSchema.safeParse(value).success,
-		),
+		// Every stored tag is kept, so editing never drops one.
+		tags: event.tags,
 		description: event.description ?? "",
 		from: toLocalDateTime(event.from),
 		to: toLocalDateTime(event.to),

@@ -2,7 +2,6 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { useApplicants } from "@/hooks/use-applicants";
 import { useColumnSettings } from "@/hooks/use-column-settings";
 import { csvFilename, useCsvExport } from "@/hooks/use-csv-export";
@@ -13,12 +12,10 @@ import {
 	visibleColumns,
 } from "@/lib/applicants/column-settings";
 import { buildApplicantsCsv } from "@/lib/applicants/export";
-import { buildEmailList, formatCount, fullName } from "@/lib/applicants/format";
 import {
 	clearFilters,
 	hasActiveFilters,
 	parseListState,
-	resultKey,
 	toApiQuery,
 	toSearchParams,
 	updateListState,
@@ -30,18 +27,13 @@ import type {
 	DuplicatesResponse,
 	EventOption,
 } from "@/lib/applicants/types";
-import { copyText } from "@/lib/clipboard";
 import { ApplicantsHeader } from "./applicants-header";
 import { ApplicantsTable, type TableData } from "./applicants-table";
 import { ApplicantsToolbar } from "./applicants-toolbar";
-import { BulkActionBar } from "./bulk-action-bar";
 import { ColumnPicker } from "./column-picker";
-import { DeleteDialog, type DeleteTarget } from "./delete-dialog";
 import { DuplicateBanner } from "./duplicate-banner";
 import { DuplicateReviewDialog } from "./duplicate-review-dialog";
 import { EmailListDialog } from "./email-list-dialog";
-
-const NO_SELECTION: ReadonlySet<string> = new Set();
 
 function useEventOptions(): EventOption[] {
 	const [events, setEvents] = useState<EventOption[]>([]);
@@ -102,26 +94,9 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 	);
 	const csvExport = useCsvExport();
 
-	// The selection belongs to one result set: any change to page, sort,
-	// search or filters starts a fresh, empty selection.
-	const currentKey = resultKey(state);
-	const [selection, setSelection] = useState<{
-		key: string;
-		ids: Set<string>;
-	}>({ key: currentKey, ids: new Set() });
-	const selected =
-		selection.key === currentKey ? selection.ids : NO_SELECTION;
-
 	const [emailListOpen, setEmailListOpen] = useState(false);
 	// Bumped on every open so the dialog remounts with fresh state.
 	const [emailListRun, setEmailListRun] = useState(0);
-	const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
-	const [deleteRun, setDeleteRun] = useState(0);
-
-	function openDelete(target: DeleteTarget) {
-		setDeleteRun((n) => n + 1);
-		setDeleteTarget(target);
-	}
 
 	const navigate = useCallback(
 		(next: ListState) => {
@@ -135,8 +110,6 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 	const change = (patch: Partial<ListState>) =>
 		navigate(updateListState(state, patch));
 
-	const items: ApplicantListItem[] =
-		applicants.status === "success" ? applicants.data.items : [];
 	const tableData: TableData =
 		applicants.status === "success"
 			? {
@@ -145,10 +118,6 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 					total: applicants.data.total,
 				}
 			: { status: applicants.status };
-
-	function setSelected(ids: Set<string>) {
-		setSelection({ key: currentKey, ids });
-	}
 
 	// A szűrt találatok mindegyike, a felhasználó által beállított oszlopokkal.
 	function exportCsv() {
@@ -164,25 +133,6 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 				rows: all.length,
 			};
 		});
-	}
-
-	async function copySelectedEmails() {
-		const { text, count } = buildEmailList(
-			items
-				.filter((item) => selected.has(item.id))
-				.map((item) => item.email),
-		);
-		if (count === 0) {
-			toast.info("A kijelölt jelentkezőknek nincs e-mail címe.");
-			return;
-		}
-		if (await copyText(text)) {
-			toast.success(
-				`${formatCount(count)} e-mail cím a vágólapra másolva`,
-			);
-		} else {
-			toast.error("Nem sikerült a vágólapra másolni.");
-		}
 	}
 
 	return (
@@ -235,43 +185,12 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 				order={state.order}
 				page={state.page}
 				pageSize={state.pageSize}
-				selected={selected}
 				filtersActive={hasActiveFilters(state)}
 				onSort={(sort, order) => change({ sort, order })}
 				onPage={(page) => change({ page })}
 				onPageSize={(pageSize) => change({ pageSize })}
-				onToggleRow={(id) => {
-					const next = new Set(selected);
-					if (next.has(id)) next.delete(id);
-					else next.add(id);
-					setSelected(next);
-				}}
-				onToggleAll={(ids, select) => {
-					const next = new Set(selected);
-					for (const id of ids) {
-						if (select) next.add(id);
-						else next.delete(id);
-					}
-					setSelected(next);
-				}}
 				onClearFilters={() => navigate(clearFilters(state))}
 				onReload={applicants.reload}
-			/>
-			<BulkActionBar
-				count={selected.size}
-				onCopyEmails={() => void copySelectedEmails()}
-				onDelete={() => {
-					const ids = [...selected];
-					const only =
-						ids.length === 1
-							? items.find((i) => i.id === ids[0])
-							: undefined;
-					openDelete({
-						ids,
-						name: only ? fullName(only) : null,
-					});
-				}}
-				onClear={() => setSelected(new Set())}
 			/>
 			<EmailListDialog
 				key={`email-${emailListRun}`}
@@ -285,16 +204,6 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 				onOpenChange={setDuplicatesOpen}
 				onChanged={(remaining) => {
 					setDuplicateCount(remaining);
-					applicants.reload();
-				}}
-			/>
-			<DeleteDialog
-				key={`delete-${deleteRun}`}
-				target={deleteTarget}
-				onOpenChange={(open) => !open && setDeleteTarget(null)}
-				onDeleted={() => {
-					setDeleteTarget(null);
-					setSelected(new Set());
 					applicants.reload();
 				}}
 			/>

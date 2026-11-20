@@ -182,12 +182,7 @@ export const COLUMNS: Record<ColumnId, ColumnDef> = {
 		id: "newsletter",
 		label: "Hírlevél",
 		pickerLabel: "Hírlevél",
-		card: (item) =>
-			item.newsletter ? (
-				<span className="text-success-fg">Feliratkozott</span>
-			) : (
-				dash
-			),
+		card: (item) => (item.newsletter ? <span>Feliratkozott</span> : dash),
 		widthClass: "w-[84px]",
 		cell: (item) =>
 			item.newsletter ? (

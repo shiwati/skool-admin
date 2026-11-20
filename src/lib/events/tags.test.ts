@@ -1,24 +1,52 @@
 import { describe, expect, it } from "vitest";
-import { EVENT_TAGS, eventTagSchema, isEventTag } from "./tags";
+import {
+	normalizeTag,
+	searchKey,
+	tagError,
+	tagListSchema,
+	tagSchema,
+} from "./tags";
 
-describe("event tags", () => {
-	it("has unique, trimmed, non-empty values", () => {
-		expect(new Set(EVENT_TAGS).size).toBe(EVENT_TAGS.length);
-		for (const tag of EVENT_TAGS) {
-			expect(tag).not.toBe("");
-			expect(tag.trim()).toBe(tag);
-		}
+describe("normalizeTag", () => {
+	it("trims, collapses inner whitespace and lowercases (Hungarian)", () => {
+		expect(normalizeTag("  Robotika ")).toBe("robotika");
+		expect(normalizeTag("3D   nyomtatás")).toBe("3d nyomtatás");
+		expect(normalizeTag("ÉLMÉNY\tTÁBOR")).toBe("élmény tábor");
+	});
+});
+
+describe("searchKey", () => {
+	it("ignores case and accents", () => {
+		expect(searchKey("Élmény")).toBe("elmeny");
+		expect(searchKey("PROGRAMOZÁS")).toBe("programozas");
+		expect(searchKey("Programozas")).toBe(searchKey("programozás"));
+	});
+});
+
+describe("tagSchema", () => {
+	it("accepts any well-formed tag and returns it normalized", () => {
+		expect(tagSchema.parse(" Új Címke ")).toBe("új címke");
 	});
 
-	it("recognises listed tags only", () => {
-		expect(isEventTag(EVENT_TAGS[0])).toBe(true);
-		expect(isEventTag("nemletezik")).toBe(false);
-		expect(isEventTag(42)).toBe(false);
+	it("rejects empty, too long and comma-separated values", () => {
+		expect(tagSchema.safeParse("   ").success).toBe(false);
+		expect(tagSchema.safeParse("a".repeat(30)).success).toBe(true);
+		expect(tagSchema.safeParse("a".repeat(31)).success).toBe(false);
+		expect(tagSchema.safeParse("robotika, kezdő").success).toBe(false);
+		expect(tagError("a,b")).toBe("A címke nem tartalmazhat vesszőt.");
 	});
+});
 
-	it("is case-sensitive, since values come from the same constant", () => {
+describe("tagListSchema", () => {
+	it("removes duplicates after normalization, keeping the first order", () => {
 		expect(
-			eventTagSchema.safeParse(EVENT_TAGS[0].toUpperCase()).success,
-		).toBe(false);
+			tagListSchema.parse(["  Robotika ", "kezdő", "robotika"]),
+		).toEqual(["robotika", "kezdő"]);
+	});
+
+	it("rejects the list when one tag is invalid", () => {
+		expect(tagListSchema.safeParse(["ok", "a".repeat(31)]).success).toBe(
+			false,
+		);
 	});
 });

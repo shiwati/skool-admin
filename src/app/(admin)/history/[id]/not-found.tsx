@@ -13,10 +13,10 @@ export default function HistoryNotFound() {
 				a hivatkozás.
 			</p>
 			<div className="flex gap-2">
-				<Button asChild variant="surface" className="rounded-full">
+				<Button asChild variant="surface">
 					<Link href="/applicants">Jelentkezők</Link>
 				</Button>
-				<Button asChild variant="surface" className="rounded-full">
+				<Button asChild variant="surface">
 					<Link href="/events">Programok</Link>
 				</Button>
 			</div>

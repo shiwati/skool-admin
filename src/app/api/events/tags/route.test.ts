@@ -1,11 +1,14 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { EVENT_TAGS } from "@/lib/events/tags";
 
-const { getSession } = vi.hoisted(() => ({ getSession: vi.fn() }));
+const { getSession, queryRaw } = vi.hoisted(() => ({
+	getSession: vi.fn(),
+	queryRaw: vi.fn(),
+}));
 vi.mock("next-auth", () => ({ getServerSession: getSession }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
 vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
+vi.mock("@/lib/db", () => ({ db: { $queryRaw: queryRaw } }));
 
 import { GET } from "./route";
 
@@ -22,16 +25,29 @@ describe("GET /api/events/tags", () => {
 		const res = await call();
 		expect(res.status).toBe(401);
 		expect(await res.json()).toEqual({ error: "Unauthorized" });
+		expect(queryRaw).not.toHaveBeenCalled();
 	});
 
-	it("returns every fixed tag in Hungarian alphabetical order, uncached", async () => {
+	it("returns the tags in use with counts, most used first, then Hungarian order, uncached", async () => {
+		queryRaw.mockResolvedValue([
+			{ name: "élmény", count: BigInt(1) },
+			{ name: "robotika", count: BigInt(2) },
+			{ name: "ablak", count: BigInt(1) },
+		]);
 		const res = await call();
 		expect(res.status).toBe(200);
 		expect(res.headers.get("Cache-Control")).toBe("no-store");
-		const { items } = await res.json();
-		expect([...items].sort()).toEqual([...EVENT_TAGS].sort());
-		expect(items).toEqual(
-			[...EVENT_TAGS].sort(new Intl.Collator("hu").compare),
-		);
+		expect(await res.json()).toEqual({
+			items: [
+				{ name: "robotika", count: 2 },
+				{ name: "ablak", count: 1 },
+				{ name: "élmény", count: 1 },
+			],
+		});
+	});
+
+	it("returns an empty list when no program has tags", async () => {
+		queryRaw.mockResolvedValue([]);
+		expect(await (await call()).json()).toEqual({ items: [] });
 	});
 });

@@ -8,6 +8,7 @@ import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import {
 	GOOGLE_DRIVE_FILE_SCOPE,
+	GOOGLE_DRIVE_READONLY_SCOPE,
 	GOOGLE_SHEETS_SCOPE,
 } from "@/lib/google/token";
 
@@ -31,7 +32,9 @@ export const authOptions: NextAuthOptions = {
 					// sheet with the signed-in admin's own permissions.
 					// drive.file: the report export creates Google Docs in the
 					// admin's own Drive (access limited to files the app made).
-					scope: `openid email profile ${GOOGLE_SHEETS_SCOPE} ${GOOGLE_DRIVE_FILE_SCOPE}`,
+					// drive.readonly: the report export copies the shared
+					// Google Doc template, which the app did not create.
+					scope: `openid email profile ${GOOGLE_SHEETS_SCOPE} ${GOOGLE_DRIVE_FILE_SCOPE} ${GOOGLE_DRIVE_READONLY_SCOPE}`,
 					// UI hint only; the claims are enforced in `signIn` below.
 					hd: env.AUTH_ALLOWED_DOMAIN,
 				},

@@ -1,23 +1,52 @@
 import { z } from "zod";
 
 /**
- * Az eseményeken használható címkék fix listája. Ez az egyetlen forrás:
- * az API-szűrő, a seed és a felület is innen dolgozik. Bővítése
- * kódmódosítás; címke eltávolítása előtt a meglévő adatot rendezni kell.
+ * Programcímkék szabályai. Nincs fix lista: a választható címkék a
+ * programokon használt címkék (`GET /api/events/tags`), újat a program
+ * űrlapján lehet felvenni. Ugyanez a normalizálás fut a böngészőben és a
+ * szerveren (űrlap, végpontok, listaszűrő, seed).
  *
  * Kliensről is importálható (nincs benne `server-only` és Prisma).
  */
-export const EVENT_TAGS = [
-	"robotika",
-	"programozás",
-	"kezdő",
-	"haladó",
-] as const;
 
-export type EventTag = (typeof EVENT_TAGS)[number];
+export const TAG_MAX_LENGTH = 30;
 
-export const eventTagSchema = z.enum(EVENT_TAGS);
-
-export function isEventTag(value: unknown): value is EventTag {
-	return eventTagSchema.safeParse(value).success;
+/** Szélek levágása, belső szóközök összevonása, kisbetű (magyar szabályokkal). */
+export function normalizeTag(value: string): string {
+	return value.trim().replace(/\s+/g, " ").toLocaleLowerCase("hu");
 }
+
+/**
+ * Kis- és nagybetűt, valamint ékezetet figyelmen kívül hagyó kulcs: a
+ * keresésnek és a majdnem azonos címkék felismerésének.
+ */
+export function searchKey(value: string): string {
+	return value
+		.normalize("NFD")
+		.replace(/\p{M}/gu, "")
+		.toLocaleLowerCase("hu");
+}
+
+/** Üres, ha a (normalizált) címke érvényes; különben a hibaüzenet. */
+export function tagError(tag: string): string | null {
+	if (tag.length === 0) return "A címke nem lehet üres.";
+	if (tag.length > TAG_MAX_LENGTH) {
+		return `A címke legfeljebb ${TAG_MAX_LENGTH} karakter lehet.`;
+	}
+	if (tag.includes(",")) return "A címke nem tartalmazhat vesszőt.";
+	return null;
+}
+
+/** Egy címke: normalizálja, majd ellenőrzi. */
+export const tagSchema = z
+	.string()
+	.transform(normalizeTag)
+	.superRefine((tag, ctx) => {
+		const message = tagError(tag);
+		if (message) ctx.addIssue({ code: "custom", message });
+	});
+
+/** Egy program címkéi: normalizálva, ismétlődés nélkül, az első előfordulás sorrendjében. */
+export const tagListSchema = z
+	.array(tagSchema)
+	.transform((tags) => [...new Set(tags)]);

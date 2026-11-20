@@ -13,7 +13,7 @@ import {
 	quoteCandidates,
 	type QuoteCandidate,
 } from "./quotes";
-import type { ReportDocumentData } from "./render";
+import type { ReportDocumentData } from "./format";
 
 export type ReportDocumentItem = {
 	id: string;

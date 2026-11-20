@@ -45,6 +45,7 @@ describe("GET /api/events/[id]/applicants", () => {
 		expect(args.where).toEqual({
 			eventId: "e1",
 			status: { in: ["APPLIED", "WAITLISTED"] },
+			applicant: { deletedAt: null },
 		});
 		expect(args.orderBy).toEqual([
 			{ applicant: { lastName: "desc" } },

@@ -7,6 +7,7 @@ import {
 	SHEET_URL_MESSAGE,
 	eventFormSchema,
 	toCreateEventInput,
+	toEventFormValues,
 	type EventFormValues,
 } from "./schema";
 
@@ -93,6 +94,43 @@ describe("eventFormSchema", () => {
 		).toEqual({
 			applicationSheetUrl: SHEET_URL_MESSAGE,
 		});
+	});
+
+	it("normalizes and de-duplicates tags, accepting new ones", () => {
+		const parsed = eventFormSchema.parse({
+			...values,
+			tags: ["  Robotika ", "robotika", "3D  nyomtatás"],
+		});
+		expect(parsed.tags).toEqual(["robotika", "3d nyomtatás"]);
+	});
+
+	it("rejects a tag longer than 30 characters on the tags field", () => {
+		expect(messages({ ...values, tags: ["a".repeat(31)] })).toMatchObject({
+			"tags.0": "A címke legfeljebb 30 karakter lehet.",
+		});
+	});
+});
+
+describe("toEventFormValues", () => {
+	it("keeps every stored tag", () => {
+		const form = toEventFormValues({
+			id: "e1",
+			name: "Python",
+			tags: ["robotika", "régi címke"],
+			description: null,
+			from: "2027-03-06T09:00:00.000Z",
+			to: "2027-03-06T13:00:00.000Z",
+			companyName: null,
+			location: null,
+			capacity: 10,
+			ageRange: null,
+			applicationSheetUrl: null,
+			participantFeedbackSheetUrl: null,
+			mentorFeedbackSheetUrl: null,
+			instructor: null,
+			mentors: [],
+		});
+		expect(form.tags).toEqual(["robotika", "régi címke"]);
 	});
 });
 

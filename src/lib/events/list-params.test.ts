@@ -19,7 +19,7 @@ describe("event list URL state", () => {
 
 	it("round-trips filters and drops invalid values", () => {
 		const state = parse(
-			"tab=closed&q=python&tags=robotika&tags=nincs&tags=robotika&place=Pécs&year=2025&sort=name&page=3&pageSize=50&instructor=Béla",
+			`tab=closed&q=python&tags=robotika&tags=${"x".repeat(31)}&tags=Robotika&place=Pécs&year=2025&sort=name&page=3&pageSize=50&instructor=Béla`,
 		);
 		expect(state).toMatchObject({
 			tab: "closed",

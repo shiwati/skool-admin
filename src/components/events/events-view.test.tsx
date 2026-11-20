@@ -74,7 +74,7 @@ describe("EventsView", () => {
 		expect(within(row).getByText("2026.11.21 – 12.12")).toBeInTheDocument();
 		expect(within(row).getByText("62 / 20 fő")).toBeInTheDocument();
 		expect(within(row).getByText("3,1×")).toBeInTheDocument();
-		expect(within(row).getByText("Betelt · várólista")).toBeInTheDocument();
+		expect(within(row).getByText("Betelt")).toBeInTheDocument();
 		expect(within(row).getByText("+1")).toBeInTheDocument();
 	});
 
@@ -177,7 +177,7 @@ describe("EventsView", () => {
 		const cells = within(screen.getAllByRole("row")[1]).getAllByRole(
 			"cell",
 		);
-		// Helyszín, Kapacitás · jelentkezők, Oktatók
+		// Helyszín, Jelentkezők · kapacitás, Oktatók
 		expect(cells[2]).toHaveTextContent(/^—$/);
 		expect(cells[3]).toHaveTextContent(/^7 jelentkező$/);
 		expect(within(cells[3]).queryByText(/×$/)).not.toBeInTheDocument();

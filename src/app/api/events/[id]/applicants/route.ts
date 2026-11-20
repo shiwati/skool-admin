@@ -65,7 +65,10 @@ export async function GET(
 		const where: Prisma.ApplicationWhereInput = {
 			eventId: id,
 			...(query.status && { status: { in: query.status } }),
-			...(applicant.length && { applicant: { AND: applicant } }),
+			applicant: {
+				deletedAt: null,
+				...(applicant.length && { AND: applicant }),
+			},
 		};
 
 		const sortMap: Record<

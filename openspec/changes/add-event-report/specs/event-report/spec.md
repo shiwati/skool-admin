@@ -20,6 +20,34 @@
 - **WHEN** an event ended and no doc was generated for it
 - **THEN** it appears under "Teendő" with the action "Riport készítése"
 
+### Requirement: Report list search
+
+A search field labelled "Szűrés programnévre" SHALL filter the listed events by program name and partner (company) name, ignoring case and accents. When nothing matches, the list SHALL show "Nincs a szűrésnek megfelelő program.".
+
+#### Scenario: Searching by partner
+
+- **GIVEN** an ended event "Python alapok – ősz" with the partner "Sigma Technology"
+- **WHEN** the admin types "sigma" into "Szűrés programnévre"
+- **THEN** the event stays in the list and events without a matching name or partner are hidden
+
+### Requirement: Report list table
+
+From 768 px, the events SHALL be shown in a table styled like the Programok table, with the columns "Program", "Lezárva", "Riport állapota", "Utolsó generálás" and an action column. The program name SHALL link to the program page (`/events/<id>`). The action SHALL be "Riport készítése" without a doc and "Riport megnyitása" otherwise, linking to the report tab. The table SHALL scroll inside its frame instead of widening the page.
+
+#### Scenario: Opening the program from the table
+
+- **WHEN** the admin activates a program name in the table at 1280 px
+- **THEN** `/events/<id>` opens for that program
+
+### Requirement: Mobile report cards
+
+Below 768 px, the events SHALL be shown as cards instead of the table, in the same order. Each card SHALL show the colour dot and program name (linking to the program page) with the partner, the lines "Lezárva", "Riport" and "Generálva" (who and when, or "—"), and the action as a full-width button.
+
+#### Scenario: Report list on a phone
+
+- **WHEN** `/reports` is shown at 390 px
+- **THEN** each event is a card with the lines "Lezárva", "Riport" and "Generálva" and a full-width action button, and no table is shown
+
 ### Requirement: Report content is anonymous
 
 The generated document SHALL NOT contain applicant names or contact data. Participant data SHALL appear only as counts and age range; quotes SHALL carry only a role ("résztvevő" or "mentor").

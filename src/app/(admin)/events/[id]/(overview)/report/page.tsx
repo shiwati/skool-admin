@@ -9,7 +9,7 @@ import { formatCount } from "@/lib/applicants/format";
 import { formatAgeRange } from "@/lib/events/format";
 import { eventReportHref } from "@/lib/events/links";
 import { getEventReport } from "@/lib/reports/load";
-import { reportDateText, reportTitle } from "@/lib/reports/render";
+import { reportDateText, reportTitle } from "@/lib/reports/format";
 import { requireAdmin } from "@/lib/session";
 
 type Props = PageProps<"/events/[id]/report">;

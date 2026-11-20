@@ -125,7 +125,7 @@ export function MobileFiltersDialog({
 				</DialogDescription>
 				{children}
 				<DialogClose asChild>
-					<Button className="mt-2 w-full rounded-full">Kész</Button>
+					<Button className="mt-2 w-full">Kész</Button>
 				</DialogClose>
 			</DialogContent>
 		</Dialog>

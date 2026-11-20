@@ -28,16 +28,16 @@ Egy tranzakcióban: csak a ténylegesen változott mezőket írja, mindegyikhez 
 
 ### `GET /api/events`
 
-Paraméterek: `page`, `pageSize`, `year`, `companyName`, `place` (helyszín vagy partnercég, részszöveg), `instructor`, `q` (név), `phase` (`active`: még nem ért véget és van jelentkezési sheet / `planned`: még nem ért véget, sheet nélkül / `closed`: véget ért; hiányzik = mind), `tags` (csak a [fix címkelistából](domain.md#címkék-eventtags), csak ismételt paraméterként, pl. `?tags=robotika&tags=kezdő`, vesszőnél nem vág; bármelyik címke egyezése elég; listán kívüli címke → `400`), `sort` (`from`|`name`|`companyName`|`capacity`, alap `from`), `order` (alap: `from` esetén desc, különben asc).
+Paraméterek: `page`, `pageSize`, `year`, `companyName`, `place` (helyszín vagy partnercég, részszöveg), `instructor`, `q` (név), `phase` (`active`: még nem ért véget és van jelentkezési sheet / `planned`: még nem ért véget, sheet nélkül / `closed`: véget ért; hiányzik = mind), `tags` ([címkék](domain.md#címkék-eventtags), csak ismételt paraméterként, pl. `?tags=robotika&tags=kezdő`, vesszőnél nem vág; normalizálódik; bármelyik címke egyezése elég; olyan érvényes címke, amit egy program sem használ → üres találat; hibás formájú címke (üres, 30 karakternél hosszabb, vesszőt tartalmaz) → `400`), `sort` (`from`|`name`|`companyName`|`capacity`, alap `from`), `order` (alap: `from` esetén desc, különben asc).
 Válasz: események + `applicationCounts` (státuszonként + `total`).
 
 ### `GET /api/events/tags`
 
-Paraméter nincs. Válasz: `{ items: string[] }`, a **fix címkelista** (`EVENT_TAGS`) minden eleme magyar ábécérendben, akkor is, ha egyik esemény sem használja; adatbázist nem olvas. Ez a címkeszűrő multiselect opciólistája; új címke a felületen nem vehető fel. Azért végpont és nem közvetlen import, hogy a lista később dinamikussá válhasson a felület módosítása nélkül.
+Paraméter nincs. Válasz: `{ items: { name: string, count: number }[] }`, a **programokon használt címkék** és hogy hány program használja őket (`unnest(tags)` + `GROUP BY`, `src/lib/events/tag-options.ts`), a legtöbbet használt elöl, azonos számnál magyar ábécérendben. A nem használt címke nem szerepel. Példa: `{ "items": [{ "name": "robotika", "count": 2 }, { "name": "ablak", "count": 1 }, { "name": "élmény", "count": 1 }] }`. Ebből dolgozik a címkeszűrő (új címke ott nem vehető fel) és a program űrlapjának címkemezője (ott igen).
 
 ### `POST /api/events` — új program
 
-Törzs (JSON, sémája `createEventSchema` a `src/lib/events/api-schema.ts`-ben): `name` (kötelező), `from`/`to` (dátum, `to >= from`); választható: `tags[]` (csak a fix címkelistából, alap üres), `description`, `companyName`, `location`, `applicationSheetUrl`, `ageRange` (`"12-18"`), `instructor`, `mentors[]`, `capacity` (egész, ≥ 0, alap 0). Üres szöveg `null`-ra normalizálódik. Az űrlap legalább 1 fős létszámot kér, ezt a kliens ellenőrzi.
+Törzs (JSON, sémája `createEventSchema` a `src/lib/events/api-schema.ts`-ben): `name` (kötelező), `from`/`to` (dátum, `to >= from`); választható: `tags[]` (bármilyen érvényes címke: normalizálódik — szélek levágva, belső szóközök összevonva, kisbetű —, 1–30 karakter, vessző nélkül, ismétlődés kiszűrve; alap üres), `description`, `companyName`, `location`, `applicationSheetUrl`, `ageRange` (`"12-18"`), `instructor`, `mentors[]`, `capacity` (egész, ≥ 0, alap 0). Üres szöveg `null`-ra normalizálódik. Az űrlap legalább 1 fős létszámot kér, ezt a kliens ellenőrzi.
 Válasz: `201 { id }`; `400` `{error, details}` (mezőnkénti hibák); `401`.
 
 ### `GET /api/events/[id]`
@@ -53,7 +53,11 @@ Válasz: `200 { id }`; `400` `{error, details}`; `401`; `404`.
 ### `GET /api/events/[id]/applicants`
 
 Paraméterek: `page`, `pageSize`, `status` (CSV enum), `ageFrom`, `ageTo`, `q`, `sort` (`lastName`|`birthYear`|`status`|`receivedAt`, alap `receivedAt`), `order` (alap `asc`).
-Válasz: Application + beágyazott `applicant`. `404`, ha az esemény nem létezik.
+Válasz: Application + beágyazott `applicant` (a törölt/anonimizált jelentkezők nélkül). `404`, ha az esemény nem létezik.
+
+### `POST /api/events/[id]/applicants/status` — tömeges státuszmódosítás
+
+Body: `{ "ids": ["…"], "status": "ACCEPTED" }` (1–100 egyedi `Application` id, `status` az `ApplicationStatus` enumból). Egy tranzakcióban csak a ténylegesen változó jelentkezések frissülnek (`status`, `updatedById`), soronként egy `History` sorral (`tableName: "application"`, `fieldName: "status"`, `oldValue`/`newValue` az enum kulcsa). A már célstátuszú sor kimarad. Válasz: `{ updated, skipped }`; hibák: 400 (validáció), 401, 404 (ismeretlen vagy másik programhoz tartozó id, semmi sem változik). Kód: `src/lib/applications/update-status.ts`. A férőhelyet a szerver nem kényszeríti ki, a felület csak figyelmeztet.
 
 Egyéb: `GET /api/health` (nyilvános readiness, 200/503), `/api/auth/*` (NextAuth).
 
@@ -107,4 +111,4 @@ A lista nem API-n megy: a `/feedback` oldal és a program „Visszajelzések” 
 A program „Záró riport” füle (`/events/[id]/report`) és a `/reports` lista szerveren olvas (`src/lib/reports/load.ts`, `list.ts`). A tartalom sémája `src/lib/reports/content.ts` (közreműködők, max. 8 idézet, ebből max. 2 kiemelt, kikapcsolt mutatók). A riport névsort nem tartalmaz: résztvevőkből csak darabszám, az idézeteknél csak a szerep.
 
 - `PUT /api/events/[id]/report` — `{ content }` mentése (`EventReport`, eseményenként egy). `200 { ok }`, `400` validációs hiba, `404`.
-- `POST /api/events/[id]/report/documents` — `{ content }` mentése, majd **mindig új** Google Doc a bejelentkezett admin saját Drive-jába (HTML-sablon → Drive konverzió, `src/lib/reports/render.ts`; `drive.file` scope). Naplózza: `EventReportDocument` + `History` (`tableName: "event"`, `fieldName: "reportDocument"`). `201 { id, title, docUrl, createdAt }`, `403 REAUTH_REQUIRED` (hiányzó scope: újra be kell jelentkezni), `502` Google-hiba.
+- `POST /api/events/[id]/report/documents` — `{ content }` mentése, majd **mindig új** Google Doc a bejelentkezett admin saját Drive-jába (a `REPORT_TEMPLATE_DOC_ID` Google Doc sablon másolata, kitöltve a Docs API-val: `src/lib/reports/template.ts`; `drive.file` + `drive.readonly` scope). Naplózza: `EventReportDocument` + `History` (`tableName: "event"`, `fieldName: "reportDocument"`). `201 { id, title, docUrl, createdAt }`, `403 REAUTH_REQUIRED` (hiányzó scope: újra be kell jelentkezni), `422 TEMPLATE_NOT_ACCESSIBLE` (a sablon nincs megosztva), `503 DRIVE_API_DISABLED` / `DOCS_API_DISABLED`, `502` Google-hiba.

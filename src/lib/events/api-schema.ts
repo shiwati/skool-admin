@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eventTagSchema } from "./tags";
+import { tagListSchema } from "./tags";
 
 const optionalField = z
 	.string()
@@ -14,7 +14,7 @@ const shape = {
 	companyName: optionalField,
 	location: optionalField,
 	description: optionalField,
-	tags: z.array(eventTagSchema),
+	tags: tagListSchema,
 	applicationSheetUrl: z.url().nullish(),
 	participantFeedbackSheetUrl: z.url().nullish(),
 	mentorFeedbackSheetUrl: z.url().nullish(),

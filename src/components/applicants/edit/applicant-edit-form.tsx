@@ -193,7 +193,7 @@ export function ApplicantEditForm({
 				title="Adatlap szerkesztése"
 				description="A mentett módosítások a változástörténetbe kerülnek, a neveddel és az időponttal."
 				actions={
-					<Button asChild variant="surface" className="rounded-full">
+					<Button asChild variant="surface">
 						<Link href={detailHref}>Mégse</Link>
 					</Button>
 				}

@@ -19,7 +19,7 @@ export type EventStatus = "open" | "full" | "running" | "planned" | "closed";
 
 export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
 	open: "Jelentkezés nyitva",
-	full: "Betelt · várólista",
+	full: "Betelt",
 	running: "Folyamatban",
 	planned: "Tervezett",
 	closed: "Lezárva",
@@ -30,7 +30,7 @@ export const EVENT_STATUS_BADGE_CLASSES: Record<EventStatus, string> = {
 	open: "bg-success-bg text-success-fg",
 	full: "bg-warning-bg text-warning-fg",
 	running: "bg-info-bg text-info-fg",
-	planned: "bg-surface-subtle text-text-secondary",
+	planned: "bg-lavender/40 text-text-primary",
 	closed: "bg-surface-subtle text-text-primary",
 };
 
