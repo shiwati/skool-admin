@@ -1,6 +1,6 @@
 /**
- * Az Áttekintés év választója: idei vagy tavalyi naptári év (budapesti idő),
- * mindig az azt megelőző évvel összevetve.
+ * Az Áttekintés év választója: naptári év (budapesti idő) az ideitől a
+ * legkorábbi programig, mindig az azt megelőző évvel összevetve.
  *
  * Kliensről is importálható (nincs benne `server-only` és Prisma).
  */
@@ -18,18 +18,33 @@ export type Period = PeriodOption & {
 	previousLabel: string;
 };
 
-/** A választható évek: idei (alapértelmezett) és tavalyi. */
-export function periodOptions(now: Date): PeriodOption[] {
+/**
+ * A választható évek az idei évtől (alapértelmezett) visszafelé a
+ * legkorábbi program évéig (`firstYear`, a DB-ből). A tavalyi év mindig
+ * szerepel, akkor is, ha még nincs régebbi program.
+ */
+export function periodOptions(
+	now: Date,
+	firstYear?: number | null,
+): PeriodOption[] {
 	const year = budapestYear(now);
-	return [
-		{ key: String(year), label: `${year} (idei év)` },
-		{ key: String(year - 1), label: String(year - 1) },
-	];
+	const oldest = Math.min(firstYear ?? year - 1, year - 1);
+	return Array.from({ length: year - oldest + 1 }, (_, i) => {
+		const y = year - i;
+		return {
+			key: String(y),
+			label: i === 0 ? `${y} (idei év)` : String(y),
+		};
+	});
 }
 
 /** Ismeretlen vagy hiányzó kulcs esetén az idei év. */
-export function resolvePeriod(key: string | undefined, now: Date): Period {
-	const options = periodOptions(now);
+export function resolvePeriod(
+	key: string | undefined,
+	now: Date,
+	firstYear?: number | null,
+): Period {
+	const options = periodOptions(now, firstYear);
 	const option = options.find((o) => o.key === key) ?? options[0];
 	const year = Number(option.key);
 	return {
