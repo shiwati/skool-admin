@@ -23,6 +23,7 @@
 - [x] 4.1 Enable the "Záró riport" tab; page `/events/[id]/report` with the sections Alapadatok, Közreműködők, Idézetek, Impact Spotlight, Generált dokumentumok.
 - [x] 4.2 Generation states: pending (button disabled), success (link + "a dokumentum a saját Google Drive-odba került" notice), error with retry; re-auth prompt when the scope is missing.
 - [x] 4.3 `/reports` list with Teendő / Kész / Mind tabs; "Riportok" sidebar item.
+- [x] 4.4 `/reports` list: name/partner search, Programok-style table (name links to the program), mobile cards.
 
 ## 5. Verify
 
