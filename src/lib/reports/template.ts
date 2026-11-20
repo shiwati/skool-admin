@@ -46,6 +46,7 @@ export function templateValues(d: ReportDocumentData): Record<string, string> {
 		"{event_name}": d.eventName,
 		"{event_date}": reportDayText(d.from, d.to),
 		"{place}": d.location?.trim() || d.companyName?.trim() || "",
+		"{short_desc}": d.description?.trim() ?? "",
 		"{count}": String(d.participants),
 		"{age}": ageRangeText(d.ageRange) ?? "",
 		"{people_count}": String(d.people.length),

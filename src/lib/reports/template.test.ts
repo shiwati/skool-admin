@@ -16,6 +16,7 @@ const data: ReportDocumentData = {
 	to: new Date("2025-05-16T16:30:00Z"),
 	location: "Budapest",
 	ageRange: "10-12",
+	description: "Rövid leírás",
 	participants: 15,
 	people: [
 		{ role: "Oktató", organization: "Skool", name: "Tóth Réka" },
@@ -40,6 +41,7 @@ describe("templateValues", () => {
 			"{event_name}": "Minecraft workshop",
 			"{event_date}": "2025. május 16.",
 			"{place}": "Budapest",
+			"{short_desc}": "Rövid leírás",
 			"{count}": "15",
 			"{age}": "10–12",
 			"{people_count}": "3",

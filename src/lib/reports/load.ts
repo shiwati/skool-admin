@@ -32,6 +32,7 @@ export type EventReportData = {
 		to: Date;
 		location: string | null;
 		ageRange: string | null;
+		description: string | null;
 	};
 	participants: number;
 	content: ReportContent;
@@ -54,6 +55,7 @@ export const getEventReport = cache(
 				to: true,
 				location: true,
 				ageRange: true,
+				description: true,
 				instructor: true,
 				mentors: true,
 				report: { select: { content: true } },
@@ -107,6 +109,7 @@ export const getEventReport = cache(
 				to: event.to,
 				location: event.location,
 				ageRange: event.ageRange,
+				description: event.description,
 			},
 			participants,
 			content: event.report
@@ -176,6 +179,7 @@ export function toDocumentData(
 		to: report.event.to,
 		location: report.event.location,
 		ageRange: report.event.ageRange,
+		description: report.event.description,
 		participants: report.participants,
 		people: content.people,
 		highlightedQuotes: quotes.filter((q) => q.highlighted),
