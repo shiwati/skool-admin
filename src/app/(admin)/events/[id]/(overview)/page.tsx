@@ -44,19 +44,23 @@ export default async function EventOverviewPage({ params }: Props) {
 						event.capacity > 0 ? formatCount(event.capacity) : "—"
 					}
 				/>
-				<KpiCard label="Jelentkezett" value={formatCount(counts.total)}>
-					{ratio !== null && (
-						<span
-							className={cn(
-								"rounded-full px-2 font-mono text-xs leading-5 font-medium",
-								ratioBadgeClass(ratio),
-							)}
-						>
-							<span className="sr-only">Túljelentkezés: </span>
-							{formatRatio(ratio)}
-						</span>
-					)}
-				</KpiCard>
+				<KpiCard
+					label="Jelentkezett"
+					value={formatCount(counts.total)}
+					asideLabel={ratio !== null && "Kereslet"}
+					asideValue={
+						ratio !== null && (
+							<span
+								className={cn(
+									"rounded-full px-2 font-mono text-xs leading-5 font-medium",
+									ratioBadgeClass(ratio),
+								)}
+							>
+								{formatRatio(ratio)}
+							</span>
+						)
+					}
+				/>
 				<KpiCard label="Elfogadva" value={formatCount(counts.ACCEPTED)}>
 					{event.capacity > 0 && (
 						<span className="text-sm text-text-secondary">

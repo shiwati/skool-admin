@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { formatCount } from "@/lib/applicants/format";
-import { applicantsHref, eventHref } from "@/lib/events/links";
+import { applicantsHref, eventHref, eventReportHref } from "@/lib/events/links";
 import { eventFeedbackHref } from "@/lib/feedback/format";
 import { cn } from "@/lib/utils";
 
@@ -25,10 +25,7 @@ function Count({ children, active }: { children: string; active?: boolean }) {
 	);
 }
 
-/**
- * A program szakaszai. A még nem létező képernyők letiltva jelennek meg
- * (ugyanígy, mint az oldalsáv menüpontjai).
- */
+/** A program szakaszai. */
 export function EventTabs({
 	eventId,
 	applications,
@@ -39,7 +36,7 @@ export function EventTabs({
 	const pathname = usePathname();
 	const overviewActive = pathname === eventHref(eventId);
 	const feedbackActive = pathname === eventFeedbackHref(eventId);
-	const disabled = ["Záró riport"];
+	const reportActive = pathname === eventReportHref(eventId);
 
 	return (
 		<nav
@@ -93,20 +90,21 @@ export function EventTabs({
 						Visszajelzések
 					</Link>
 				</li>
-				{disabled.map((label) => (
-					<li key={label}>
-						<span
-							aria-disabled="true"
-							title="Hamarosan elérhető."
-							className={cn(
-								tabClass,
-								"cursor-not-allowed border-transparent text-text-tertiary",
-							)}
-						>
-							{label}
-						</span>
-					</li>
-				))}
+				<li>
+					<Link
+						href={eventReportHref(eventId)}
+						aria-current={reportActive ? "page" : undefined}
+						className={cn(
+							tabClass,
+							"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							reportActive
+								? "border-ink text-text-primary"
+								: "border-transparent text-text-secondary hover:text-text-primary",
+						)}
+					>
+						Záró riport
+					</Link>
+				</li>
 			</ul>
 		</nav>
 	);

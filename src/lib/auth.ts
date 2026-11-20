@@ -6,7 +6,10 @@ import { evaluateSignIn, type SignInProfile } from "@/lib/access-policy";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { GOOGLE_SHEETS_SCOPE } from "@/lib/google/token";
+import {
+	GOOGLE_DRIVE_FILE_SCOPE,
+	GOOGLE_SHEETS_SCOPE,
+} from "@/lib/google/token";
 
 export const authOptions: NextAuthOptions = {
 	adapter: PrismaAdapter(db),
@@ -26,7 +29,9 @@ export const authOptions: NextAuthOptions = {
 					access_type: "offline",
 					// Sheets read access: the event sync reads the response
 					// sheet with the signed-in admin's own permissions.
-					scope: `openid email profile ${GOOGLE_SHEETS_SCOPE}`,
+					// drive.file: the report export creates Google Docs in the
+					// admin's own Drive (access limited to files the app made).
+					scope: `openid email profile ${GOOGLE_SHEETS_SCOPE} ${GOOGLE_DRIVE_FILE_SCOPE}`,
 					// UI hint only; the claims are enforced in `signIn` below.
 					hd: env.AUTH_ALLOWED_DOMAIN,
 				},

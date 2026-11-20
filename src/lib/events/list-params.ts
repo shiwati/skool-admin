@@ -134,6 +134,25 @@ export function clearEventFilters(state: EventListState): EventListState {
 	};
 }
 
+/** Állapot → `GET /api/events` query (felülírható lap és lapméret, pl. az exporthoz). */
+export function toEventsApiQuery(
+	state: EventListState,
+	overrides: { page?: number; pageSize?: number } = {},
+): URLSearchParams {
+	const params = new URLSearchParams();
+	params.set("page", String(overrides.page ?? state.page));
+	params.set("pageSize", String(overrides.pageSize ?? state.pageSize));
+	if (state.q) params.set("q", state.q);
+	for (const tag of state.tags) params.append("tags", tag);
+	if (state.place) params.set("place", state.place);
+	if (state.instructor) params.set("instructor", state.instructor);
+	if (state.year !== undefined) params.set("year", String(state.year));
+	if (state.tab !== "all") params.set("phase", state.tab);
+	params.set("sort", state.sort);
+	params.set("order", state.order);
+	return params;
+}
+
 /** Állapot → `eventsQuerySchema` bemenete (a szerver oldali lekéréshez). */
 export function toEventsQueryInput(state: EventListState) {
 	return {

@@ -47,7 +47,12 @@ export const navGroups: NavGroup[] = [
 				href: "/feedback",
 				mobile: "tab",
 			},
-			{ label: "Riportok", icon: FileText, mobile: "more" },
+			{
+				label: "Riportok",
+				icon: FileText,
+				href: "/reports",
+				mobile: "more",
+			},
 		],
 	},
 	{

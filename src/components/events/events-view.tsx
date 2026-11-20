@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
@@ -8,15 +8,19 @@ import { PageHeader } from "@/components/admin-shell/page-header";
 import { ColumnPicker } from "@/components/column-picker";
 import { Button } from "@/components/ui/button";
 import { useColumnSettings } from "@/hooks/use-column-settings";
+import { csvFilename, useCsvExport } from "@/hooks/use-csv-export";
+import { fetchAllPages } from "@/lib/api/fetch-all-pages";
 import { formatCount } from "@/lib/applicants/format";
 import { visibleColumns } from "@/lib/column-settings";
 import { EVENT_COLUMN_CONFIG } from "@/lib/events/column-settings";
+import { buildEventsCsv } from "@/lib/events/export";
 import type { PhaseCounts } from "@/lib/events/list";
 import {
 	clearEventFilters,
 	hasActiveEventFilters,
 	parseEventListState,
 	toEventSearchParams,
+	toEventsApiQuery,
 	updateEventListState,
 	type EventListState,
 } from "@/lib/events/list-params";
@@ -53,6 +57,7 @@ export function EventsView({
 	const [pending, startTransition] = useTransition();
 	const [columnSettings, setColumnSettings] =
 		useColumnSettings(EVENT_COLUMN_CONFIG);
+	const csvExport = useCsvExport();
 	const [deleteTarget, setDeleteTarget] = useState<EventDeleteTarget | null>(
 		null,
 	);
@@ -69,6 +74,18 @@ export function EventsView({
 		navigate(updateEventListState(state, patch));
 	const clearFilters = () => navigate(clearEventFilters(state));
 
+	// A szűrt találatok mindegyike (az aktuális fül is szűrésnek számít).
+	function exportCsv() {
+		void csvExport.run(csvFilename("programok"), async (signal) => {
+			const all = await fetchAllPages<EventListItem>(
+				(page, pageSize) =>
+					`/api/events?${toEventsApiQuery(state, { page, pageSize })}`,
+				signal,
+			);
+			return { csv: buildEventsCsv(all), rows: all.length };
+		});
+	}
+
 	return (
 		<>
 			<PageHeader
@@ -79,13 +96,25 @@ export function EventsView({
 					`Találatok száma: ${formatCount(total)} db`
 				}
 				actions={
-					// Mobile: the floating button below takes this role.
-					<Button asChild className="hidden md:inline-flex">
-						<Link href="/events/new">
-							<Plus aria-hidden="true" />
-							Új program
-						</Link>
-					</Button>
+					<>
+						<Button
+							variant="surface"
+							onClick={exportCsv}
+							disabled={csvExport.exporting}
+						>
+							<Download aria-hidden="true" />
+							{csvExport.exporting
+								? "Exportálás…"
+								: "Exportálás CSV-be"}
+						</Button>
+						{/* Mobile: the floating button below takes this role. */}
+						<Button asChild className="hidden md:inline-flex">
+							<Link href="/events/new">
+								<Plus aria-hidden="true" />
+								Új program
+							</Link>
+						</Button>
+					</>
 				}
 			/>
 			{/* Mobile (board 05.1 M): floating "Új program" above the bottom nav. */}

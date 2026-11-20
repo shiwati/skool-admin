@@ -76,18 +76,21 @@ describe("MobileTabBar", () => {
 		).toBeInTheDocument();
 	});
 
-	it("opens the more sheet with the remaining, disabled items", async () => {
+	it("opens the more sheet with the remaining items", async () => {
 		render(<MobileTabBar />);
 		await userEvent.click(screen.getByRole("button", { name: "Több" }));
 		const sheet = screen.getByRole("dialog", { name: "Több" });
 		const items = within(sheet).getAllByRole("link");
-		expect(items.map((i) => i.getAttribute("aria-label"))).toEqual([
+		expect(
+			items.map((i) => i.getAttribute("aria-label") ?? i.textContent),
+		).toEqual([
 			"Riportok",
 			"Adatforrások",
 			"Adatmigráció",
 			"Változásnapló",
 		]);
-		for (const item of items) {
+		expect(items[0]).toHaveAttribute("href", "/reports");
+		for (const item of items.slice(1)) {
 			expect(item).toHaveAttribute("aria-disabled", "true");
 		}
 	});
