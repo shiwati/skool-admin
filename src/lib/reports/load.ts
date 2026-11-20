@@ -155,6 +155,7 @@ export function toDocumentData(
 					{
 						text: q.text,
 						role: QUOTE_ROLE_LABELS[role],
+						kind: role,
 						highlighted: q.highlighted,
 					},
 				]
@@ -164,7 +165,7 @@ export function toDocumentData(
 	const metrics = report.metrics.flatMap((m) =>
 		m.percent === null || disabled.has(m.key)
 			? []
-			: [{ percent: m.percent, phrase: m.phrase }],
+			: [{ key: m.key, percent: m.percent, phrase: m.phrase }],
 	);
 	const recommend = report.metrics.find((m) => m.key === "recommend");
 

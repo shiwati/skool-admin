@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeMetrics, metricSentence } from "./metrics";
+import { computeMetrics } from "./metrics";
 
 const metric = (key: string, inputs: Parameters<typeof computeMetrics>[0]) =>
 	computeMetrics(inputs).find((m) => m.key === key)!;
@@ -38,16 +38,5 @@ describe("computeMetrics", () => {
 			{ answers: { s08CanLearnProgramming: "x" }, recommend: null },
 		]);
 		expect(result).toMatchObject({ answered: 0, percent: null });
-	});
-});
-
-describe("metricSentence", () => {
-	it("builds the Hungarian sentence", () => {
-		expect(
-			metricSentence({
-				percent: 90,
-				phrase: "szerint Skooleenak lenni menő",
-			}),
-		).toBe("A résztvevők 90%-a szerint Skooleenak lenni menő.");
 	});
 });

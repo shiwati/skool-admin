@@ -7,7 +7,7 @@ import {
 	visibleColumns,
 } from "@/lib/applicants/column-settings";
 import { ApplicantsTable } from "./applicants-table";
-import { pageNumbers } from "./pager";
+import { pageNumbers } from "@/lib/pagination";
 import { applicant, boroka } from "./test-fixtures";
 
 const router = vi.hoisted(() => ({ push: vi.fn() }));

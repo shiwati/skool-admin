@@ -1,41 +1,25 @@
 import { describe, expect, it } from "vitest";
-import {
-	isActive,
-	mobileMoreItems,
-	mobileTabItems,
-	railItems,
-	shortLabel,
-} from "./nav-items";
+import { isActive, navItems, shortLabel } from "./nav-items";
 
-describe("nav items per breakpoint", () => {
-	it("puts the four main sections in the mobile tab bar", () => {
-		expect(mobileTabItems.map((i) => i.label)).toEqual([
+describe("nav items", () => {
+	it("lists every main section in order", () => {
+		expect(navItems.map((i) => i.label)).toEqual([
 			"Áttekintés",
 			"Jelentkezők",
 			"Programok",
 			"Visszajelzések",
-		]);
-	});
-
-	it("puts the remaining items in the more sheet", () => {
-		expect(mobileMoreItems.map((i) => i.label)).toEqual([
 			"Riportok",
-			"Adatforrások",
-			"Adatmigráció",
-			"Változásnapló",
 		]);
 	});
 
-	it("gives the rail the main items and one disabled data item", () => {
-		expect(railItems.main.map(shortLabel)).toEqual([
+	it("shortens labels for the narrow navigations", () => {
+		expect(navItems.map(shortLabel)).toEqual([
 			"Áttekintés",
 			"Jelentkezők",
 			"Programok",
 			"Visszajelz.",
 			"Riportok",
 		]);
-		expect(railItems.data.label).toBe("Adatok");
-		expect(railItems.data.href).toBeUndefined();
 	});
 
 	it("keeps sections active on sub-paths", () => {

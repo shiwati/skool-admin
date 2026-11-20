@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { isActive, navGroups } from "./nav-items";
+import { isActive, navItems } from "./nav-items";
 
 const itemBase =
 	"flex h-10 items-center gap-3 rounded-full px-3 text-sm font-medium [&_svg]:size-[18px] [&_svg]:shrink-0";
@@ -35,55 +35,27 @@ export function AdminSidebar({ className }: { className?: string }) {
 				</span>
 			</div>
 
-			{navGroups.map((group, index) => (
-				<div key={group.label} className="flex flex-col gap-1">
-					<div
+			<div className="px-3 pt-3 pb-1.5 font-mono text-[11px] leading-4 font-semibold uppercase">
+				Főmenü
+			</div>
+			{navItems.map(({ label, icon: Icon, href }) => {
+				const active = isActive(href, pathname);
+				return (
+					<Link
+						key={label}
+						href={href}
+						aria-current={active ? "page" : undefined}
 						className={cn(
-							"px-3 pb-1.5 font-mono text-[11px] leading-4 font-semibold uppercase",
-							index === 0 ? "pt-3" : "pt-4",
+							itemBase,
+							"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
+							active ? "bg-ink text-white" : "hover:bg-white/40",
 						)}
 					>
-						{group.label}
-					</div>
-					{group.items.map(({ label, icon: Icon, href }) => {
-						if (!href) {
-							return (
-								<span
-									key={label}
-									role="link"
-									aria-disabled="true"
-									title="Hamarosan"
-									className={cn(
-										itemBase,
-										"cursor-not-allowed text-text-primary/45",
-									)}
-								>
-									<Icon aria-hidden="true" />
-									<span className="flex-1">{label}</span>
-								</span>
-							);
-						}
-						const active = isActive(href, pathname);
-						return (
-							<Link
-								key={label}
-								href={href}
-								aria-current={active ? "page" : undefined}
-								className={cn(
-									itemBase,
-									"focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none",
-									active
-										? "bg-ink text-white"
-										: "hover:bg-white/40",
-								)}
-							>
-								<Icon aria-hidden="true" />
-								<span className="flex-1">{label}</span>
-							</Link>
-						);
-					})}
-				</div>
-			))}
+						<Icon aria-hidden="true" />
+						<span className="flex-1">{label}</span>
+					</Link>
+				);
+			})}
 		</nav>
 	);
 }

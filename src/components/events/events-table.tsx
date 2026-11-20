@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { Pager } from "@/components/applicants/pager";
+import { Pager } from "@/components/shared/pager";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {

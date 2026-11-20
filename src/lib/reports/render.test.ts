@@ -16,9 +16,24 @@ const data: ReportDocumentData = {
 	ageRange: "10-12",
 	participants: 15,
 	people: [{ role: "Oktató", organization: "Skool", name: "Jéney Ildikó" }],
-	highlightedQuotes: [{ text: "Minden <tetszett>!", role: "résztvevő" }],
-	quotes: [{ text: "A Bosch nagyon jó hely volt!", role: "résztvevő" }],
-	metrics: [{ percent: 100, phrase: "ajánlaná a workshopot másoknak is" }],
+	highlightedQuotes: [
+		{ text: "Minden <tetszett>!", role: "résztvevő", kind: "PARTICIPANT" },
+	],
+	quotes: [
+		{
+			text: "A Bosch nagyon jó hely volt!",
+			role: "résztvevő",
+			kind: "PARTICIPANT",
+		},
+		{ text: "Öröm volt mentorálni.", role: "mentor", kind: "MENTOR" },
+	],
+	metrics: [
+		{
+			key: "recommend",
+			percent: 100,
+			phrase: "ajánlaná a workshopot másoknak is",
+		},
+	],
 	recommendPercent: 100,
 };
 
@@ -55,10 +70,11 @@ describe("renderReportHtml", () => {
 		);
 		expect(html).toContain("Jéney Ildikó");
 		expect(html).toContain("A Bosch nagyon jó hely volt!");
-		expect(html).toContain(
-			"A résztvevők <b>100%</b>-a ajánlaná a workshopot másoknak is.",
-		);
+		expect(html).toContain("ajánlaná a workshopot másoknak is");
+		expect(html).toContain("Öröm volt mentorálni.");
+		expect(html).toContain("Kik vettek részt?");
 		expect(html).toContain("Mit csináltunk?");
+		expect(html).toContain("Pillanatok a workshopról");
 	});
 
 	it("escapes user text", () => {
@@ -66,10 +82,17 @@ describe("renderReportHtml", () => {
 		expect(html).not.toContain("<tetszett>");
 	});
 
-	it("leaves out the impact section without metrics", () => {
-		expect(renderReportHtml({ ...data, metrics: [] })).not.toContain(
-			"A hatás számokban",
+	it("shows a placeholder instead of empty metrics", () => {
+		expect(renderReportHtml({ ...data, metrics: [] })).toContain(
+			"Nincs megjeleníthető mutató",
 		);
+	});
+
+	it("embeds the logo when given, text logo otherwise", () => {
+		expect(
+			renderReportHtml(data, { logoDataUri: "data:image/png;base64,AA" }),
+		).toContain('src="data:image/png;base64,AA"');
+		expect(html).not.toContain("<img");
 	});
 });
 
