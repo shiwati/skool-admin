@@ -106,6 +106,7 @@ describe("POST /api/events/[id]/feedback/sync", () => {
 			role: "MENTOR",
 			rows: [],
 			timeZone: "Europe/Budapest",
+			headerMapping: null,
 		});
 	});
 

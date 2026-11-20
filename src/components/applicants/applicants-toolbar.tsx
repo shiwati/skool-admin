@@ -33,6 +33,8 @@ export const SEARCH_DEBOUNCE_MS = 300;
 type Props = {
 	filters: ListFilters;
 	events: EventOption[];
+	/** A „Program éve” választó évei (a DB-ből). */
+	years: number[];
 	onChange: (patch: Partial<ListFilters>) => void;
 	onClearAll: () => void;
 	/** Jobb oldali elem (oszlopválasztó), tablettől. */
@@ -60,6 +62,7 @@ export function activeFilterCount(filters: ListFilters): number {
 export function ApplicantsToolbar({
 	filters,
 	events,
+	years,
 	onChange,
 	onClearAll,
 	trailing,
@@ -69,6 +72,7 @@ export function ApplicantsToolbar({
 		<FilterChips
 			filters={filters}
 			events={events}
+			years={years}
 			onChange={onChange}
 			onClearAll={onClearAll}
 		/>
@@ -137,6 +141,7 @@ export function MobileFiltersDialog({
 function FilterChips({
 	filters,
 	events,
+	years,
 	onChange,
 	onClearAll,
 }: Omit<Props, "trailing">) {
@@ -149,6 +154,7 @@ function FilterChips({
 			/>
 			<YearChip
 				year={filters.programYear}
+				years={years}
 				onChange={(programYear) => onChange({ programYear })}
 			/>
 			<AgeChip

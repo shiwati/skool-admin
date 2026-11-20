@@ -34,7 +34,8 @@ export type ApplicationData = {
 	companyAwareness: boolean;
 };
 
-type Field = keyof ApplicantData | keyof ApplicationData;
+export type ApplicationField = keyof ApplicantData | keyof ApplicationData;
+type Field = ApplicationField;
 type Cell = string | number | boolean | null | undefined;
 
 export function normalizeHeader(header: string): string {
@@ -88,6 +89,44 @@ const RULES: [Field, (h: string) => boolean][] = [
 
 export const REQUIRED_FIELDS = ["lastName", "firstName", "email"] as const;
 
+/** Az importálható mezők felirata, a szerkesztőfelület sorrendjében. */
+export const APPLICATION_FIELD_LABELS: Record<ApplicationField, string> = {
+	receivedAt: "Jelentkezés időpontja (időbélyeg)",
+	lastName: "Vezetéknév",
+	firstName: "Keresztnév",
+	email: "E-mail",
+	birthYear: "Születési év",
+	schoolName: "Iskola",
+	hometown: "Település",
+	phoneNumber: "Telefonszám",
+	parentLastName: "Szülő vezetékneve",
+	parentFirstName: "Szülő keresztneve",
+	parentMothersName: "Szülő anyja neve",
+	parentAddress: "Szülő lakcíme",
+	parentEmail: "Szülő e-mail címe",
+	parentPhone: "Szülő telefonszáma",
+	newsletter: "Hírlevél",
+	foodPreference: "Étkezési igény",
+	heardFromWhere: "Honnan hallott rólunk",
+	heardFromWhom: "Kitől hallott rólunk",
+	solvedProblem: "Megoldott probléma",
+	pastExpInProg: "Programozási tapasztalat",
+	pastParticipationOther: "Más informatikai foglalkozás",
+	pastParticipationSkool: "Volt már Skool foglalkozáson",
+	pastParticipationSkoolDesc: "Korábbi Skool foglalkozás leírása",
+	companyAwareness: "Ismeri a partnercéget",
+};
+
+export const APPLICATION_FIELDS = Object.keys(
+	APPLICATION_FIELD_LABELS,
+) as ApplicationField[];
+
+/**
+ * Eventenként mentett megfeleltetés: mező → a sheet pontos fejléce. A
+ * hiányzó mező nem importálódik. `null` = alapértelmezett (kulcsszavas).
+ */
+export type ApplicationSheetMapping = Partial<Record<ApplicationField, string>>;
+
 export type HeaderMapping = {
 	columns: Partial<Record<Field, number>>;
 	/** Headers that matched no field (or a field already taken). */
@@ -95,7 +134,33 @@ export type HeaderMapping = {
 	missingRequired: Field[];
 };
 
-export function mapHeaders(headers: Cell[]): HeaderMapping {
+/** Fejlécszöveg → első oszlopindex (normalizált, pontos egyezés). */
+export function headerIndex(headers: Cell[]): Map<string, number> {
+	const index = new Map<string, number>();
+	headers.forEach((raw, i) => {
+		const header = normalizeHeader(raw == null ? "" : String(raw));
+		if (header && !index.has(header)) index.set(header, i);
+	});
+	return index;
+}
+
+/** A megfeleltetéssel lefedett oszlopokon kívüli, nem üres fejlécek. */
+export function unusedHeaders(
+	headers: Cell[],
+	used: Iterable<number>,
+): string[] {
+	const taken = new Set(used);
+	return headers.flatMap((raw, i) => {
+		const text = raw == null ? "" : String(raw).trim();
+		return text && !taken.has(i) ? [text] : [];
+	});
+}
+
+export function mapHeaders(
+	headers: Cell[],
+	override?: ApplicationSheetMapping | null,
+): HeaderMapping {
+	if (override) return mapHeadersExact(headers, override);
 	const columns: Partial<Record<Field, number>> = {};
 	const unmapped: string[] = [];
 
@@ -115,6 +180,38 @@ export function mapHeaders(headers: Cell[]): HeaderMapping {
 		(field) => columns[field] === undefined,
 	);
 	return { columns, unmapped, missingRequired };
+}
+
+function mapHeadersExact(
+	headers: Cell[],
+	override: ApplicationSheetMapping,
+): HeaderMapping {
+	const index = headerIndex(headers);
+	const columns: Partial<Record<Field, number>> = {};
+	for (const [field, header] of Object.entries(override)) {
+		const i = header ? index.get(normalizeHeader(header)) : undefined;
+		if (i !== undefined && field in APPLICATION_FIELD_LABELS) {
+			columns[field as Field] = i;
+		}
+	}
+	return {
+		columns,
+		unmapped: unusedHeaders(headers, Object.values(columns)),
+		missingRequired: REQUIRED_FIELDS.filter(
+			(field) => columns[field] === undefined,
+		),
+	};
+}
+
+/** A kulcsszavas felismerés eredménye pontos fejlécekként (a szerkesztő alapértéke). */
+export function defaultApplicationMapping(
+	headers: Cell[],
+): ApplicationSheetMapping {
+	const result: ApplicationSheetMapping = {};
+	for (const [field, i] of Object.entries(mapHeaders(headers).columns)) {
+		result[field as Field] = String(headers[i!]).trim();
+	}
+	return result;
 }
 
 function text(value: Cell): string | null {

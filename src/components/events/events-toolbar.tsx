@@ -15,12 +15,15 @@ import { TagFilter } from "./tag-filter";
 
 export function EventsToolbar({
 	filters,
+	years,
 	onChange,
 	onClearAll,
 	trailing,
 	mobileTrailing,
 }: {
 	filters: EventListFilters;
+	/** A „Program éve” választó évei (a DB-ből). */
+	years: number[];
 	onChange: (patch: Partial<EventListFilters>) => void;
 	onClearAll: () => void;
 	/** Tablettől: a sor végére igazítva (pl. „Oszlopok”). */
@@ -61,6 +64,7 @@ export function EventsToolbar({
 				/>
 				<YearChip
 					year={filters.year}
+					years={years}
 					onChange={(year) => onChange({ year })}
 				/>
 				<TextChip

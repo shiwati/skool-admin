@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { createEventSchema } from "@/lib/events/api-schema";
+import { withJsonNulls } from "@/lib/events/prisma-data";
 import { eventsQuerySchema, listEvents } from "@/lib/events/list";
 import { handleQuery, jsonResponse } from "@/lib/api/handler";
 import { logger } from "@/lib/logger";
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
 
 	try {
 		const { id } = await db.event.create({
-			data: parsed.data,
+			data: withJsonNulls(parsed.data),
 			select: { id: true },
 		});
 		logger.info({

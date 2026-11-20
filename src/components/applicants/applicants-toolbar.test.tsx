@@ -16,6 +16,7 @@ function renderToolbar(filters: Partial<ListFilters> = {}) {
 		<ApplicantsToolbar
 			filters={{ eventIds: [], ...filters }}
 			events={events}
+			years={[2026, 2025, 2024]}
 			onChange={onChange}
 			onClearAll={onClearAll}
 		/>,
@@ -48,6 +49,7 @@ describe("ApplicantsToolbar", () => {
 			<ApplicantsToolbar
 				filters={{ eventIds: [] }}
 				events={events}
+				years={[2026, 2025, 2024]}
 				onChange={vi.fn()}
 				onClearAll={vi.fn()}
 			/>,
@@ -168,6 +170,7 @@ describe("ApplicantsToolbar on mobile", () => {
 			<ApplicantsToolbar
 				filters={{ eventIds: [] }}
 				events={events}
+				years={[2026, 2025, 2024]}
 				onChange={vi.fn()}
 				onClearAll={vi.fn()}
 				trailing={<button>Oszlopok</button>}
@@ -219,6 +222,7 @@ describe("ApplicantsToolbar mobile trailing slot", () => {
 			<ApplicantsToolbar
 				filters={{ eventIds: [] }}
 				events={events}
+				years={[2026, 2025, 2024]}
 				onChange={vi.fn()}
 				onClearAll={vi.fn()}
 				mobileTrailing={<button>Oszlopok</button>}

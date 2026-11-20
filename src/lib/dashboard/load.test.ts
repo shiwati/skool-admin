@@ -60,7 +60,10 @@ const events = [
 describe("loadDashboard", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
-		eventAggregate.mockResolvedValue({ _min: { from: null } });
+		eventAggregate.mockResolvedValue({
+			_min: { from: null },
+			_max: { from: null },
+		});
 		eventFindMany
 			// program list of the period
 			.mockResolvedValueOnce([
@@ -210,6 +213,7 @@ describe("loadDashboard", () => {
 	it("offers years back to the first program in the database", async () => {
 		eventAggregate.mockResolvedValue({
 			_min: { from: new Date("2024-03-16T08:00:00Z") },
+			_max: { from: null },
 		});
 		const data = await loadDashboard({ period: "2024" }, now);
 		expect(data.periodOptions.map((o) => o.key)).toEqual([

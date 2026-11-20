@@ -3,23 +3,25 @@
 import { cn } from "@/lib/utils";
 import { FilterChip } from "./filter-chip";
 
-/** Választható évek: a következő évtől visszafelé öt évig. */
-export function yearOptions(now = new Date()): number[] {
-	const current = now.getFullYear();
-	return Array.from({ length: 7 }, (_, i) => current + 1 - i);
-}
-
 /** „Program éve” szűrő: a program kezdési évére szűr. */
 export function YearChip({
 	year,
+	years,
 	onChange,
 }: {
 	year?: number;
+	/** A választható évek (lásd `programYears`). */
+	years: number[];
 	onChange: (year: number | undefined) => void;
 }) {
+	// Az URL-ből jövő, listán kívüli év se tűnjön el a választóból.
+	const shown =
+		year === undefined || years.includes(year)
+			? years
+			: [...years, year].sort((a, b) => b - a);
 	const options: [string, number | undefined][] = [
 		["Bármikor", undefined],
-		...yearOptions().map((y): [string, number] => [String(y), y]),
+		...shown.map((y): [string, number] => [String(y), y]),
 	];
 	return (
 		<FilterChip

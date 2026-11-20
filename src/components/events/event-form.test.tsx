@@ -202,6 +202,9 @@ describe("EventForm", () => {
 			applicationSheetUrl: null,
 			participantFeedbackSheetUrl: null,
 			mentorFeedbackSheetUrl: null,
+			applicationSheetMapping: null,
+			participantFeedbackSheetMapping: null,
+			mentorFeedbackSheetMapping: null,
 			instructor: null,
 			mentors: ["Szűcs Petra"],
 		};
@@ -254,6 +257,9 @@ describe("EventForm", () => {
 				applicationSheetUrl: null,
 				participantFeedbackSheetUrl: null,
 				mentorFeedbackSheetUrl: null,
+				applicationSheetMapping: null,
+				participantFeedbackSheetMapping: null,
+				mentorFeedbackSheetMapping: null,
 				instructor: null,
 				mentors: ["Szűcs Petra"],
 			});

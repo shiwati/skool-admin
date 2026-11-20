@@ -2,11 +2,19 @@
  * Visszajelző űrlap sheetjének tiszta feldolgozása: fejléc → kérdéskulcs,
  * sor → `Feedback` adatok. Adatbázis nélkül tesztelhető.
  */
-import { normalizeHeader, serialToDate } from "@/lib/sheet-import/mapping";
+import {
+	headerIndex,
+	normalizeHeader,
+	serialToDate,
+	unusedHeaders,
+} from "@/lib/sheet-import/mapping";
 import {
 	isTimestampHeader,
 	QUESTIONS,
+	TIMESTAMP_KEY,
+	toQuestion,
 	type FeedbackRoleKey,
+	type FeedbackSheetMapping,
 	type Question,
 	type Recommend,
 } from "./questions";
@@ -23,12 +31,82 @@ export type FeedbackHeaderMapping = {
 	unmapped: string[];
 	/** Hiányzó kötelező oszlopok (feliratuk). */
 	missingRequired: string[];
+	/** Az importált kérdések (katalógus + az event egyéni kérdései). */
+	questions?: Question[];
 };
+
+function missingRequired(
+	questions: Question[],
+	timestamp: number | undefined,
+	columns: Record<string, number>,
+): string[] {
+	return [
+		...(timestamp === undefined ? ["Időbélyeg"] : []),
+		...questions
+			.filter((q) => q.required && columns[q.key] === undefined)
+			.map((q) => q.label),
+	];
+}
+
+function mapFeedbackHeadersExact(
+	role: FeedbackRoleKey,
+	headers: Cell[],
+	override: FeedbackSheetMapping,
+): FeedbackHeaderMapping {
+	const index = headerIndex(headers);
+	const find = (header: string | undefined) =>
+		header ? index.get(normalizeHeader(header)) : undefined;
+	const custom = override.custom.map(toQuestion);
+	const questions = [...QUESTIONS[role], ...custom];
+
+	const columns: Record<string, number> = {};
+	for (const q of QUESTIONS[role]) {
+		const i = find(override.columns[q.key]);
+		if (i !== undefined) columns[q.key] = i;
+	}
+	override.custom.forEach((c, n) => {
+		const i = find(c.header);
+		if (i !== undefined) columns[custom[n].key] = i;
+	});
+	const timestamp = find(override.columns[TIMESTAMP_KEY]);
+	return {
+		timestamp,
+		columns,
+		questions,
+		unmapped: unusedHeaders(headers, [
+			...Object.values(columns),
+			...(timestamp === undefined ? [] : [timestamp]),
+		]),
+		missingRequired: missingRequired(questions, timestamp, columns),
+	};
+}
+
+/** A kulcsszavas felismerés eredménye pontos fejlécekként (a szerkesztő alapértéke). */
+export function defaultFeedbackMapping(
+	role: FeedbackRoleKey,
+	headers: Cell[],
+): FeedbackSheetMapping {
+	const { timestamp, columns } = mapFeedbackHeaders(role, headers);
+	const header = (i: number) => String(headers[i]).trim();
+	return {
+		columns: {
+			...(timestamp === undefined
+				? {}
+				: { [TIMESTAMP_KEY]: header(timestamp) }),
+			...Object.fromEntries(
+				Object.entries(columns).map(([key, i]) => [key, header(i)]),
+			),
+		},
+		custom: [],
+	};
+}
 
 export function mapFeedbackHeaders(
 	role: FeedbackRoleKey,
 	headers: Cell[],
+	override?: FeedbackSheetMapping | null,
 ): FeedbackHeaderMapping {
+	if (override) return mapFeedbackHeadersExact(role, headers, override);
 	const questions = QUESTIONS[role];
 	const columns: Record<string, number> = {};
 	const unmapped: string[] = [];
@@ -49,13 +127,12 @@ export function mapFeedbackHeaders(
 		else unmapped.push(text.trim());
 	});
 
-	const missingRequired = [
-		...(timestamp === undefined ? ["Időbélyeg"] : []),
-		...questions
-			.filter((q) => q.required && columns[q.key] === undefined)
-			.map((q) => q.label),
-	];
-	return { timestamp, columns, unmapped, missingRequired };
+	return {
+		timestamp,
+		columns,
+		unmapped,
+		missingRequired: missingRequired(questions, timestamp, columns),
+	};
 }
 
 function text(value: Cell): string | null {
@@ -157,8 +234,9 @@ export function parseFeedbackRow(
 ): ParsedFeedbackRow {
 	if (row.every((cell) => text(cell) === null)) return { ok: "empty" };
 
+	const questions = mapping.questions ?? QUESTIONS[role];
 	const answers: Answers = {};
-	for (const question of QUESTIONS[role]) {
+	for (const question of questions) {
 		const index = mapping.columns[question.key];
 		if (index === undefined) continue;
 		const value = parseAnswer(question, row[index]);
@@ -177,7 +255,7 @@ export function parseFeedbackRow(
 			? serialToDate(timestamp, timeZone)
 			: null;
 
-	const searchText = QUESTIONS[role]
+	const searchText = questions
 		.filter((q) => q.kind === "text" && typeof answers[q.key] === "string")
 		.map((q) => answers[q.key])
 		.join("\n")

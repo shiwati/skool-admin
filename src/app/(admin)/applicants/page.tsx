@@ -6,6 +6,8 @@ import { applicantsQuerySchema, listApplicants } from "@/lib/applicants/list";
 import { parseListState, toApiQuery } from "@/lib/applicants/list-params";
 import type { ApplicantsPage as ApplicantsPageData } from "@/lib/applicants/types";
 import { logger } from "@/lib/logger";
+import { programYears } from "@/lib/events/program-years";
+import { eventYearBounds } from "@/lib/dashboard/first-year";
 import {
 	ApplicantsView,
 	type InitialApplicants,
@@ -47,12 +49,18 @@ async function loadInitial(
 
 // Access is enforced by the (admin) layout.
 export default async function ApplicantsPage({ searchParams }: Props) {
-	const initial = await loadInitial(await searchParams);
+	const [initial, bounds] = await Promise.all([
+		loadInitial(await searchParams),
+		eventYearBounds(),
+	]);
 	return (
 		<PageShell>
 			{/* useSearchParams in the view needs a Suspense boundary. */}
 			<Suspense>
-				<ApplicantsView initial={initial} />
+				<ApplicantsView
+					initial={initial}
+					years={programYears(bounds)}
+				/>
 			</Suspense>
 		</PageShell>
 	);
