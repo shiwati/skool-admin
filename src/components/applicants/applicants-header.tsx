@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, MoreHorizontal } from "lucide-react";
+import { Copy, Download, MoreHorizontal } from "lucide-react";
 import { PageHeader } from "@/components/admin-shell/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,12 +15,16 @@ export function ApplicantsHeader({
 	total,
 	filtered = false,
 	onEmailList,
+	onExport,
+	exporting = false,
 }: {
 	/** `null`, amíg az első lekérés nem fejeződött be. */
 	total: number | null;
 	/** Szűrt állapotban a szám a találatok száma, nem az összes profilé. */
 	filtered?: boolean;
 	onEmailList: () => void;
+	onExport: () => void;
+	exporting?: boolean;
 }) {
 	return (
 		<PageHeader
@@ -43,6 +47,13 @@ export function ApplicantsHeader({
 						/>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
+						<DropdownMenuItem
+							onSelect={onExport}
+							disabled={exporting}
+						>
+							<Download aria-hidden="true" />
+							{exporting ? "Exportálás…" : "Exportálás CSV-be"}
+						</DropdownMenuItem>
 						<DropdownMenuItem onSelect={onEmailList}>
 							<Copy aria-hidden="true" />
 							E-mail lista
@@ -51,10 +62,20 @@ export function ApplicantsHeader({
 				</DropdownMenu>
 			}
 			actions={
-				<Button variant="surface" onClick={onEmailList}>
-					<Copy aria-hidden="true" />
-					E-mail lista
-				</Button>
+				<>
+					<Button
+						variant="surface"
+						onClick={onExport}
+						disabled={exporting}
+					>
+						<Download aria-hidden="true" />
+						{exporting ? "Exportálás…" : "Exportálás CSV-be"}
+					</Button>
+					<Button variant="surface" onClick={onEmailList}>
+						<Copy aria-hidden="true" />
+						E-mail lista
+					</Button>
+				</>
 			}
 		/>
 	);

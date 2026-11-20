@@ -5,8 +5,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useApplicants } from "@/hooks/use-applicants";
 import { useColumnSettings } from "@/hooks/use-column-settings";
+import { csvFilename, useCsvExport } from "@/hooks/use-csv-export";
 import { apiFetch } from "@/lib/api/client";
+import { fetchAllPages } from "@/lib/api/fetch-all-pages";
 import { visibleColumns } from "@/lib/applicants/column-settings";
+import { buildApplicantsCsv } from "@/lib/applicants/export";
 import { buildEmailList, formatCount, fullName } from "@/lib/applicants/format";
 import {
 	clearFilters,
@@ -92,6 +95,7 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 	const [duplicatesOpen, setDuplicatesOpen] = useState(false);
 	const [duplicatesRun, setDuplicatesRun] = useState(0);
 	const [columnSettings, setColumnSettings] = useColumnSettings();
+	const csvExport = useCsvExport();
 
 	// The selection belongs to one result set: any change to page, sort,
 	// search or filters starts a fresh, empty selection.
@@ -141,6 +145,22 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 		setSelection({ key: currentKey, ids });
 	}
 
+	// A szűrt találatok mindegyike, a felhasználó által beállított oszlopokkal.
+	function exportCsv() {
+		const columns = visibleColumns(columnSettings);
+		void csvExport.run(csvFilename("jelentkezok"), async (signal) => {
+			const all = await fetchAllPages<ApplicantListItem>(
+				(page, pageSize) =>
+					`/api/applicants?${toApiQuery(state, { page, pageSize })}`,
+				signal,
+			);
+			return {
+				csv: buildApplicantsCsv(all, columns),
+				rows: all.length,
+			};
+		});
+	}
+
 	async function copySelectedEmails() {
 		const { text, count } = buildEmailList(
 			items
@@ -173,6 +193,8 @@ export function ApplicantsView({ initial }: { initial?: InitialApplicants }) {
 					setEmailListRun((n) => n + 1);
 					setEmailListOpen(true);
 				}}
+				onExport={exportCsv}
+				exporting={csvExport.exporting}
 			/>
 			<DuplicateBanner
 				count={duplicateCount}
