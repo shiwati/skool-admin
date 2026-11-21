@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Breadcrumb } from "@/components/admin-shell/breadcrumb";
 import { Pill } from "@/components/applicants/detail/detail-card";
 import { tagClass } from "@/lib/events/colors";
-import { eventPeople, formatDateRange } from "@/lib/events/format";
+import { eventPeople, formatShortDateRange } from "@/lib/events/format";
 import {
 	EVENT_STATUS_BADGE_CLASSES,
 	EVENT_STATUS_LABELS,
@@ -100,7 +100,7 @@ export function EventHeader({
 					</div>
 					<p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-secondary">
 						<MetaItem icon={CalendarDays}>
-							{formatDateRange(event.from, event.to)}
+							{formatShortDateRange(event.from, event.to)}
 						</MetaItem>
 						{place && <MetaItem icon={MapPin}>{place}</MetaItem>}
 						{shown.length > 0 && (

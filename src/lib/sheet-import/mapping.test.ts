@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { duplicateKey, mapHeaders, parseRow, serialToDate } from "./mapping";
+import { historyFieldLabel } from "@/lib/applicants/detail-labels";
+import {
+	APPLICATION_FIELD_LABELS,
+	APPLICATION_FIELDS,
+	duplicateKey,
+	mapHeaders,
+	parseRow,
+	serialToDate,
+} from "./mapping";
 
 // Header row copied from a real Skool form response sheet.
 const HEADERS = [
@@ -181,5 +189,26 @@ describe("duplicateKey", () => {
 it("still recognises the older Sigma wording", () => {
 	expect(mapHeaders(["Hallottál már a Sigmáról?"]).columns).toEqual({
 		companyAwareness: 0,
+	});
+});
+
+describe("APPLICATION_FIELD_LABELS", () => {
+	it("uses the same labels as the change history", () => {
+		for (const field of APPLICATION_FIELDS) {
+			if (field === "receivedAt") continue;
+			expect(APPLICATION_FIELD_LABELS[field]).toBe(
+				historyFieldLabel(field),
+			);
+		}
+	});
+
+	it("labels the form's problem question as the problem to solve", () => {
+		expect(APPLICATION_FIELD_LABELS.solvedProblem).toBe(
+			"Megoldandó probléma",
+		);
+		expect(APPLICATION_FIELD_LABELS.parentAddress).toBe("Szülő címe");
+		expect(APPLICATION_FIELD_LABELS.receivedAt).toBe(
+			"Jelentkezés időpontja (időbélyeg)",
+		);
 	});
 });

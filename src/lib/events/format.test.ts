@@ -3,7 +3,7 @@ import {
 	demandRatio,
 	eventPeople,
 	formatAgeRange,
-	formatDateRange,
+	formatShortDateRange,
 	formatRatio,
 	ratioBadgeClass,
 	ratioBarClass,
@@ -35,29 +35,41 @@ describe("eventPeople", () => {
 	});
 });
 
-describe("formatDateRange", () => {
+describe("formatShortDateRange", () => {
 	it("starts with the year", () => {
 		expect(
-			formatDateRange("2026-11-21T09:00:00Z", "2026-12-12T15:00:00Z"),
+			formatShortDateRange(
+				"2026-11-21T09:00:00Z",
+				"2026-12-12T15:00:00Z",
+			),
 		).toBe("2026.11.21 – 12.12");
 	});
 
 	it("shows a single date for one-day events", () => {
 		expect(
-			formatDateRange("2026-11-16T09:00:00Z", "2026-11-16T15:00:00Z"),
+			formatShortDateRange(
+				"2026-11-16T09:00:00Z",
+				"2026-11-16T15:00:00Z",
+			),
 		).toBe("2026.11.16");
 	});
 
 	it("adds the year to the end of year-crossing ranges", () => {
 		expect(
-			formatDateRange("2026-12-30T08:00:00Z", "2027-01-02T15:00:00Z"),
+			formatShortDateRange(
+				"2026-12-30T08:00:00Z",
+				"2027-01-02T15:00:00Z",
+			),
 		).toBe("2026.12.30 – 2027.01.02");
 	});
 
 	it("uses Budapest dates", () => {
 		// 23:30 UTC is already the next day in Budapest.
 		expect(
-			formatDateRange("2026-11-20T23:30:00Z", "2026-11-21T10:00:00Z"),
+			formatShortDateRange(
+				"2026-11-20T23:30:00Z",
+				"2026-11-21T10:00:00Z",
+			),
 		).toBe("2026.11.21");
 	});
 });

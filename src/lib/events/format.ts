@@ -18,9 +18,10 @@ function dateParts(date: Date): [string, string, string] {
 /**
  * Időpont-tartomány évvel az elején (`2026.11.21 – 12.12`), egynapos
  * eseménynél egy dátum (`2026.11.16`). Évhatáron átnyúlóknál a vége is
- * évet kap.
+ * évet kap. (A teljes, mindkét végén évszámos alak: `formatDateRange` a
+ * `@/lib/applicants/format`-ban.)
  */
-export function formatDateRange(
+export function formatShortDateRange(
 	fromIso: string | Date,
 	toIso: string | Date,
 ): string {

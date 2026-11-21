@@ -13,6 +13,7 @@ import {
 	EMPTY,
 	fullName,
 	isOver16,
+	TAG_BADGE_CLASSES,
 } from "@/lib/applicants/format";
 import type { PageSize } from "@/lib/applicants/list-params";
 import type { EventApplicationItem } from "@/lib/events/applications";
@@ -312,7 +313,12 @@ export function ApplicationsTable({
 									<td className="px-3 py-2.5 font-mono">
 										{age === null ? EMPTY : age}
 										{isOver16(age) && (
-											<span className="ml-1.5 rounded-full bg-lemon px-1.5 text-[11px] leading-4">
+											<span
+												className={cn(
+													"ml-1.5 rounded-full px-1.5 text-[11px] leading-4",
+													TAG_BADGE_CLASSES.over16,
+												)}
+											>
 												16+
 											</span>
 										)}

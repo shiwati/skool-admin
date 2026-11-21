@@ -4,6 +4,8 @@
  * small wording changes between forms keep working.
  */
 
+import { FIELD_LABELS } from "@/lib/applicants/field-labels";
+
 export type ApplicantData = {
 	firstName: string;
 	lastName: string;
@@ -90,32 +92,35 @@ const RULES: [Field, (h: string) => boolean][] = [
 
 export const REQUIRED_FIELDS = ["lastName", "firstName", "email"] as const;
 
-/** Az importálható mezők felirata, a szerkesztőfelület sorrendjében. */
+/**
+ * Az importálható mezők felirata, a szerkesztőfelület sorrendjében: a közös
+ * mezőfeliratok (`FIELD_LABELS`), plusz az időbélyeg.
+ */
 export const APPLICATION_FIELD_LABELS: Record<ApplicationField, string> = {
 	receivedAt: "Jelentkezés időpontja (időbélyeg)",
-	lastName: "Vezetéknév",
-	firstName: "Keresztnév",
-	email: "E-mail",
-	birthYear: "Születési év",
-	schoolName: "Iskola",
-	hometown: "Település",
-	phoneNumber: "Telefonszám",
-	parentLastName: "Szülő vezetékneve",
-	parentFirstName: "Szülő keresztneve",
-	parentMothersName: "Szülő anyja neve",
-	parentAddress: "Szülő lakcíme",
-	parentEmail: "Szülő e-mail címe",
-	parentPhone: "Szülő telefonszáma",
-	newsletter: "Hírlevél",
-	foodPreference: "Étkezési igény",
-	heardFromWhere: "Honnan hallott rólunk",
-	heardFromWhom: "Kitől hallott rólunk",
-	solvedProblem: "Megoldott probléma",
-	pastExpInProg: "Programozási tapasztalat",
-	pastParticipationOther: "Más informatikai foglalkozás",
-	pastParticipationSkool: "Volt már Skool foglalkozáson",
-	pastParticipationSkoolDesc: "Korábbi Skool foglalkozás leírása",
-	companyAwareness: "Ismeri a partnercéget",
+	lastName: FIELD_LABELS.lastName,
+	firstName: FIELD_LABELS.firstName,
+	email: FIELD_LABELS.email,
+	birthYear: FIELD_LABELS.birthYear,
+	schoolName: FIELD_LABELS.schoolName,
+	hometown: FIELD_LABELS.hometown,
+	phoneNumber: FIELD_LABELS.phoneNumber,
+	parentLastName: FIELD_LABELS.parentLastName,
+	parentFirstName: FIELD_LABELS.parentFirstName,
+	parentMothersName: FIELD_LABELS.parentMothersName,
+	parentAddress: FIELD_LABELS.parentAddress,
+	parentEmail: FIELD_LABELS.parentEmail,
+	parentPhone: FIELD_LABELS.parentPhone,
+	newsletter: FIELD_LABELS.newsletter,
+	foodPreference: FIELD_LABELS.foodPreference,
+	heardFromWhere: FIELD_LABELS.heardFromWhere,
+	heardFromWhom: FIELD_LABELS.heardFromWhom,
+	solvedProblem: FIELD_LABELS.solvedProblem,
+	pastExpInProg: FIELD_LABELS.pastExpInProg,
+	pastParticipationOther: FIELD_LABELS.pastParticipationOther,
+	pastParticipationSkool: FIELD_LABELS.pastParticipationSkool,
+	pastParticipationSkoolDesc: FIELD_LABELS.pastParticipationSkoolDesc,
+	companyAwareness: FIELD_LABELS.companyAwareness,
 };
 
 export const APPLICATION_FIELDS = Object.keys(

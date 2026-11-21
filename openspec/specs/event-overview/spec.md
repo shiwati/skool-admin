@@ -22,7 +22,7 @@ Shows a single program's page at `/events/[id]`: header and tabs, KPI cards, app
 
 ### Requirement: Program header
 
-The page SHALL show a breadcrumb "Programok › name", the program name, its tags, the program status (same rules as the program list), the date range with duration, the place, and the instructor and mentors. A "Szerkesztés" button SHALL open `/events/<id>/edit`.
+The page SHALL show a breadcrumb "Programok › name", the program name, its tags, the program status (same rules as the program list), the date range (in the program list's "Időpont" format), the place, and the instructor and mentors. A "Szerkesztés" button SHALL open `/events/<id>/edit`.
 
 #### Scenario: Header of an open program
 

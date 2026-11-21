@@ -133,24 +133,22 @@ The "Program" cell SHALL show the program name and its tags as badges. The name 
 
 ### Requirement: Date cell
 
-The "Időpont" cell SHALL show the date range in Budapest time as `MM.DD – MM.DD`, and the number of calendar days the event touches ("N nap"). A one-day event SHALL show a single date. Dates outside the current year SHALL include the year (`YYYY.MM.DD`). A range that crosses a year boundary SHALL show the year on both ends.
+The "Időpont" cell SHALL show the date range in Budapest time as `YYYY.MM.DD – MM.DD`, with the year at the start. A one-day event SHALL show a single date (`YYYY.MM.DD`). A range that crosses a year boundary SHALL show the year on both ends. The cell SHALL not show the number of days.
 
-#### Scenario: Range in the current year
+#### Scenario: Range within one year
 
-- **GIVEN** today is 2026-11-19 and an event runs from 2026-11-21 to 2026-12-12
-- **WHEN** it is listed
-- **THEN** the cell shows "11.21 – 12.12" and "22 nap"
+- **WHEN** an event runs from 2026-11-21 to 2026-12-12
+- **THEN** the cell shows "2026.11.21 – 12.12"
 
 #### Scenario: One-day event
 
 - **WHEN** an event starts and ends on 2026-11-16
-- **THEN** the cell shows "11.16" and "1 nap"
+- **THEN** the cell shows "2026.11.16"
 
-#### Scenario: Event in another year
+#### Scenario: Range across a year boundary
 
-- **GIVEN** today is in 2026
-- **WHEN** an event ran from 2025-07-06 to 2025-07-10
-- **THEN** the cell shows "2025.07.06 – 07.10"
+- **WHEN** an event runs from 2026-12-30 to 2027-01-02
+- **THEN** the cell shows "2026.12.30 – 2027.01.02"
 
 ### Requirement: Location cell
 
