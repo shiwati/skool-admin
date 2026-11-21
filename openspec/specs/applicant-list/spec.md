@@ -156,8 +156,6 @@ An "Oszlopok" button SHALL open the "Oszlopok a listában" panel. In it the user
 
 "Név / e-mail" SHALL always remain visible. Besides the default columns, "Szülő neve és e-mail" and "Telefonszám" SHALL be available, hidden by default.
 
-The button SHALL be available at every width. Below 768 px it SHALL be a 44 × 44 px icon button with the accessible name "Oszlopok", next to the search field and the "Szűrők" button. Its panel SHALL only control visibility: it SHALL NOT offer drag handles or move up/down controls, and the cards SHALL keep the order set on a larger screen.
-
 #### Scenario: Showing the phone number
 
 - **WHEN** the user ticks "Telefonszám" in the panel
@@ -167,6 +165,10 @@ The button SHALL be available at every width. Below 768 px it SHALL be a 44 × 4
 
 - **WHEN** the user moves "Hírlevél" up one position using the keyboard
 - **THEN** the "Hírlevél" column moves one position left in the table
+
+### Requirement: Column picker on a phone
+
+The "Oszlopok" button SHALL be available at every width. Below 768 px it SHALL be a 44 × 44 px icon button with the accessible name "Oszlopok", next to the search field and the "Szűrők" button. Its panel SHALL only control visibility: it SHALL NOT offer drag handles or move up/down controls, and the cards SHALL keep the order set on a larger screen.
 
 #### Scenario: Column picker on a phone
 
@@ -260,27 +262,13 @@ From 768 px to 1279 px, the applicants page SHALL keep the table layout:
 
 ### Requirement: Mobile applicant cards
 
-Below 768 px, the applicants SHALL be shown as a list of cards instead of the table, in the same order and with the same paging. Each card SHALL link to the applicant's detail page.
-
-The card header SHALL always show the "Név / e-mail" part:
+Below 768 px, the applicants SHALL be shown as cards instead of the table, in the same order and with the same paging. Each card SHALL link to the applicant's detail page. The card header SHALL always show "Név / e-mail":
 
 - the initials avatar
 - the name, with a "16+" badge from 16 years
 - the e-mail address, truncated to one line
 
-Below the header, the card SHALL show one labelled line for each other visible column, in the column order set in the column picker. Each line SHALL use the column's heading as its label: "Életkor", "Program", "Státusz", "Település / iskola", "Hírlevél", "Előzmény", "Jelentkezett", "Szülő", "Telefonszám". The line values SHALL be:
-
-- **Életkor:** "{N} év", or "—".
-- **Program:** the latest program with its colour dot and "+N" for further applications, or "—".
-- **Státusz:** the latest application's status badge, or "—".
-- **Település / iskola:** the settlement with the school after it ("Budapest · Fazekas Gimnázium"), or "—".
-- **Hírlevél:** "Feliratkozott", or "—" when not subscribed.
-- **Előzmény:** the number of attended programs as plain text ("1 program"), or "—".
-- **Jelentkezett:** the creation date as `ÉÉÉÉ.HH.NN`.
-- **Szülő:** the parent's name and e-mail, or "—".
-- **Telefonszám:** the phone number, or "—".
-
-Hidden columns SHALL have no line. The cards SHALL use the same saved column settings as the table. Cards SHALL NOT have selection checkboxes, and the bulk-action bar SHALL NOT be offered on mobile. The loading, empty and error states SHALL be shown as on desktop, inside the list.
+Cards SHALL NOT have selection checkboxes, and there SHALL be no bulk-action bar. Loading, empty and error states SHALL look as on desktop, inside the list.
 
 #### Scenario: Card content
 
@@ -289,6 +277,15 @@ Hidden columns SHALL have no line. The cards SHALL use the same saved column set
 - **THEN** her card shows "Nagy Luca" with "16+" and her e-mail
 - **AND** below that the lines "Életkor 16 év", "Program Python alapok – ősz", "Státusz Elfogadva", "Település / iskola Budapest", "Hírlevél Feliratkozott", "Előzmény 1 program" and "Jelentkezett" with the date, in this order
 - **AND** tapping the card opens her detail page
+
+#### Scenario: No selection on mobile
+
+- **WHEN** the applicants page is shown at 390 px
+- **THEN** no selection checkboxes and no bulk-action bar are shown
+
+### Requirement: Mobile applicant card lines
+
+Below the header, the card SHALL show one labelled line for each other visible column, in the column order set in the column picker. Each line SHALL use the column's heading as its label: "Életkor", "Program", "Státusz", "Település / iskola", "Hírlevél", "Előzmény", "Jelentkezett", "Szülő", "Telefonszám". Hidden columns SHALL have no line. The cards SHALL use the same saved column settings as the table.
 
 #### Scenario: Hiding a column hides its card line
 
@@ -301,10 +298,26 @@ Hidden columns SHALL have no line. The cards SHALL use the same saved column set
 - **WHEN** the user turns on "Telefonszám" at 390 px and moves it to the top
 - **THEN** each card shows a "Telefonszám" line directly below the card header
 
-#### Scenario: No selection on mobile
+### Requirement: Mobile applicant card line values
 
-- **WHEN** the applicants page is shown at 390 px
-- **THEN** no selection checkboxes and no bulk-action bar are shown
+Card lines SHALL show these values, or "—" when there is none:
+
+- Életkor: "{N} év"
+- Program: the latest program with colour dot, "+N" for further applications
+- Státusz: the latest application's status badge
+- Település / iskola: settlement and school, joined by " · "
+- Hírlevél: "Feliratkozott" when subscribed
+- Előzmény: attended programs as plain text, e.g. "1 program"
+- Jelentkezett: the creation date as `ÉÉÉÉ.HH.NN`
+- Szülő: the parent's name and e-mail
+- Telefonszám: the phone number
+
+#### Scenario: Empty card values
+
+- **GIVEN** an applicant without birth year, settlement, school, parent, phone number, newsletter subscription and applications
+- **WHEN** the applicants page is shown at 390 px with every column turned on
+- **THEN** the lines "Életkor", "Program", "Státusz", "Település / iskola", "Hírlevél", "Előzmény", "Szülő" and "Telefonszám" show "—"
+- **AND** the "Jelentkezett" line shows the creation date
 
 ### Requirement: Mobile filters dialog
 

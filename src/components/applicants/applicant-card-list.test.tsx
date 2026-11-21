@@ -72,6 +72,58 @@ describe("ApplicantCardList (03.1 M)", () => {
 		expect(within(list).queryByRole("checkbox")).not.toBeInTheDocument();
 	});
 
+	it("shows a dash for every missing value (spec: Empty card values)", () => {
+		renderList(
+			one({
+				birthYear: null,
+				hometown: null,
+				schoolName: null,
+				parentFirstName: null,
+				parentLastName: null,
+				parentEmail: null,
+				phoneNumber: null,
+				newsletter: false,
+				applications: [],
+			}),
+			{
+				columns: [
+					"name",
+					"age",
+					"program",
+					"status",
+					"location",
+					"newsletter",
+					"history",
+					"createdAt",
+					"parent",
+					"phone",
+				],
+			},
+		);
+		const card = screen.getByRole("link");
+		const lines = Object.fromEntries(
+			within(card)
+				.getAllByRole("term")
+				.map((dt) => [
+					dt.textContent,
+					dt.nextElementSibling?.textContent,
+				]),
+		);
+		for (const label of [
+			"Életkor",
+			"Program",
+			"Státusz",
+			"Település / iskola",
+			"Hírlevél",
+			"Előzmény",
+			"Szülő",
+			"Telefonszám",
+		]) {
+			expect(lines[label]).toBe("—");
+		}
+		expect(lines["Jelentkezett"]).toBe("2026.10.02");
+	});
+
 	it("leaves out the line of a hidden column", () => {
 		renderList(one(), {
 			columns: DEFAULT_COLUMNS.filter((id) => id !== "newsletter"),
