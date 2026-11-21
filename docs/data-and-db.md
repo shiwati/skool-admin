@@ -44,7 +44,9 @@ Jelentkezőt fizikailag nem törlünk. A törlés (`anonymizeApplicants`, `src/l
 - A jelentkezések (program, státusz, dátumok) megmaradnak, a szabad szöveges válaszaik törlődnek.
 - A `history` sorokból (`table_name` = `applicant` vagy `application`, `record_id` = az érintett id) kikerülnek a régi és új értékek, egy új sor (`field_name` = `deletedAt`) pedig rögzíti a törlést.
 
-Minden jelentkezőt olvasó lekérdezésnek `deletedAt: null`-ra kell szűrnie (a `GET /api/applicants` ezt teszi). Lokálisan: a `db:seed` upsertje egy törölt mintajelentkezőnek visszaírja a személyes adatait, de a `deletedAt`-et nem nullázza, így a jelentkező rejtve marad. Teljes visszaállításhoz használd a `db:seed:reset`-et.
+Minden **személyeket listázó/mutató** lekérdezésnek `deletedAt: null`-ra kell szűrnie (a `GET /api/applicants` ezt teszi). **Kivétel: a statisztikák** (dashboard, riport résztvevőszám, visszajelzések kitöltési aránya) az anonimizált jelentkezők jelentkezéseit is számolják — az anonimizálás épp ezért van.
+
+**Duplikátum-összevonás ≠ GDPR-törlés:** összevonáskor a beolvasztott jelentkező jelentkezései és History sorai a megtartott jelentkezőhöz kerülnek, a rekordja **véglegesen törlődik** (ugyanaz a személy, egynek kell látszania mindenhol). Az újraimportálást az `Application.sourceKey` akadályozza meg, ami a jelentkezéssel együtt költözik. Lokálisan: a `db:seed` upsertje egy törölt mintajelentkezőnek visszaírja a személyes adatait, de a `deletedAt`-et nem nullázza, így a jelentkező rejtve marad. Teljes visszaállításhoz használd a `db:seed:reset`-et.
 
 ## History
 

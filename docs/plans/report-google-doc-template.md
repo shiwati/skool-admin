@@ -146,4 +146,4 @@ Abban a GCP-projektben, amelyikben a `GOOGLE_CLIENT_ID` OAuth kliens van (ugyano
 - [ ] Minden helyőrző kicserélődik (keress rá a kész doksiban a `{{` szövegre).
 - [ ] Szélső esetek: 0 közreműködő, 0 idézet, 0 mutató, 1 mutató, 16 mutató, nincs korosztály, többnapos program.
 - [ ] A sablonmegosztás visszavonásakor érthető hibaüzenet jelenik meg.
-- [ ] Ha nincs `REPORT_TEMPLATE_DOC_ID`, a mostani HTML-es generálás működik tovább.
+- ~~Ha nincs `REPORT_TEMPLATE_DOC_ID`, a mostani HTML-es generálás működik tovább.~~ Elvetve (2026-11-21): a változó kötelező, HTML-es tartalék nincs.

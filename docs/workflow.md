@@ -30,7 +30,7 @@ npm run dev              # http://localhost:3000
 
 ## OpenSpec
 
-Specifikáció-vezérelt változáskezelés: `openspec/specs/` (érvényes követelmények), `openspec/changes/` (folyamatban), `changes/archive/` (lezárt). Az `openspec-*` skillek vezetik a javaslat → megvalósítás → archiválás menetet. Jelenleg egy spec van: `admin-auth`.
+Specifikáció-vezérelt változáskezelés: `openspec/specs/` (érvényes követelmények), `openspec/changes/` (folyamatban), `changes/archive/` (lezárt). Az `openspec-*` skillek (`.claude/skills/`, tükrözve `.agents/skills/`) vezetik a menetet: `explore` → `propose` (vagy `new` + `continue` / `ff`) → `apply` → `verify` → `archive` (`bulk-archive`, `sync`, `update`, `onboard` is elérhető). A CLI globálisan telepített (`npm i -g @fission-ai/openspec`), a skillek frissítése: `openspec update`. A megvalósított funkciók specjei az `openspec/specs/` alatt vannak (`openspec list --specs`); a specek angolul, a felületi szövegek szó szerint magyarul.
 **Az új igényeket itt érdemes rögzíteni, nem a `docs/`-ban.**
 
 ## Git
