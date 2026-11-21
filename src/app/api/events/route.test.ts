@@ -1,16 +1,15 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { findMany, count, groupBy, create, getSession, getAdminSession } =
-	vi.hoisted(() => ({
+const { findMany, count, groupBy, create, getAdminSession } = vi.hoisted(
+	() => ({
 		create: vi.fn(),
 		getAdminSession: vi.fn(),
 		findMany: vi.fn(),
 		count: vi.fn(),
 		groupBy: vi.fn(),
-		getSession: vi.fn(),
-	}));
-vi.mock("next-auth", () => ({ getServerSession: getSession }));
+	}),
+);
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
 vi.mock("@/lib/db", () => ({
 	db: { event: { findMany, count, create }, application: { groupBy } },
@@ -25,7 +24,15 @@ const call = (qs = "") => GET(new Request(`http://x/api/events${qs}`));
 describe("GET /api/events", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
-		getSession.mockResolvedValue({ user: {} });
+		getAdminSession.mockResolvedValue({ user: {} });
+	});
+
+	it("rejects unauthenticated requests", async () => {
+		getAdminSession.mockResolvedValue(null);
+		const res = await call();
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
+		expect(findMany).not.toHaveBeenCalled();
 	});
 
 	it("filters by year and defaults to newest first", async () => {
@@ -136,6 +143,7 @@ describe("POST /api/events", () => {
 		getAdminSession.mockResolvedValue(null);
 		const res = await post({});
 		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
 		expect(create).not.toHaveBeenCalled();
 	});
 
@@ -150,6 +158,69 @@ describe("POST /api/events", () => {
 		const json = await res.json();
 		expect(json.details.fieldErrors).toHaveProperty("name");
 		expect(create).not.toHaveBeenCalled();
+	});
+
+	it("rejects an end one day before the start with an error on `to`", async () => {
+		const res = await post({
+			name: "Tábor",
+			from: "2026-07-02T08:00:00Z",
+			to: "2026-07-01T08:00:00Z",
+		});
+		expect(res.status).toBe(400);
+		const { fieldErrors } = (await res.json()).details;
+		expect(fieldErrors).toHaveProperty("to");
+		expect(fieldErrors).not.toHaveProperty("from");
+		expect(create).not.toHaveBeenCalled();
+	});
+
+	it("rejects a blank name and a negative capacity", async () => {
+		const res = await post({
+			name: "   ",
+			from: "2026-07-01T08:00:00Z",
+			to: "2026-07-05T16:00:00Z",
+			capacity: -1,
+		});
+		expect(res.status).toBe(400);
+		const { fieldErrors } = (await res.json()).details;
+		expect(fieldErrors).toHaveProperty("name");
+		expect(fieldErrors).toHaveProperty("capacity");
+		expect(create).not.toHaveBeenCalled();
+	});
+
+	it("rejects an invalid sheet URL", async () => {
+		const res = await post({
+			name: "Tábor",
+			from: "2026-07-01T08:00:00Z",
+			to: "2026-07-05T16:00:00Z",
+			applicationSheetUrl: "not a url",
+		});
+		expect(res.status).toBe(400);
+		expect((await res.json()).details.fieldErrors).toHaveProperty(
+			"applicationSheetUrl",
+		);
+		expect(create).not.toHaveBeenCalled();
+	});
+
+	it("defaults capacity to 0 and stores blank optional text as null", async () => {
+		create.mockResolvedValue({ id: "e2" });
+		const res = await post({
+			name: "Tábor",
+			from: "2026-07-01T08:00:00Z",
+			to: "2026-07-05T16:00:00Z",
+			location: "",
+			instructor: "  ",
+			applicationSheetUrl: null,
+		});
+		expect(res.status).toBe(201);
+		const { data } = create.mock.calls[0][0];
+		expect(data).toMatchObject({
+			capacity: 0,
+			tags: [],
+			mentors: [],
+			location: null,
+			instructor: null,
+			applicationSheetUrl: null,
+		});
 	});
 
 	it("creates the event and returns its id", async () => {
