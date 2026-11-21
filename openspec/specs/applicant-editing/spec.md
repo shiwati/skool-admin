@@ -14,12 +14,14 @@ The system SHALL provide an edit page at `/applicants/{id}/edit` for signed-in a
 - **Title:** "Adatlap szerkesztése".
 - **Description:** "A mentett módosítások a változástörténetbe kerülnek, a neveddel és az időponttal."
 
-A signed-out visitor SHALL be sent to the login page and returned to the edit page after signing in. For an unknown or deleted applicant, the page SHALL answer 404 with the "Nem található ilyen jelentkező" page.
-
 #### Scenario: Opening the edit page
 
 - **WHEN** an admin opens `/applicants/{id}/edit` for Nagy Luca
 - **THEN** the page shows "Adatlap szerkesztése" with the breadcrumb "Jelentkezők › Nagy Luca › Szerkesztés"
+
+### Requirement: Edit page access
+
+A signed-out visitor SHALL be sent to the login page and returned to the edit page after signing in. For an unknown or deleted applicant, the edit page SHALL answer 404 with the "Nem található ilyen jelentkező" page.
 
 #### Scenario: Deleted applicant
 
@@ -62,21 +64,22 @@ Required fields SHALL be marked with "\*". Program, status and any other applica
 
 ### Requirement: Field validation
 
-The form SHALL validate on submit, and the server SHALL apply the same rules:
-
-- Vezetéknév, keresztnév and e-mail are required.
-- Leading and trailing spaces are removed, and empty optional fields are stored as empty values.
-- The applicant e-mail and the parent e-mail, when given, must be valid e-mail addresses with a domain ending.
-- The birth year, when given, must be a whole number between 1900 and the current year.
-- Phone numbers, when given, may contain only digits, spaces, "+", "-", "(" and ")", with 6 to 20 digits.
-- Text fields are at most 200 characters.
-
-Invalid fields SHALL be marked invalid for assistive technology and show their error message below the field.
+The form SHALL validate on submit, and the server SHALL apply the same rules. Leading and trailing spaces SHALL be removed, and empty optional fields SHALL be stored as empty values. Invalid fields SHALL be marked invalid for assistive technology and show their error message below the field.
 
 #### Scenario: Invalid e-mail
 
 - **WHEN** the user enters "nagy.luca@gmail" as e-mail and saves
 - **THEN** the E-mail field shows "Érvénytelen e-mail cím" and nothing is saved
+
+### Requirement: Field rules
+
+The form and the server SHALL apply these rules:
+
+- Vezetéknév, keresztnév and e-mail are required.
+- The applicant e-mail and the parent e-mail, when given, must be valid e-mail addresses with a domain ending.
+- The birth year, when given, must be a whole number between 1900 and the current year.
+- Phone numbers, when given, may contain only digits, spaces, "+", "-", "(" and ")", with 6 to 20 digits.
+- Text fields are at most 200 characters.
 
 #### Scenario: Missing required name
 
@@ -140,10 +143,6 @@ Saving SHALL send the form values and the applicant's modification time, as load
 - It SHALL answer `404` when the applicant does not exist or is deleted.
 - It SHALL answer `409` when the applicant was modified after the given modification time.
 - On success it SHALL answer `200` with the new modification time.
-- It SHALL send no caching headers that allow storing the response.
-- Error responses SHALL NOT include personal data or technical details.
-- The update SHALL be recorded as made by the signed-in user.
-- Logs SHALL contain only the event name, the user id and the number of changed fields.
 
 #### Scenario: Unauthenticated request
 
@@ -154,6 +153,17 @@ Saving SHALL send the form values and the applicant's modification time, as load
 
 - **WHEN** the body has an invalid e-mail
 - **THEN** it answers 400 with a field error for `email` and nothing changes
+
+### Requirement: Save endpoint privacy and attribution
+
+`POST /api/applicants/{id}/edit` SHALL send no caching headers that allow storing the response, and its error responses SHALL NOT include personal data or technical details. The update SHALL be recorded as made by the signed-in user. Logs SHALL contain only the event name, the user id and the number of changed fields.
+
+#### Scenario: Successful save is attributed and logged without personal data
+
+- **GIVEN** a signed-in admin changes two fields of an applicant
+- **WHEN** the save succeeds
+- **THEN** the response is not cacheable and the update is recorded as made by that admin
+- **AND** the log entry contains only the event name, the admin's user id and the number 2
 
 ### Requirement: Field errors from the server
 

@@ -8,13 +8,7 @@ Provides the shared navigation frame around every signed-in admin page: a sideba
 
 ### Requirement: Admin pages render inside the shell
 
-Every page that requires an admin session SHALL render inside the admin shell. Its navigation SHALL be labelled "Főmenü" for assistive technology and SHALL take one of these forms by breakpoint:
-
-- **Desktop (≥ 1280 px):** a left sidebar and a topbar above the page content.
-- **Tablet (768–1279 px):** an 80 px icon rail on the left and the topbar above the content.
-- **Mobile (< 768 px):** a top bar and a navigation bar fixed to the bottom of the screen. There is no sidebar.
-
-Exactly one "Főmenü" navigation SHALL be exposed to assistive technology at any width. The login page SHALL NOT render the shell.
+Every page that requires an admin session SHALL render inside the admin shell. Its navigation SHALL be labelled "Főmenü" for assistive technology, and exactly one "Főmenü" navigation SHALL be exposed to assistive technology at any width. The login page SHALL NOT render the shell.
 
 #### Scenario: Signed-in admin opens an admin page
 
@@ -25,6 +19,14 @@ Exactly one "Főmenü" navigation SHALL be exposed to assistive technology at an
 
 - **WHEN** a visitor opens `/login`
 - **THEN** neither the sidebar nor the topbar is shown
+
+### Requirement: Shell navigation by breakpoint
+
+The shell navigation SHALL take one of these forms by breakpoint:
+
+- **Desktop (≥ 1280 px):** a left sidebar and a topbar above the page content.
+- **Tablet (768–1279 px):** an 80 px icon rail on the left and the topbar above the content.
+- **Mobile (< 768 px):** a top bar and a navigation bar fixed to the bottom of the screen. There is no sidebar.
 
 #### Scenario: Tablet rail
 

@@ -93,7 +93,7 @@ describe("POST /api/applicants/[id]/edit", () => {
 		expect((await post(rest)).status).toBe(400);
 	});
 
-	it("saves the converted values and returns the new modification time", async () => {
+	it("saves the converted values and returns the new modification time (spec: Successful save is attributed and logged without personal data)", async () => {
 		const res = await post(body);
 		expect(res.status).toBe(200);
 		expect(res.headers.get("cache-control")).toContain("no-store");

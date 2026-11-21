@@ -48,10 +48,10 @@ When no applicant has the id in the URL, or the applicant has been deleted (anon
 
 ### Requirement: Detail page header
 
-The header SHALL show an initials avatar and the name as "Vezetéknév Keresztnév". Next to the name it SHALL show these badges:
+The header SHALL show an initials avatar and the name as "Vezetéknév Keresztnév". Next to the name it SHALL show:
 
-- the status label of the most recently received application, if there is one
-- "16+" when the age (current year minus birth year) is at least 16
+- the status label of the most recently received application, if any
+- "16+" when the current year minus the birth year is at least 16
 - "Hírlevél" when subscribed to the newsletter
 - "Alumni" when at least one application has the status "Részt vett"
 
@@ -98,12 +98,12 @@ Missing values SHALL show "—". E-mail addresses SHALL be `mailto:` links and p
 
 A "Programok" section SHALL list every application of the applicant, most recently received first. Each row SHALL show:
 
-- Program: the program name with its colour dot, matching the list
+- Program: name and colour dot, as in the list
 - Időpont: the program dates as `ÉÉÉÉ.HH.NN – ÉÉÉÉ.HH.NN`
-- Státusz: a status badge with the same labels and colours as the list
-- Jelentkezett: the date the application was received
+- Státusz: status badge, as in the list
+- Jelentkezett: the date received
 
-The section header SHALL summarise the applications as "N jelentkezés · M elvégzett", where M counts the "Részt vett" applications. Without applications, the section SHALL show "Még nincs jelentkezése".
+The section header SHALL show "N jelentkezés · M elvégzett", where M counts the "Részt vett" applications. Without applications, the section SHALL show "Még nincs jelentkezése".
 
 #### Scenario: Programs summary
 
@@ -113,19 +113,7 @@ The section header SHALL summarise the applications as "N jelentkezés · M elv�
 
 ### Requirement: Application form answers
 
-When the applicant has at least one application, a "Jelentkezési űrlap válaszai" card SHALL show the answers of the most recently received application. Its subtitle SHALL be "{program} · beküldve {ÉÉÉÉ.HH.NN ÓÓ:PP}". It SHALL list only the answered questions, each with a label:
-
-- Honnan hallottál rólunk?
-- Kitől hallottál rólunk?
-- Milyen problémát oldanál meg?
-- Van programozási tapasztalatod?
-- Részt vettél már Skool programon?
-- Korábbi Skool program
-- Más programok
-- Étkezési igény
-- Megjegyzés
-
-"Részt vettél már Skool programon?" SHALL be shown only when the answer is yes, as "Igen". When no question is answered, the card SHALL say "Nincs kitöltött válasz".
+When the applicant has at least one application, a "Jelentkezési űrlap válaszai" card SHALL show the answers of the most recently received application. Its subtitle SHALL be "{program} · beküldve {ÉÉÉÉ.HH.NN ÓÓ:PP}". It SHALL list only the answered questions. When no question is answered, the card SHALL say "Nincs kitöltött válasz".
 
 #### Scenario: Only answered questions are listed
 
@@ -137,6 +125,28 @@ When the applicant has at least one application, a "Jelentkezési űrlap válasz
 
 - **WHEN** the applicant has no applications
 - **THEN** the "Jelentkezési űrlap válaszai" card is not shown
+
+### Requirement: Application form answer labels
+
+Each answered question SHALL be shown with one of these labels:
+
+- Honnan hallottál rólunk?
+- Kitől hallottál rólunk?
+- Milyen problémát oldanál meg?
+- Van programozási tapasztalatod?
+- Részt vettél már Skool programon?
+- Korábbi Skool program
+- Más programok
+- Étkezési igény
+- Megjegyzés
+
+"Részt vettél már Skool programon?" SHALL be shown only when the answer is yes, as "Igen".
+
+#### Scenario: Past Skool participation
+
+- **GIVEN** the latest application answers yes to "Részt vettél már Skool programon?"
+- **WHEN** the detail page is rendered
+- **THEN** the card lists "Részt vettél már Skool programon?" with the answer "Igen"
 
 ### Requirement: Tags card
 
@@ -155,20 +165,7 @@ With no applicable tag, it SHALL say "Nincs címke". The tags SHALL NOT be edita
 
 ### Requirement: Change history card
 
-A "Legutóbbi változások" card SHALL list the recorded changes of the applicant and of their applications, newest first, at most 5 entries. The card header SHALL show a "Teljes napló" link to the applicant's full change history at `/history/<id>`, also when there are no entries. Each entry SHALL show:
-
-- who made the change: the user's name, or "Rendszer" when no user is recorded
-- the changed field with a Hungarian label; for an application change, also the program name
-- the old and new values as "régi → új", when recorded
-- when it happened, as `ÉÉÉÉ.HH.NN ÓÓ:PP` in Budapest time
-
-Status values SHALL be shown with their status labels. Fields without a known label SHALL show their technical name. Without entries, the card SHALL say "Még nincs rögzített változás".
-
-#### Scenario: Status change of an application
-
-- **GIVEN** Kovács Anna changed the status of the "Python alapok – ősz" application from APPLIED to ACCEPTED
-- **WHEN** the detail page is rendered
-- **THEN** the history card shows "Kovács Anna módosította: Státusz (Python alapok – ősz)" with "Új jelentkező → Elfogadva" and the change time
+A "Legutóbbi változások" card SHALL list the recorded changes of the applicant and of their applications, newest first, at most 5 entries. The card header SHALL show a "Teljes napló" link to the applicant's full change history at `/history/<id>`, also when there are no entries. Without entries, the card SHALL say "Még nincs rögzített változás".
 
 #### Scenario: No recorded changes
 
@@ -185,6 +182,23 @@ Status values SHALL be shown with their status labels. Fields without a known la
 
 - **WHEN** the admin activates "Teljes napló" on the history card
 - **THEN** `/history/<id>` opens for this applicant
+
+### Requirement: Change history entries
+
+Each entry of the "Legutóbbi változások" card SHALL show:
+
+- who made the change: the user's name, or "Rendszer" when no user is recorded
+- the changed field with a Hungarian label; for an application change, also the program name
+- the old and new values as "régi → új", when recorded
+- when it happened, as `ÉÉÉÉ.HH.NN ÓÓ:PP` in Budapest time
+
+Status values SHALL be shown with their status labels. Fields without a known label SHALL show their technical name.
+
+#### Scenario: Status change of an application
+
+- **GIVEN** Kovács Anna changed the status of the "Python alapok – ősz" application from APPLIED to ACCEPTED
+- **WHEN** the detail page is rendered
+- **THEN** the history card shows "Kovács Anna módosította: Státusz (Python alapok – ősz)" with "Új jelentkező → Elfogadva" and the change time
 
 ### Requirement: Header actions
 

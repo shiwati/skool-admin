@@ -20,14 +20,18 @@ Shows a single program's page at `/events/[id]`: header and tabs, KPI cards, app
 - **WHEN** an admin opens `/events/does-not-exist`
 - **THEN** the "not found" page is shown
 
-### Requirement: Program header and tabs
+### Requirement: Program header
 
-The page SHALL show a breadcrumb "Programok › name", the program name, its tags, the program status (same rules as the program list), the date range with duration, the place, and the instructor and mentors. A "Szerkesztés" button SHALL open `/events/<id>/edit`. A tab bar SHALL show these tabs as links: "Áttekintés" (`/events/<id>`), "Jelentkezők" with the number of applications (`/events/<id>/applicants`), "Visszajelzések" (`/events/<id>/feedback`) and "Záró riport" (`/events/<id>/report`). The tab of the open page SHALL be marked as current. There SHALL be no "Változástörténet" tab: the program's change log opens from the "Teljes napló" link of the latest changes card, as on the applicant detail page.
+The page SHALL show a breadcrumb "Programok › name", the program name, its tags, the program status (same rules as the program list), the date range with duration, the place, and the instructor and mentors. A "Szerkesztés" button SHALL open `/events/<id>/edit`.
 
 #### Scenario: Header of an open program
 
 - **WHEN** the admin opens a program that has a sheet, is in the future and is not full
 - **THEN** the header shows the status "Jelentkezés nyitva" and the "Jelentkezők" tab shows the application count
+
+### Requirement: Program tabs
+
+A tab bar SHALL show these tabs as links: "Áttekintés" (`/events/<id>`), "Jelentkezők" with the number of applications (`/events/<id>/applicants`), "Visszajelzések" (`/events/<id>/feedback`) and "Záró riport" (`/events/<id>/report`). The tab of the open page SHALL be marked as current. There SHALL be no "Változástörténet" tab: the program's change log opens from the "Teljes napló" link of the latest changes card, as on the applicant detail page.
 
 #### Scenario: Opening the report tab
 

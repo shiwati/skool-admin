@@ -338,7 +338,17 @@ From 768 px to 1279 px, the programs page SHALL keep the table. The table SHALL 
 
 ### Requirement: Mobile program cards
 
-Below 768 px, programs SHALL be shown as cards instead of the table, in the same order and with the same paging. Each card SHALL show a header with the program name and colour dot, linking to the program page, its tags, and a "Műveletek: <program name>" button with the row actions. Below the header, every other visible column SHALL be one labelled line, in the order of the column settings:
+Below 768 px, programs SHALL be shown as cards instead of the table, in the same order and with the same paging. Each card SHALL show a header with the program name and colour dot, linking to the program page, its tags, and a "Műveletek: <program name>" button with the row actions. Tapping anywhere on a card, except on the actions button and its menu, SHALL open the program page. The empty states SHALL be shown as on desktop.
+
+#### Scenario: Program card
+
+- **GIVEN** a program with capacity 20 and 62 applications
+- **WHEN** `/events` is shown at 390 px
+- **THEN** its card shows "62 / 20 fő" with the "3,1×" badge, and tapping the name opens the program page
+
+### Requirement: Mobile program card lines
+
+Below the card header, every other visible column SHALL be one labelled line, in the order of the column settings:
 
 - "Időpont": the date cell content
 - "Helyszín": the location and partner
@@ -346,13 +356,7 @@ Below 768 px, programs SHALL be shown as cards instead of the table, in the same
 - "Oktatók": the instructors line
 - "Státusz": the display status
 
-Tapping anywhere on a card, except on the actions button and its menu, SHALL open the program page. Hidden columns SHALL have no line. The empty states SHALL be shown as on desktop.
-
-#### Scenario: Program card
-
-- **GIVEN** a program with capacity 20 and 62 applications
-- **WHEN** `/events` is shown at 390 px
-- **THEN** its card shows "62 / 20 fő" with the "3,1×" badge, and tapping the name opens the program page
+Hidden columns SHALL have no line.
 
 #### Scenario: Hidden column on a card
 
