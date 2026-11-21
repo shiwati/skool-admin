@@ -283,4 +283,13 @@ describe("value parsers", () => {
 		).toBe(4.5);
 		expect(overallScore("MENTOR", {})).toBeNull();
 	});
+
+	it("uses the mentor's own overall rating", () => {
+		expect(overallScore("MENTOR", { overallRating: 4 })).toBe(4);
+		// Participant ratings on a mentor response are ignored.
+		expect(
+			overallScore("MENTOR", { mentorRating: 5, instructorRating: 5 }),
+		).toBeNull();
+		expect(overallScore("PARTICIPANT", { overallRating: 4 })).toBeNull();
+	});
 });

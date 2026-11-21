@@ -33,7 +33,17 @@ describe("GET /api/applicants", () => {
 
 	it("rejects unauthenticated requests", async () => {
 		getSession.mockResolvedValue(null);
-		expect((await call()).status).toBe(401);
+		const res = await call();
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
+		expect(res.headers.get("Cache-Control")).toBe("no-store");
+		expect(findMany).not.toHaveBeenCalled();
+	});
+
+	it("marks successful responses as not cacheable", async () => {
+		const res = await call();
+		expect(res.status).toBe(200);
+		expect(res.headers.get("Cache-Control")).toBe("no-store");
 	});
 
 	it("always excludes anonymized (deleted) applicants", async () => {
@@ -56,7 +66,12 @@ describe("GET /api/applicants", () => {
 	);
 
 	it("validates query params", async () => {
-		expect((await call("?pageSize=500")).status).toBe(400);
+		const res = await call("?pageSize=500");
+		expect(res.status).toBe(400);
+		expect(res.headers.get("Cache-Control")).toBe("no-store");
+		const body = await res.json();
+		expect(body.error).toBe("Invalid query parameters");
+		expect(body.details.fieldErrors).toHaveProperty("pageSize");
 		expect((await call("?ageFrom=15&ageTo=10")).status).toBe(400);
 		expect((await call("?historyFrom=3&historyTo=1")).status).toBe(400);
 	});

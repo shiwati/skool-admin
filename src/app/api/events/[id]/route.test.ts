@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { getEvent, getAdminSession, tx, transaction } = vi.hoisted(() => {
 	const tx = {
-		event: { findUnique: vi.fn(), update: vi.fn() },
-		history: { createMany: vi.fn() },
+		event: { findUnique: vi.fn(), update: vi.fn(), delete: vi.fn() },
+		history: { createMany: vi.fn(), create: vi.fn() },
 	};
 	return {
 		getEvent: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock("@/lib/events/queries", () => ({ getEvent }));
 vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn(), info: vi.fn() } }));
 vi.mock("@/lib/session", () => ({ getAdminSession }));
 
-import { GET, PATCH } from "./route";
+import { DELETE, GET, PATCH } from "./route";
 
 const ctx = { params: Promise.resolve({ id: "e1" }) } as never;
 
@@ -52,7 +52,10 @@ describe("GET /api/events/[id]", () => {
 
 	it("rejects unauthenticated requests", async () => {
 		getAdminSession.mockResolvedValue(null);
-		expect((await get()).status).toBe(401);
+		const res = await get();
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
+		expect(res.headers.get("Cache-Control")).toBe("no-store");
 		expect(getEvent).not.toHaveBeenCalled();
 	});
 
@@ -89,7 +92,10 @@ describe("PATCH /api/events/[id]", () => {
 
 	it("rejects unauthenticated requests", async () => {
 		getAdminSession.mockResolvedValue(null);
-		expect((await patch({ name: "x" })).status).toBe(401);
+		const res = await patch({ name: "x" });
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
+		expect(res.headers.get("Cache-Control")).toBe("no-store");
 		expect(transaction).not.toHaveBeenCalled();
 	});
 
@@ -122,6 +128,7 @@ describe("PATCH /api/events/[id]", () => {
 			capacity: 20,
 		});
 		expect(res.status).toBe(200);
+		expect(res.headers.get("Cache-Control")).toBe("no-store");
 		expect(await res.json()).toEqual({ id: "e1" });
 		expect(tx.event.update).toHaveBeenCalledWith({
 			where: { id: "e1" },
@@ -149,10 +156,95 @@ describe("PATCH /api/events/[id]", () => {
 		});
 	});
 
+	it("clears a text field sent as blank", async () => {
+		tx.event.findUnique.mockResolvedValue({
+			...existing,
+			location: "Pécs",
+		});
+		const res = await patch({ location: "  " });
+		expect(res.status).toBe(200);
+		expect(tx.event.update).toHaveBeenCalledWith({
+			where: { id: "e1" },
+			data: { location: null },
+		});
+		expect(tx.history.createMany).toHaveBeenCalledWith({
+			data: [
+				expect.objectContaining({
+					fieldName: "location",
+					oldValue: "Pécs",
+					newValue: null,
+				}),
+			],
+		});
+	});
+
+	it("rejects an invalid sheet URL", async () => {
+		const res = await patch({ participantFeedbackSheetUrl: "nope" });
+		expect(res.status).toBe(400);
+		expect((await res.json()).details.fieldErrors).toHaveProperty(
+			"participantFeedbackSheetUrl",
+		);
+		expect(transaction).not.toHaveBeenCalled();
+	});
+
 	it("writes nothing when no value changes", async () => {
 		const res = await patch({ name: "Tábor", capacity: 20 });
 		expect(res.status).toBe(200);
 		expect(tx.event.update).not.toHaveBeenCalled();
 		expect(tx.history.createMany).not.toHaveBeenCalled();
+	});
+});
+
+describe("DELETE /api/events/[id]", () => {
+	const del = () =>
+		DELETE(
+			new Request("http://x/api/events/e1", { method: "DELETE" }),
+			ctx,
+		);
+
+	beforeEach(() => {
+		vi.resetAllMocks();
+		transaction.mockImplementation((fn) => fn(tx));
+		getAdminSession.mockResolvedValue({ user: { id: "u1" } });
+		tx.event.findUnique.mockResolvedValue({ name: "Tábor" });
+	});
+
+	it("rejects unauthenticated requests", async () => {
+		getAdminSession.mockResolvedValue(null);
+		const res = await del();
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
+		expect(transaction).not.toHaveBeenCalled();
+	});
+
+	it("returns 404 for an unknown event", async () => {
+		tx.event.findUnique.mockResolvedValue(null);
+		expect((await del()).status).toBe(404);
+		expect(tx.event.delete).not.toHaveBeenCalled();
+		expect(tx.history.create).not.toHaveBeenCalled();
+	});
+
+	it("hard-deletes the event and records a 'deleted' History row", async () => {
+		const res = await del();
+		expect(res.status).toBe(200);
+		expect(await res.json()).toEqual({ id: "e1" });
+		expect(tx.event.delete).toHaveBeenCalledWith({ where: { id: "e1" } });
+		expect(tx.history.create).toHaveBeenCalledWith({
+			data: {
+				tableName: "event",
+				recordId: "e1",
+				createdById: "u1",
+				fieldName: "deleted",
+				oldValue: "Tábor",
+				newValue: null,
+			},
+		});
+	});
+
+	it("returns 500 without details when the database fails", async () => {
+		tx.event.delete.mockRejectedValue(new Error("private details"));
+		const res = await del();
+		expect(res.status).toBe(500);
+		expect(await res.json()).toEqual({ error: "Internal Server Error" });
 	});
 });

@@ -145,7 +145,47 @@ describe("ApplicationsSection", () => {
 			ids: ["a1", "a2"],
 			status: "ACCEPTED",
 		});
-		expect(toastSuccess).toHaveBeenCalled();
+		expect(toastSuccess).toHaveBeenCalledWith(
+			"1 jelentkezés státusza: Elfogadva",
+		);
+	});
+
+	it("shows an error toast when the status change fails", async () => {
+		const user = userEvent.setup();
+		const list = fetchMock.getMockImplementation()!;
+		fetchMock.mockImplementation((url: string, init?: RequestInit) =>
+			init?.method === "POST"
+				? Promise.resolve(
+						new Response(JSON.stringify({ error: "x" }), {
+							status: 500,
+						}),
+					)
+				: list(url, init),
+		);
+		renderSection(20, 5);
+		await screen.findByText("Kiss Anna");
+		await user.click(
+			screen.getByRole("checkbox", { name: "Kiss Anna kijelölése" }),
+		);
+		await user.click(screen.getByRole("button", { name: "Elfogadva" }));
+		await waitFor(() =>
+			expect(toastError).toHaveBeenCalledWith(
+				"A státusz módosítása nem sikerült. Próbáld újra.",
+			),
+		);
+		expect(toastSuccess).not.toHaveBeenCalled();
+	});
+
+	it("does not warn about capacity when the program has no limit", async () => {
+		const user = userEvent.setup();
+		renderSection(0, 20);
+		await screen.findByText("Kiss Anna");
+		await user.click(
+			screen.getByRole("checkbox", { name: "Kiss Anna kijelölése" }),
+		);
+		await user.click(screen.getByRole("button", { name: "Elfogadva" }));
+		await waitFor(() => expect(refresh).toHaveBeenCalled());
+		expect(screen.queryByText("Túlléped a kapacitást?")).toBeNull();
 	});
 
 	it("asks for confirmation when accepting would exceed the capacity", async () => {
@@ -159,6 +199,9 @@ describe("ApplicationsSection", () => {
 		expect(
 			await screen.findByText("Túlléped a kapacitást?"),
 		).toBeInTheDocument();
+		expect(screen.getByRole("alertdialog")).toHaveTextContent(
+			"A művelet után 21 elfogadott jelentkező lenne, a program kapacitása 20.",
+		);
 		expect(
 			fetchMock.mock.calls.some(([, init]) => init?.method === "POST"),
 		).toBe(false);

@@ -29,6 +29,7 @@ describe("GET /api/health", () => {
 		query.mockRejectedValue(error);
 		const response = await GET();
 		expect(response.status).toBe(503);
+		expect(response.headers.get("Cache-Control")).toBe("no-store");
 		expect(await response.json()).toEqual({
 			status: "error",
 			checks: { database: "down" },

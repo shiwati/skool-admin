@@ -65,7 +65,9 @@ describe("POST /api/applicants/[id]/edit", () => {
 
 	it("rejects requests without a session or user id", async () => {
 		getAdminSession.mockResolvedValue(null);
-		expect((await post(body)).status).toBe(401);
+		const res = await post(body);
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
 		getAdminSession.mockResolvedValue({ user: {} });
 		expect((await post(body)).status).toBe(401);
 		expect(update).not.toHaveBeenCalled();

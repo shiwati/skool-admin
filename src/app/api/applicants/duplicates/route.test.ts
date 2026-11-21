@@ -40,7 +40,9 @@ describe("GET /api/applicants/duplicates", () => {
 
 	it("rejects signed-out requests", async () => {
 		getSession.mockResolvedValue(null);
-		expect((await call()).status).toBe(401);
+		const res = await call();
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
 	});
 
 	it("returns the first undismissed pair and the count", async () => {

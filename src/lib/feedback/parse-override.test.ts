@@ -52,6 +52,31 @@ describe("mapFeedbackHeaders with a saved mapping", () => {
 		});
 	});
 
+	it("does not let a custom scale answer change the overall score", () => {
+		const result = mapFeedbackHeaders("MENTOR", HEADERS, {
+			columns: mapping.columns,
+			custom: [
+				{
+					label: "Kedvenc feladat",
+					kind: "scale" as const,
+					header: "Milyen pizzát kérnél?",
+				},
+			],
+		});
+		const row = parseFeedbackRow(
+			"MENTOR",
+			[46000, 3, "x", 1],
+			result,
+			"Europe/Budapest",
+		);
+		expect(row).toMatchObject({
+			ok: true,
+			answers: { overallRating: 3, "custom:Kedvenc feladat": 1 },
+			overallScore: 3,
+			recommend: null,
+		});
+	});
+
 	it("reports a required question whose header is missing", () => {
 		const result = mapFeedbackHeaders("MENTOR", HEADERS, {
 			columns: { timestamp: "Időbélyeg", overallRating: "Régi kérdés" },

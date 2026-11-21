@@ -19,6 +19,11 @@ vi.mock("@/lib/reports/save", () => {
 	return { generateReportDocument: generate, ReportEventNotFoundError };
 });
 
+import {
+	DocsApiDisabledError,
+	ReportTemplateNotAccessibleError,
+} from "@/lib/google/docs";
+import { DriveApiDisabledError } from "@/lib/google/drive";
 import { GoogleReauthRequiredError } from "@/lib/google/token";
 import { ReportEventNotFoundError } from "@/lib/reports/save";
 import { POST } from "./route";
@@ -32,7 +37,7 @@ const call = (body: unknown) =>
 	POST(
 		new Request("http://x/api/events/e1/report/documents", {
 			method: "POST",
-			body: JSON.stringify(body),
+			body: typeof body === "string" ? body : JSON.stringify(body),
 		}),
 		{ params: Promise.resolve({ id: "e1" }) },
 	);
@@ -47,6 +52,7 @@ describe("POST /api/events/[id]/report/documents", () => {
 		getSession.mockResolvedValue(null);
 		const response = await call({ content });
 		expect(response.status).toBe(401);
+		expect(await response.json()).toEqual({ error: "Unauthorized" });
 		expect(generate).not.toHaveBeenCalled();
 	});
 
@@ -88,8 +94,45 @@ describe("POST /api/events/[id]/report/documents", () => {
 		expect((await call({ content })).status).toBe(404);
 	});
 
+	it("rejects a body that is not JSON", async () => {
+		expect((await call("{")).status).toBe(400);
+		expect(generate).not.toHaveBeenCalled();
+	});
+
+	it("returns 422 when the template is not accessible", async () => {
+		generate.mockRejectedValue(new ReportTemplateNotAccessibleError());
+		const response = await call({ content });
+		expect(response.status).toBe(422);
+		expect(await response.json()).toEqual({
+			code: "TEMPLATE_NOT_ACCESSIBLE",
+			error: "A riport-sablon nem érhető el. Ellenőrizd, hogy meg van-e osztva a domainnel.",
+		});
+	});
+
+	it("returns 503 when the Drive API is disabled", async () => {
+		generate.mockRejectedValue(new DriveApiDisabledError());
+		const response = await call({ content });
+		expect(response.status).toBe(503);
+		expect(await response.json()).toMatchObject({
+			code: "DRIVE_API_DISABLED",
+		});
+	});
+
+	it("returns 503 when the Docs API is disabled", async () => {
+		generate.mockRejectedValue(new DocsApiDisabledError());
+		const response = await call({ content });
+		expect(response.status).toBe(503);
+		expect(await response.json()).toMatchObject({
+			code: "DOCS_API_DISABLED",
+		});
+	});
+
 	it("returns 502 when Google fails", async () => {
 		generate.mockRejectedValue(new Error("Google Drive API error (500)"));
-		expect((await call({ content })).status).toBe(502);
+		const response = await call({ content });
+		expect(response.status).toBe(502);
+		expect(JSON.stringify(await response.json())).not.toContain(
+			"Google Drive API error",
+		);
 	});
 });
