@@ -103,7 +103,8 @@ Copy `.env.example` to `.env` for local development. Next.js loads it automatica
 
 | Variable                 | Requirement                                                                                   |
 | ------------------------ | --------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`           | PostgreSQL connection URL                                                                     |
+| `DATABASE_URL`           | Direct (non-pooled) PostgreSQL URL; used by migrations, Prisma Studio and the seed            |
+| `DATABASE_URL_POOLED`    | Optional pooled PostgreSQL URL for the app at runtime; falls back to `DATABASE_URL`           |
 | `NEXTAUTH_SECRET`        | Random secret, at least 32 characters                                                         |
 | `NEXTAUTH_URL`           | Canonical HTTP(S) application URL                                                             |
 | `GOOGLE_CLIENT_ID`       | Google OAuth client ID (see [Authentication](#authentication))                                |

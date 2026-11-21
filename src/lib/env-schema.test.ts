@@ -23,6 +23,8 @@ describe("environment validation", () => {
 		["DATABASE_URL", undefined],
 		["DATABASE_URL", "https://example.test"],
 		["DATABASE_URL", "not a URL"],
+		["DATABASE_URL_POOLED", "https://example.test"],
+		["DATABASE_URL_POOLED", "not a URL"],
 		["NEXTAUTH_SECRET", "short"],
 		["NEXTAUTH_URL", "ftp://example.test"],
 		["NEXTAUTH_URL", "not a URL"],
@@ -47,6 +49,20 @@ describe("environment validation", () => {
 			expect(String(error)).not.toContain(valid.GOOGLE_CLIENT_SECRET);
 			expect(String(error)).not.toContain(valid.GOOGLE_CLIENT_ID);
 		}
+	});
+
+	it("leaves DATABASE_URL_POOLED optional and treats empty as unset", () => {
+		expect(parseEnv(valid).DATABASE_URL_POOLED).toBeUndefined();
+		expect(
+			parseEnv({ ...valid, DATABASE_URL_POOLED: "" }).DATABASE_URL_POOLED,
+		).toBeUndefined();
+		expect(
+			parseEnv({
+				...valid,
+				DATABASE_URL_POOLED:
+					"postgres://test:test@pooler.test:6543/test",
+			}).DATABASE_URL_POOLED,
+		).toBe("postgres://test:test@pooler.test:6543/test");
 	});
 
 	it("normalises the allowed domain to lower case", () => {

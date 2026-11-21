@@ -4,7 +4,16 @@ export const envSchema = z.object({
 	NODE_ENV: z
 		.enum(["development", "test", "production"])
 		.default("development"),
+	/** Direkt (pooler nélküli) kapcsolat: Prisma CLI (migrációk, Studio) és seed. */
 	DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+	/** Poololt kapcsolat az app futásidejére; ha nincs megadva, a `DATABASE_URL`. */
+	DATABASE_URL_POOLED: z.preprocess(
+		(value) =>
+			typeof value === "string" && value.trim() === ""
+				? undefined
+				: value,
+		z.url({ protocol: /^postgres(ql)?$/ }).optional(),
+	),
 	NEXTAUTH_SECRET: z.string().min(32, "Must contain at least 32 characters"),
 	NEXTAUTH_URL: z.url({ protocol: /^https?$/ }),
 	GOOGLE_CLIENT_ID: z.string().trim().min(1, "Required"),
