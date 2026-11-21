@@ -77,7 +77,8 @@ A tervek: „Reszponzív nézetek” oldal (tablet 820 px, mobil 390 px). Három
     - **Fejléc:** jelentkezőnél és programnál ugyanaz: morzsamenü („Jelentkezők › név › Változástörténet” vagy „Programok › név › Változástörténet”, a név a rekord oldalára visz) és a név.
     - **Belépési pont:** a jelentkező adatlap és a programoldal kártyájának „Teljes napló” linkje. Szűrők és lapozás még nincsenek.
 - Kliensoldali API-hívások: `apiFetch` (`src/lib/api/client.ts`). 401 esetén teljes oldalas átirányítás a `/login`-ra, az aktuális URL-lel mint visszatérési címmel.
-- `error.tsx`, `not-found.tsx`: globális hibaoldalak.
+- `error.tsx`, `not-found.tsx`: globális hibaoldalak. A `not-found.tsx` („Az oldal nem található”, „Vissza a kezdőlapra” link a `/`-re) minden olyan 404-re vonatkozik, amelyhez nincs szűkebb `not-found.tsx` (jelentkező, program, változásnapló). Az `error.tsx` „Hiba történt” oldalt mutat „Próbáld újra” gombbal; a gomb a `retry()`-t hívja (Next 16.3+), ami a szerverről újra lekéri és rendereli a hibás szegmenst (a `reset()` csak kliensoldalon renderelne újra, szerverhibánál ugyanazt a hibát hozná vissza).
+- `global-error.tsx`: ha maga a root layout hibázik, ez lép a helyére; saját `<html>`/`<body>`-t renderel, importálja a `globals.css`-t, a címet React `<title>` adja (kliens komponens nem exportálhat `metadata`-t). A Poppins betűtípust nem tölti be, a rendszer sans-serif fontja jelenik meg.
 
 ## Teljesítmény
 
