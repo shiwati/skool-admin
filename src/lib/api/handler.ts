@@ -1,9 +1,8 @@
 import "server-only";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import type { z } from "zod";
-import { authOptions } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { getAdminSession } from "@/lib/session";
 import { formatValidationErrors } from "@/lib/validation";
 import { searchParamsToObject } from "./query";
 
@@ -22,12 +21,11 @@ export async function handleQuery<S extends z.ZodType>(
 	schema: S,
 	run: (query: z.output<S>) => Promise<Response>,
 ): Promise<Response> {
-	const session = await getServerSession(authOptions);
+	const session = await getAdminSession();
 	if (!session) return jsonResponse({ error: "Unauthorized" }, 401);
 
-	const parsed = schema.safeParse(
-		searchParamsToObject(new URL(request.url).searchParams),
-	);
+	const url = new URL(request.url);
+	const parsed = schema.safeParse(searchParamsToObject(url.searchParams));
 	if (!parsed.success) {
 		return jsonResponse(
 			{
@@ -41,7 +39,12 @@ export async function handleQuery<S extends z.ZodType>(
 	try {
 		return await run(parsed.data);
 	} catch (error) {
-		logger.error({ err: error, url: request.url }, "API request failed");
+		// Csak a pathname: a query string (pl. `q`) keresett nevet vagy
+		// e-mail-címet tartalmazhat.
+		logger.error(
+			{ event: "api.request_failed", path: url.pathname, err: error },
+			"API request failed",
+		);
 		return jsonResponse({ error: "Internal Server Error" }, 500);
 	}
 }
