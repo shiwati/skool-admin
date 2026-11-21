@@ -1,8 +1,8 @@
 "use client";
 
 import { Copy } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
 	AlertDialog,
@@ -16,14 +16,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { apiFetch, ApiError, isAbortError } from "@/lib/api/client";
 import { formatCount, STATUS_LABELS } from "@/lib/applicants/format";
-import type { PageSize } from "@/lib/applicants/list-params";
 import type { ApplicationStatus } from "@/lib/applicants/types";
 import {
 	acceptedAfter,
-	applicationsQueryString,
-	type ApplicationsQuery,
 	type EventApplicationsPage,
+	type InitialApplications,
 } from "@/lib/events/applications";
+import {
+	DEFAULT_APPLICATIONS_VIEW as DEFAULT_VIEW,
+	parseApplicationsParams,
+	toApplicationsApiQuery,
+	updateApplicationsView,
+	type ApplicationsView,
+} from "@/lib/events/applications-params";
+import { eventApplicantsHref } from "@/lib/events/links";
 import type { StatusCounts } from "@/lib/events/list";
 import {
 	EmailListDialog,
@@ -34,22 +40,14 @@ import { BulkStatusBar } from "./bulk-status-bar";
 import { SheetSyncButton } from "./sheet-sync-button";
 import { StatusFilterChips } from "./status-filter-chips";
 
-const DEFAULT_QUERY: ApplicationsQuery = {
-	status: null,
-	sort: "receivedAt",
-	order: "asc",
-	page: 1,
-	pageSize: 25,
-};
-
-const SORT_LABELS: Record<ApplicationsQuery["sort"], string> = {
+const SORT_LABELS: Record<ApplicationsView["sort"], string> = {
 	receivedAt: "jelentkezés ideje",
-	lastName: "név",
-	birthYear: "kor",
+	name: "név",
+	age: "kor",
 	status: "státusz",
 };
 
-function sortDescription({ sort, order }: ApplicationsQuery) {
+function sortDescription({ sort, order }: ApplicationsView) {
 	const direction =
 		sort === "receivedAt"
 			? order === "asc"
@@ -63,22 +61,55 @@ function sortDescription({ sort, order }: ApplicationsQuery) {
 
 type Settled = { key: string; data: ApplicationsData };
 
+function settledFrom(attempt: number, initial: InitialApplications): Settled {
+	return {
+		key: `${attempt}:${initial.apiQuery}`,
+		data: {
+			status: "success",
+			items: initial.data.items,
+			total: initial.data.total,
+		},
+	};
+}
+
 export function ApplicationsSection({
 	eventId,
 	capacity,
 	counts,
 	applicationSheetUrl = null,
+	initial,
 }: {
 	eventId: string;
 	capacity: number;
 	counts: StatusCounts;
 	/** Ha meg van adva, a szakasz fejlécében szinkronizálás gomb is van. */
 	applicationSheetUrl?: string | null;
+	/**
+	 * A szerveren az URL nézetével lekért oldal. `router.refresh()` után új
+	 * példány érkezik, ami lecseréli a listát (kliensoldali kérés nélkül).
+	 */
+	initial?: InitialApplications;
 }) {
 	const router = useRouter();
-	const [query, setQuery] = useState<ApplicationsQuery>(DEFAULT_QUERY);
+	const [refreshing, startRefresh] = useTransition();
+	const searchParams = useSearchParams();
+	const searchKey = searchParams.toString();
+	const view = useMemo(
+		() => parseApplicationsParams(new URLSearchParams(searchKey)),
+		[searchKey],
+	);
 	const [attempt, setAttempt] = useState(0);
-	const [settled, setSettled] = useState<Settled>();
+	const [settled, setSettled] = useState<Settled | undefined>(() =>
+		initial ? settledFrom(0, initial) : undefined,
+	);
+	// Fresh server data after `router.refresh()`: adopt it during render. If
+	// the server could not load it, fall back to a client request.
+	const [seenInitial, setSeenInitial] = useState(initial);
+	if (initial !== seenInitial) {
+		setSeenInitial(initial);
+		if (initial) setSettled(settledFrom(attempt, initial));
+		else setAttempt((n) => n + 1);
+	}
 	// Selection is tagged with the result it was made on, so any filter, sort
 	// or page change drops it without an effect.
 	const [selection, setSelection] = useState<{
@@ -92,10 +123,12 @@ export function ApplicationsSection({
 		accepted: number;
 	} | null>(null);
 
-	const queryString = applicationsQueryString(query);
+	const queryString = toApplicationsApiQuery(view).toString();
 	const requestKey = `${attempt}:${queryString}`;
 
 	useEffect(() => {
+		// Already answered (e.g. by the server-rendered first page).
+		if (settled?.key === requestKey) return;
 		const controller = new AbortController();
 		apiFetch<EventApplicationsPage>(
 			`/api/events/${eventId}/applicants?${queryString}`,
@@ -118,6 +151,8 @@ export function ApplicationsSection({
 				setSettled({ key: requestKey, data: { status: "error" } });
 			});
 		return () => controller.abort();
+		// `settled` is only read to skip a request that is already answered.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [eventId, queryString, requestKey]);
 
 	const data: ApplicationsData =
@@ -138,15 +173,13 @@ export function ApplicationsSection({
 			const emails = selectedKey.split("\n");
 			return async () => ({ emails, total: emails.length });
 		}
-		const status = query.status;
+		const status = view.status;
 		return async (page, pageSize, signal) => {
 			const data = await apiFetch<EventApplicationsPage>(
-				`/api/events/${eventId}/applicants?${applicationsQueryString({
-					...DEFAULT_QUERY,
-					status,
-					page,
-					pageSize,
-				})}`,
+				`/api/events/${eventId}/applicants?${toApplicationsApiQuery(
+					{ ...DEFAULT_VIEW, status },
+					{ page, pageSize },
+				)}`,
 				{ signal },
 			);
 			return {
@@ -154,10 +187,21 @@ export function ApplicationsSection({
 				total: data.total,
 			};
 		};
-	}, [eventId, query.status, selectedKey]);
+	}, [eventId, view.status, selectedKey]);
 
-	function change(patch: Partial<ApplicationsQuery>) {
-		setQuery((current) => ({ ...current, ...patch }));
+	// Native history API: Next syncs `useSearchParams` without re-rendering
+	// the page on the server, so only this component fetches the new view.
+	function change(patch: Partial<ApplicationsView>) {
+		window.history.replaceState(
+			null,
+			"",
+			eventApplicantsHref(eventId, updateApplicationsView(view, patch)),
+		);
+	}
+
+	// The server reloads the open view (and the counts) in one go.
+	function refresh() {
+		startRefresh(() => router.refresh());
 	}
 
 	function select(ids: ReadonlySet<string>) {
@@ -179,8 +223,7 @@ export function ApplicationsSection({
 				`${formatCount(result.updated)} jelentkezés státusza: ${STATUS_LABELS[status]}`,
 			);
 			select(new Set());
-			setAttempt((n) => n + 1);
-			router.refresh();
+			refresh();
 		} catch (error) {
 			if (!(error instanceof ApiError && error.status === 401))
 				toast.error("A státusz módosítása nem sikerült. Próbáld újra.");
@@ -213,10 +256,8 @@ export function ApplicationsSection({
 				</h2>
 				<div className="flex flex-wrap gap-2">
 					{applicationSheetUrl && (
-						<SheetSyncButton
-							eventId={eventId}
-							onSynced={() => setAttempt((n) => n + 1)}
-						/>
+						// Its `router.refresh()` brings the reloaded list.
+						<SheetSyncButton eventId={eventId} />
 					)}
 					<Button
 						variant="surface"
@@ -232,13 +273,13 @@ export function ApplicationsSection({
 			</div>
 			<StatusFilterChips
 				counts={counts}
-				value={query.status}
-				onChange={(status) => change({ status, page: 1 })}
+				value={view.status}
+				onChange={(status) => change({ status })}
 			/>
 			<p className="text-xs text-text-secondary">
-				Rendezés: {sortDescription(query)}
-				{(query.sort !== DEFAULT_QUERY.sort ||
-					query.order !== DEFAULT_QUERY.order) && (
+				Rendezés: {sortDescription(view)}
+				{(view.sort !== DEFAULT_VIEW.sort ||
+					view.order !== DEFAULT_VIEW.order) && (
 					<>
 						{" · "}
 						<button
@@ -246,9 +287,8 @@ export function ApplicationsSection({
 							className="text-info-fg underline underline-offset-2 hover:text-ink"
 							onClick={() =>
 								change({
-									sort: DEFAULT_QUERY.sort,
-									order: DEFAULT_QUERY.order,
-									page: 1,
+									sort: DEFAULT_VIEW.sort,
+									order: DEFAULT_VIEW.order,
 								})
 							}
 						>
@@ -260,16 +300,16 @@ export function ApplicationsSection({
 			<ApplicationsTable
 				data={data}
 				selected={selected}
-				sort={query.sort}
-				order={query.order}
-				page={query.page}
-				pageSize={query.pageSize as PageSize}
-				filtersActive={query.status !== null}
-				statusPending={pending}
+				sort={view.sort}
+				order={view.order}
+				page={view.page}
+				pageSize={view.pageSize}
+				filtersActive={view.status !== null}
+				statusPending={pending || refreshing}
 				onChangeStatus={(item, status) => requestStatus([item], status)}
-				onSort={(sort, order) => change({ sort, order, page: 1 })}
+				onSort={(sort, order) => change({ sort, order })}
 				onPage={(page) => change({ page })}
-				onPageSize={(pageSize) => change({ pageSize, page: 1 })}
+				onPageSize={(pageSize) => change({ pageSize })}
 				onToggleRow={(id, checked) => {
 					const next = new Set(selected);
 					if (checked) next.add(id);
@@ -284,7 +324,7 @@ export function ApplicationsSection({
 					}
 					select(next);
 				}}
-				onClearFilters={() => change({ status: null, page: 1 })}
+				onClearFilters={() => change({ status: null })}
 				onReload={() => setAttempt((n) => n + 1)}
 			/>
 			<BulkStatusBar

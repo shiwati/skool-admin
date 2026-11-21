@@ -1,24 +1,60 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ComponentProps } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ApplicationStatus } from "@/lib/applicants/types";
+import type {
+	EventApplicationItem,
+	InitialApplications,
+} from "@/lib/events/applications";
+import {
+	DEFAULT_APPLICATIONS_VIEW,
+	toApplicationsApiQuery,
+} from "@/lib/events/applications-params";
 import { overviewCounts } from "./test-fixtures";
 
-const { push, refresh, toastSuccess, toastError } = vi.hoisted(() => ({
-	push: vi.fn(),
-	refresh: vi.fn(),
-	toastSuccess: vi.fn(),
-	toastError: vi.fn(),
-}));
-vi.mock("next/navigation", () => ({
-	useRouter: () => ({ push, refresh, replace: vi.fn() }),
-}));
+const { push, refresh, toastSuccess, toastError, nav } = vi.hoisted(() => {
+	// URL store: `useSearchParams` re-renders when `replaceState` writes it,
+	// as Next does for the native history API.
+	let search = "";
+	const listeners = new Set<() => void>();
+	return {
+		push: vi.fn(),
+		refresh: vi.fn(),
+		toastSuccess: vi.fn(),
+		toastError: vi.fn(),
+		nav: {
+			get: () => search,
+			set(next: string) {
+				search = next;
+				listeners.forEach((l) => l());
+			},
+			subscribe(listener: () => void) {
+				listeners.add(listener);
+				return () => listeners.delete(listener);
+			},
+		},
+	};
+});
+vi.mock("next/navigation", async () => {
+	const { useSyncExternalStore } = await import("react");
+	return {
+		useRouter: () => ({ push, refresh, replace: vi.fn() }),
+		useSearchParams: () =>
+			new URLSearchParams(useSyncExternalStore(nav.subscribe, nav.get)),
+	};
+});
 vi.mock("sonner", () => ({
 	toast: { success: toastSuccess, error: toastError },
 }));
 
 import { ApplicationsSection } from "./applications-section";
 
-const item = (id: string, last: string, status = "APPLIED") => ({
+const item = (
+	id: string,
+	last: string,
+	status: ApplicationStatus = "APPLIED",
+): EventApplicationItem => ({
 	id,
 	status,
 	receivedAt: "2026-11-01T10:00:00Z",
@@ -59,22 +95,60 @@ function respond(items: ReturnType<typeof item>[]) {
 	});
 }
 
-function renderSection(capacity = 20, accepted = 20) {
+function renderSection(
+	capacity = 20,
+	accepted = 20,
+	props: Partial<ComponentProps<typeof ApplicationsSection>> = {},
+) {
 	return render(
 		<ApplicationsSection
 			eventId="e1"
 			capacity={capacity}
 			counts={overviewCounts({ ACCEPTED: accepted })}
+			{...props}
 		/>,
 	);
 }
 
+const DEFAULT_API_QUERY = toApplicationsApiQuery(
+	DEFAULT_APPLICATIONS_VIEW,
+).toString();
+
+function initialOf(
+	items: EventApplicationItem[],
+	apiQuery = DEFAULT_API_QUERY,
+): InitialApplications {
+	return {
+		apiQuery,
+		data: { items, total: items.length, page: 1, pageSize: 25 },
+	};
+}
+
+const listCalls = () =>
+	fetchMock.mock.calls
+		.map(([url]) => url as string)
+		.filter((url) => url.startsWith("/api/events/e1/applicants?"));
+
 describe("ApplicationsSection", () => {
+	let replaceState: ReturnType<typeof vi.spyOn>;
+
 	beforeEach(() => {
 		vi.clearAllMocks();
+		nav.set("");
 		vi.stubGlobal("fetch", fetchMock);
+		replaceState = vi
+			.spyOn(window.history, "replaceState")
+			.mockImplementation((_state, _title, url) => {
+				nav.set(new URL(String(url), "http://x").search.slice(1));
+			});
 		respond([item("a1", "Kiss"), item("a2", "Nagy", "WAITLISTED")]);
 	});
+	afterEach(() => {
+		replaceState.mockRestore();
+		vi.unstubAllGlobals();
+	});
+
+	const lastUrl = () => replaceState.mock.lastCall?.[2];
 
 	it("lists the applications and filters by status chip", async () => {
 		const user = userEvent.setup();
@@ -87,6 +161,131 @@ describe("ApplicationsSection", () => {
 				expect.anything(),
 			),
 		);
+	});
+
+	it("writes the status filter to the URL and returns to page 1", async () => {
+		const user = userEvent.setup();
+		nav.set("page=3");
+		renderSection();
+		await screen.findByText("Kiss Anna");
+		await user.click(screen.getByRole("button", { name: /^Elfogadva/ }));
+		expect(lastUrl()).toBe("/events/e1/applicants?status=ACCEPTED");
+		await waitFor(() =>
+			expect(listCalls().at(-1)).toBe(
+				"/api/events/e1/applicants?sort=receivedAt&order=asc&page=1&pageSize=25&status=ACCEPTED",
+			),
+		);
+	});
+
+	it("restores the view from the URL", async () => {
+		nav.set("status=WAITLISTED&page=2");
+		renderSection();
+		await screen.findByText("Kiss Anna");
+		expect(listCalls()).toEqual([
+			"/api/events/e1/applicants?sort=receivedAt&order=asc&page=2&pageSize=25&status=WAITLISTED",
+		]);
+		expect(
+			screen.getByRole("button", { name: /^Várólista/ }),
+		).toHaveAttribute("aria-pressed", "true");
+	});
+
+	it("leaves the URL clean for the default view", async () => {
+		const user = userEvent.setup();
+		nav.set("status=ACCEPTED");
+		renderSection();
+		await screen.findByText("Kiss Anna");
+		await user.click(screen.getByRole("button", { name: /^Mind/ }));
+		expect(lastUrl()).toBe("/events/e1/applicants");
+	});
+
+	it("sorts by age as youngest first", async () => {
+		const user = userEvent.setup();
+		renderSection();
+		await screen.findByText("Kiss Anna");
+		await user.click(screen.getByRole("button", { name: /^Kor/ }));
+		expect(lastUrl()).toBe("/events/e1/applicants?sort=age");
+		expect(screen.getByText(/kor, növekvő/)).toBeInTheDocument();
+		await waitFor(() =>
+			expect(listCalls().at(-1)).toContain("sort=birthYear&order=desc"),
+		);
+	});
+
+	it("shows the server-rendered view without fetching", async () => {
+		nav.set("status=WAITLISTED");
+		const view = {
+			...DEFAULT_APPLICATIONS_VIEW,
+			status: "WAITLISTED" as const,
+		};
+		renderSection(20, 20, {
+			initial: initialOf(
+				[item("a2", "Nagy", "WAITLISTED")],
+				toApplicationsApiQuery(view).toString(),
+			),
+		});
+		expect(screen.getByText("Nagy Anna")).toBeInTheDocument();
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it("fetches when the server-rendered page answers another view", async () => {
+		nav.set("page=2");
+		renderSection(20, 20, { initial: initialOf([item("a1", "Kiss")]) });
+		await waitFor(() => expect(listCalls()).toHaveLength(1));
+		expect(listCalls()[0]).toContain("page=2");
+	});
+
+	it("reloads only through the server after a status change", async () => {
+		const user = userEvent.setup();
+		const { rerender } = renderSection(20, 5, {
+			initial: initialOf([item("a1", "Kiss")]),
+		});
+		await user.click(
+			screen.getByRole("checkbox", { name: "Kiss Anna kijelölése" }),
+		);
+		await user.click(screen.getByRole("button", { name: "Elfogadva" }));
+		await waitFor(() => expect(refresh).toHaveBeenCalled());
+		expect(listCalls()).toEqual([]);
+		// The refreshed page brings the new data.
+		rerender(
+			<ApplicationsSection
+				eventId="e1"
+				capacity={20}
+				counts={overviewCounts({ ACCEPTED: 6 })}
+				initial={initialOf([item("a1", "Kiss", "ACCEPTED")])}
+			/>,
+		);
+		expect(
+			screen.getByRole("row", { name: /Kiss Anna/ }),
+		).toHaveTextContent("Elfogadva");
+		expect(listCalls()).toEqual([]);
+	});
+
+	it("fetches from the client when the refreshed page has no data", async () => {
+		const { rerender } = renderSection(20, 5, {
+			initial: initialOf([item("a1", "Kiss")]),
+		});
+		rerender(
+			<ApplicationsSection
+				eventId="e1"
+				capacity={20}
+				counts={overviewCounts({ ACCEPTED: 5 })}
+			/>,
+		);
+		await waitFor(() => expect(listCalls()).toHaveLength(1));
+	});
+
+	it("retries from the client after a load error", async () => {
+		const user = userEvent.setup();
+		const list = fetchMock.getMockImplementation()!;
+		fetchMock.mockImplementationOnce(() =>
+			Promise.resolve(new Response("{}", { status: 500 })),
+		);
+		renderSection();
+		await user.click(
+			await screen.findByRole("button", { name: "Újratöltés" }),
+		);
+		fetchMock.mockImplementation(list);
+		expect(await screen.findByText("Kiss Anna")).toBeInTheDocument();
+		expect(listCalls()).toHaveLength(2);
 	});
 
 	it("states the default sort and offers a way back after changing it", async () => {
@@ -219,7 +418,7 @@ describe("ApplicationsSection", () => {
 		).not.toBeInTheDocument();
 	});
 
-	it("syncs the sheet and reloads the list", async () => {
+	it("syncs the sheet and reloads the page", async () => {
 		const user = userEvent.setup();
 		render(
 			<ApplicationsSection
@@ -243,7 +442,7 @@ describe("ApplicationsSection", () => {
 				),
 			),
 		);
-		const listCalls = fetchMock.mock.calls.length;
+		const before = listCalls().length;
 		await user.click(
 			screen.getByRole("button", { name: "Szinkronizálás most" }),
 		);
@@ -254,10 +453,9 @@ describe("ApplicationsSection", () => {
 		expect(toastSuccess).toHaveBeenCalledWith(
 			"Szinkronizálva: 2 új jelentkezés, 5 már meglévő.",
 		);
+		// The list comes back with the refreshed page, not from the client.
 		expect(refresh).toHaveBeenCalled();
-		await waitFor(() =>
-			expect(fetchMock.mock.calls.length).toBeGreaterThan(listCalls + 1),
-		);
+		expect(listCalls()).toHaveLength(before);
 	});
 
 	it("collects the e-mail list for the current status filter", async () => {
