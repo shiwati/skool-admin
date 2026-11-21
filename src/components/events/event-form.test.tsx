@@ -62,6 +62,7 @@ describe("EventForm", () => {
 		expect(
 			await screen.findByText("A program nem menthető – 4 hiba"),
 		).toBeInTheDocument();
+		expect(screen.getAllByText("Kötelező mező").length).toBeGreaterThan(0);
 		expect(apiFetch).not.toHaveBeenCalled();
 		await user.click(screen.getByRole("button", { name: "Kezdés" }));
 		expect(screen.getByLabelText(/Kezdés/)).toHaveFocus();
@@ -100,6 +101,7 @@ describe("EventForm", () => {
 		expect(
 			await screen.findByText("Legalább 1 fő legyen."),
 		).toBeInTheDocument();
+		expect(saveCalls()).toHaveLength(0);
 	});
 
 	it("posts the event and opens it by the returned id", async () => {
@@ -136,7 +138,7 @@ describe("EventForm", () => {
 			capacity: 24,
 			mentors: ["Szűcs Petra"],
 		});
-		expect(toastSuccess).toHaveBeenCalled();
+		expect(toastSuccess).toHaveBeenCalledWith("A program mentve.");
 	});
 
 	it("shows a server error on the tags field", async () => {

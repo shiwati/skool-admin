@@ -31,6 +31,31 @@ describe("buildEventsCsv", () => {
 			"Robotika tábor;robotika, tábor;2026.12.01;2026.12.05;Pécs;Acme Kft.;20;25;Nagy Péter, Szabó Anna;Betelt",
 		);
 	});
+
+	it("leaves missing values empty", () => {
+		const [, row] = buildEventsCsv(
+			[
+				{
+					...event,
+					tags: [],
+					location: null,
+					companyName: null,
+					instructor: null,
+					mentors: [],
+				},
+			],
+			NOW,
+		)
+			.replace(String.fromCharCode(0xfeff), "")
+			.trimEnd()
+			.split("\r\n");
+		const cells = row.split(";");
+		expect(cells).toHaveLength(10);
+		expect(cells[1]).toBe("");
+		expect(cells[4]).toBe("");
+		expect(cells[5]).toBe("");
+		expect(cells[8]).toBe("");
+	});
 });
 
 describe("toEventsApiQuery", () => {

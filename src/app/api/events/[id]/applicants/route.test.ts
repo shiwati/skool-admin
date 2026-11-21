@@ -30,6 +30,14 @@ describe("GET /api/events/[id]/applicants", () => {
 		count.mockResolvedValue(0);
 	});
 
+	it("rejects unauthenticated requests", async () => {
+		getSession.mockResolvedValue(null);
+		const res = await call();
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
+		expect(findUnique).not.toHaveBeenCalled();
+	});
+
 	it("returns 404 for unknown events", async () => {
 		findUnique.mockResolvedValue(null);
 		expect((await call()).status).toBe(404);

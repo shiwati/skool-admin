@@ -37,6 +37,7 @@ vi.mock("@/lib/feedback/import", async () => {
 });
 
 import { FeedbackHeaderError } from "@/lib/feedback/import";
+import { SheetAccessError } from "@/lib/google/sheets";
 import { GoogleReauthRequiredError } from "@/lib/google/token";
 import { POST } from "./route";
 
@@ -65,7 +66,9 @@ describe("POST /api/events/[id]/feedback/sync", () => {
 
 	it("rejects signed-out requests", async () => {
 		getSession.mockResolvedValue(null);
-		expect((await call()).status).toBe(401);
+		const res = await call();
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
 		expect(findEvent).not.toHaveBeenCalled();
 	});
 
@@ -126,6 +129,27 @@ describe("POST /api/events/[id]/feedback/sync", () => {
 		const res = await call();
 		expect(res.status).toBe(403);
 		expect((await res.json()).code).toBe("REAUTH_REQUIRED");
+	});
+
+	it("reports a sheet that cannot be read", async () => {
+		fetchSheet.mockRejectedValue(
+			new SheetAccessError("A sheet nem olvasható.", 403),
+		);
+		const res = await call();
+		expect(res.status).toBe(422);
+		expect(await res.json()).toEqual({
+			error: "A sheet nem olvasható.",
+			code: "SHEET_NOT_ACCESSIBLE",
+		});
+	});
+
+	it("answers 500 without error details on unexpected failures", async () => {
+		importRows.mockRejectedValue(new Error("secret db detail"));
+		const res = await call();
+		expect(res.status).toBe(500);
+		const body = await res.json();
+		expect(body).toEqual({ error: "Internal Server Error" });
+		expect(JSON.stringify(body)).not.toContain("secret db detail");
 	});
 
 	it("reports missing required columns with the form's role", async () => {

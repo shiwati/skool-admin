@@ -15,6 +15,21 @@ describe("dashboardDemoData", () => {
 		expect(dashboardDemoData(now)).toEqual(data);
 	});
 
+	it("prefixes every id with demo_", () => {
+		const ids = [
+			...data.events,
+			...data.applicants,
+			...data.applications,
+			...data.feedback,
+		].map((r) => r.id);
+		expect(ids.length).toBeGreaterThan(0);
+		for (const id of ids) expect(id).toMatch(/^demo_/);
+		for (const a of data.applications) {
+			expect(a.eventId).toMatch(/^demo_/);
+			expect(a.applicantId).toMatch(/^demo_/);
+		}
+	});
+
 	it("covers last year, this year, the last 6 months and the future", () => {
 		const starts = data.events.map((e) => e.from as Date);
 		const months = new Set(

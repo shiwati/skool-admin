@@ -78,3 +78,87 @@ describe("FeedbackView responsive variants (07.1)", () => {
 		expect(grid).toHaveClass("grid-cols-2", "xl:grid-cols-4");
 	});
 });
+
+describe("FeedbackView empty states", () => {
+	const empty: FeedbackListPage = {
+		...data,
+		items: [],
+		total: 0,
+		stats: {
+			count: 0,
+			averageScore: null,
+			recommendRate: null,
+			responseRate: null,
+		},
+	};
+
+	it("explains how to get feedback when there is none", () => {
+		render(
+			<FeedbackView
+				data={empty}
+				state={{}}
+				basePath="/feedback"
+				openItem={null}
+			/>,
+		);
+		expect(
+			screen.getByRole("heading", { name: "Még nincs visszajelzés" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"A program szerkesztésénél add meg a visszajelző sheeteket, majd szinkronizálj.",
+			),
+		).toBeInTheDocument();
+	});
+
+	it("asks to change the filters when they exclude everything", () => {
+		render(
+			<FeedbackView
+				data={empty}
+				state={{ q: "pizza" }}
+				basePath="/feedback"
+				openItem={null}
+			/>,
+		);
+		expect(
+			screen.getByRole("heading", { name: "Nincs találat" }),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText("Módosíts a keresésen vagy a szűrőkön."),
+		).toBeInTheDocument();
+	});
+});
+
+describe("FeedbackView details drawer", () => {
+	it("shows the anonymous respondent profile and custom answers", () => {
+		const item = {
+			...data.items[0],
+			answers: {
+				mentorRating: 5,
+				birthYear: 2012,
+				settlement: "főváros",
+				"custom:Kedvenc feladat": "A játék",
+			},
+		};
+		render(
+			<FeedbackView
+				data={{ ...data, items: [item] }}
+				state={{ open: item.id }}
+				basePath="/feedback"
+				openItem={item}
+			/>,
+		);
+		const dialog = screen.getByRole("dialog");
+		expect(
+			within(dialog).getByText("Kitöltő (névtelen)"),
+		).toBeInTheDocument();
+		expect(within(dialog).getByText("Egyéni kérdések")).toBeInTheDocument();
+		expect(within(dialog).getByText("A játék")).toBeInTheDocument();
+		expect(dialog).toHaveTextContent(
+			"A kitöltés névtelen, nincs jelentkezőhöz párosítva.",
+		);
+		expect(
+			within(dialog).queryByRole("link", { name: /jelentkező/i }),
+		).toBeNull();
+	});
+});

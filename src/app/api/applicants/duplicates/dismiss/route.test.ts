@@ -40,7 +40,9 @@ describe("POST /api/applicants/duplicates/dismiss", () => {
 
 	it("rejects signed-out requests", async () => {
 		getSession.mockResolvedValue(null);
-		expect((await call({ applicantIds: ["a", "b"] })).status).toBe(401);
+		const res = await call({ applicantIds: ["a", "b"] });
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
 	});
 
 	it("rejects a pair of the same id", async () => {

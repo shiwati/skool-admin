@@ -42,6 +42,7 @@ describe("POST /api/applicants/delete", () => {
 		getAdminSession.mockResolvedValue(null);
 		const res = await post({ ids: ["a1"] });
 		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
 		expect(anonymize).not.toHaveBeenCalled();
 	});
 

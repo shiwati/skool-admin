@@ -12,5 +12,7 @@ describe("returnToFromHeader", () => {
 		expect(returnToFromHeader(null)).toBe("/");
 		expect(returnToFromHeader("//evil.example/x")).toBe("/");
 		expect(returnToFromHeader("https://evil.example/")).toBe("/");
+		expect(returnToFromHeader("/\\evil.example/x")).toBe("/");
+		expect(returnToFromHeader("javascript:alert(1)")).toBe("/");
 	});
 });

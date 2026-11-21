@@ -1,6 +1,6 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { EventListItem } from "./events-table";
 import { EventsView } from "./events-view";
 
@@ -13,6 +13,11 @@ vi.mock("next/navigation", () => ({
 	useRouter: () => ({ replace: nav.replace, push: nav.push }),
 	usePathname: () => "/events",
 	useSearchParams: () => new URLSearchParams(nav.search),
+}));
+const { downloadCsv } = vi.hoisted(() => ({ downloadCsv: vi.fn() }));
+vi.mock("@/lib/download", () => ({ downloadCsv }));
+vi.mock("sonner", () => ({
+	toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
 const now = "2026-11-19T12:00:00.000Z";
@@ -328,5 +333,63 @@ describe("EventsView on mobile (05.1 M)", () => {
 		).getByText("Budapest");
 		await userEvent.click(card);
 		expect(nav.push).toHaveBeenCalledWith("/events/e1");
+	});
+});
+
+describe("EventsView CSV export", () => {
+	const fetchMock = vi.fn();
+
+	beforeEach(() => {
+		nav.search = "tab=planned&q=python";
+		vi.stubGlobal("fetch", fetchMock);
+	});
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.resetAllMocks();
+	});
+
+	it("exports every matching program across pages (spec scenario)", async () => {
+		const all = Array.from({ length: 45 }, (_, i) =>
+			event({ id: `e${i}`, name: `Program ${i}` }),
+		);
+		let release!: () => void;
+		const gate = new Promise<void>((resolve) => (release = resolve));
+		fetchMock.mockImplementation(async () => {
+			await gate;
+			return new Response(JSON.stringify({ items: all, total: 45 }), {
+				status: 200,
+			});
+		});
+		render(
+			<EventsView
+				items={all.slice(0, 20)}
+				total={45}
+				counts={counts}
+				now={now}
+			/>,
+		);
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "Exportálás CSV-be" }),
+		);
+		expect(
+			screen.getByRole("button", { name: "Exportálás…" }),
+		).toBeDisabled();
+		release();
+		await waitFor(() => expect(downloadCsv).toHaveBeenCalled());
+
+		const url = new URL(fetchMock.mock.calls[0][0], "http://x");
+		expect(url.pathname).toBe("/api/events");
+		expect(url.searchParams.get("phase")).toBe("planned");
+		expect(url.searchParams.get("q")).toBe("python");
+		expect(url.searchParams.get("page")).toBe("1");
+
+		const [filename, csv] = downloadCsv.mock.calls[0];
+		expect(filename).toMatch(/^programok-.*\.csv$/);
+		const lines = (csv as string).trimEnd().split("\r\n");
+		expect(lines).toHaveLength(1 + 45);
+		expect(
+			await screen.findByRole("button", { name: "Exportálás CSV-be" }),
+		).toBeEnabled();
 	});
 });

@@ -45,6 +45,7 @@ describe("POST /api/events/[id]/applicants/status", () => {
 		getAdminSession.mockResolvedValue(null);
 		const res = await post({ ids: ["a1"], status: "ACCEPTED" });
 		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
 		expect(update).not.toHaveBeenCalled();
 	});
 
@@ -81,6 +82,11 @@ describe("POST /api/events/[id]/applicants/status", () => {
 			"ACCEPTED",
 			"u1",
 		);
+		expect(info).toHaveBeenCalledWith({
+			event: "applications.status_changed",
+			userId: "u1",
+			count: 2,
+		});
 		const logged = JSON.stringify(info.mock.calls);
 		expect(logged).not.toContain("anna@skool.org.hu");
 		expect(logged).not.toContain("a1");

@@ -41,6 +41,10 @@ describe("EventActions", () => {
 		expect(screen.getByRole("alertdialog")).toHaveTextContent(
 			"Törlöd a(z) Python alapok – ősz programot?",
 		);
+		expect(screen.getByRole("alertdialog")).toHaveTextContent(
+			/véglegesen törlődik, a hozzá tartozó 62 jelentkezéssel együtt.*A jelentkezők adatai megmaradnak\./,
+		);
+		expect(screen.getByRole("button", { name: "Törlés" })).toBeDisabled();
 		await userEvent.click(
 			screen.getByRole("checkbox", {
 				name: "Értem, a törlés nem vonható vissza",
