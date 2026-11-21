@@ -25,6 +25,21 @@ describe("StatusBreakdown", () => {
 		).toHaveAttribute("href", "/events/e1/applicants");
 	});
 
+	it("links each non-empty status to the tab filtered by it", () => {
+		render(<StatusBreakdown eventId="e1" counts={overviewCounts()} />);
+		expect(screen.getByRole("link", { name: "Várólista" })).toHaveAttribute(
+			"href",
+			"/events/e1/applicants?status=WAITLISTED",
+		);
+		expect(
+			screen.getByRole("link", { name: "Új jelentkező" }),
+		).toHaveAttribute("href", "/events/e1/applicants?status=APPLIED");
+		expect(
+			screen.queryByRole("link", { name: "Elutasítva" }),
+		).not.toBeInTheDocument();
+		expect(screen.getByText("Elutasítva")).toBeInTheDocument();
+	});
+
 	it("shows an empty state instead of the bar without applications", () => {
 		render(
 			<StatusBreakdown

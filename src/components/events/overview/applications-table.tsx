@@ -15,11 +15,11 @@ import {
 	isOver16,
 } from "@/lib/applicants/format";
 import type { PageSize } from "@/lib/applicants/list-params";
+import type { EventApplicationItem } from "@/lib/events/applications";
 import type {
-	ApplicationSortKey,
-	EventApplicationItem,
+	ApplicationsSortKey as ApplicationSortKey,
 	SortOrder,
-} from "@/lib/events/applications";
+} from "@/lib/events/applications-params";
 import { openRowHref } from "@/lib/row-nav";
 import { cn } from "@/lib/utils";
 import { StatusCell } from "./status-cell";
@@ -62,8 +62,8 @@ type Column = {
 };
 
 const COLUMNS: Column[] = [
-	{ label: "Név", sortKey: "lastName" },
-	{ label: "Kor", sortKey: "birthYear", className: "w-24" },
+	{ label: "Név", sortKey: "name" },
+	{ label: "Kor", sortKey: "age", className: "w-24" },
 	{
 		label: "Település",
 		subLabel: "Iskola",

@@ -3,8 +3,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ApplicationsSection } from "@/components/events/overview/applications-section";
+import { loadEventApplicationsPage } from "@/lib/events/applications-list";
+import {
+	parseApplicationsParams,
+	type ApplicationsView,
+} from "@/lib/events/applications-params";
 import { applicantsHref, eventApplicantsHref } from "@/lib/events/links";
 import { getEventOverview } from "@/lib/events/overview";
+import { logger } from "@/lib/logger";
 import { requireAdmin } from "@/lib/session";
 
 type Props = PageProps<"/events/[id]/applicants">;
@@ -15,6 +21,18 @@ async function load(id: string) {
 	return getEventOverview(id);
 }
 
+/** Az URL nézetének oldala; hiba esetén a kliens a szokásos API-hívással próbálkozik. */
+async function loadInitial(id: string, view: ApplicationsView) {
+	// Outside the try: the login redirect must not be swallowed.
+	await requireAdmin(eventApplicantsHref(id));
+	try {
+		return await loadEventApplicationsPage(id, view);
+	} catch (error) {
+		logger.error({ err: error }, "Initial event applications load failed");
+		return undefined;
+	}
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
 	const overview = await load((await params).id);
 	return {
@@ -22,9 +40,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 	};
 }
 
-export default async function EventApplicantsPage({ params }: Props) {
+/** A Next `searchParams`-a → `URLSearchParams` (ismételt kulcsból az első). */
+function toSearchParams(
+	searchParams: Record<string, string | string[] | undefined>,
+) {
+	const params = new URLSearchParams();
+	for (const [key, value] of Object.entries(searchParams)) {
+		const first = [value ?? []].flat()[0];
+		if (first !== undefined) params.set(key, first);
+	}
+	return params;
+}
+
+export default async function EventApplicantsPage({
+	params,
+	searchParams,
+}: Props) {
 	const { id } = await params;
-	const overview = await load(id);
+	const view = parseApplicationsParams(toSearchParams(await searchParams));
+	const [overview, initial] = await Promise.all([
+		load(id),
+		loadInitial(id, view),
+	]);
 	if (!overview) notFound();
 	const { event, counts } = overview;
 
@@ -48,6 +85,7 @@ export default async function EventApplicantsPage({ params }: Props) {
 				capacity={event.capacity}
 				counts={counts}
 				applicationSheetUrl={event.applicationSheetUrl}
+				initial={initial}
 			/>
 		</>
 	);

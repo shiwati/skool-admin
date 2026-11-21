@@ -70,7 +70,21 @@ export function StatusBreakdown({
 								STATUS_BADGE_CLASSES[status],
 							)}
 						/>
-						<span className="flex-1">{STATUS_LABELS[status]}</span>
+						<span className="flex-1">
+							{/* A non-empty status opens the tab filtered to it. */}
+							{counts[status] > 0 ? (
+								<Link
+									href={eventApplicantsHref(eventId, {
+										status,
+									})}
+									className="underline-offset-2 hover:text-info-fg hover:underline"
+								>
+									{STATUS_LABELS[status]}
+								</Link>
+							) : (
+								STATUS_LABELS[status]
+							)}
+						</span>
 						<span className="font-mono">
 							{formatCount(counts[status])}
 						</span>

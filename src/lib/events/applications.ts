@@ -25,28 +25,11 @@ export type EventApplicationsPage = {
 	pageSize: number;
 };
 
-export type ApplicationSortKey =
-	"receivedAt" | "lastName" | "birthYear" | "status";
-export type SortOrder = "asc" | "desc";
-
-export type ApplicationsQuery = {
-	status: ApplicationStatus | null;
-	sort: ApplicationSortKey;
-	order: SortOrder;
-	page: number;
-	pageSize: number;
+/** A szerveren előtöltött oldal, és az API-query, amire válaszol. */
+export type InitialApplications = {
+	apiQuery: string;
+	data: EventApplicationsPage;
 };
-
-export function applicationsQueryString(query: ApplicationsQuery): string {
-	const params = new URLSearchParams({
-		sort: query.sort,
-		order: query.order,
-		page: String(query.page),
-		pageSize: String(query.pageSize),
-	});
-	if (query.status) params.set("status", query.status);
-	return params.toString();
-}
 
 /** Az elfogadottak száma a művelet után, ha `ids` mind `status` státuszba kerül. */
 export function acceptedAfter(
