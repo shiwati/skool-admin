@@ -2,6 +2,7 @@ import "server-only";
 import { ApplicationStatus, type Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import type { EventOption } from "@/lib/applicants/types";
 import {
 	budapestYearRange,
 	containsInsensitive,
@@ -149,4 +150,16 @@ export async function countEventsByPhase(
 		),
 	);
 	return { planned, closed, all: planned + closed };
+}
+
+/**
+ * A Jelentkezők lista „Program” szűrőjének választható programjai: a 100
+ * legkésőbb kezdődő, kezdés szerint csökkenő sorrendben.
+ */
+export async function listEventOptions(): Promise<EventOption[]> {
+	return db.event.findMany({
+		select: { id: true, name: true },
+		orderBy: [{ from: "desc" }, { id: "asc" }],
+		take: 100,
+	});
 }

@@ -22,7 +22,7 @@ The system SHALL serve the applicants screen at `/applicants` to signed-in admin
 
 ### Requirement: Data comes from the applicants endpoint
 
-The list SHALL be populated from `GET /api/applicants` using only that endpoint's supported query parameters. If the endpoint answers 401, the user SHALL be sent to `/login` with the current page as the return URL.
+The list SHALL be populated from `GET /api/applicants` using only that endpoint's supported query parameters; the first page for the opened URL MAY be rendered on the server with the same query. If the endpoint answers 401, the user SHALL be sent to `/login` with the current page as the return URL.
 
 #### Scenario: Session expired while on the page
 

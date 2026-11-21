@@ -41,10 +41,8 @@ const applicantSelect = {
 	},
 } as const;
 
-/** Az eldöntetlen duplikátumpárok közül a `skip`-edik, teljes adatokkal. */
-export async function getDuplicatePair(
-	skip: number,
-): Promise<DuplicatesResponse> {
+/** Az eldöntetlen duplikátumpárok (azonosítók), stabil sorrendben. */
+async function undecidedPairs() {
 	const rows = await db.applicant.findMany({
 		where: {
 			duplicateFlag: true,
@@ -61,10 +59,22 @@ export async function getDuplicatePair(
 				select: { applicantAId: true, applicantBId: true },
 			})
 		: [];
-	const pairs = buildDuplicatePairs(
+	return buildDuplicatePairs(
 		candidates,
 		new Set(dismissals.map((d) => pairKey(d.applicantAId, d.applicantBId))),
 	);
+}
+
+/** Az eldöntetlen duplikátumpárok száma (a Jelentkezők oldal bannere). */
+export async function countDuplicatePairs(): Promise<number> {
+	return (await undecidedPairs()).length;
+}
+
+/** Az eldöntetlen duplikátumpárok közül a `skip`-edik, teljes adatokkal. */
+export async function getDuplicatePair(
+	skip: number,
+): Promise<DuplicatesResponse> {
+	const pairs = await undecidedPairs();
 	if (pairs.length === 0) return { total: 0, index: 0, pair: null };
 
 	const index = skip % pairs.length;
