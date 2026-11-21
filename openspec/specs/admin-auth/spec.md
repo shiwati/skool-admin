@@ -194,3 +194,22 @@ The server SHALL refuse to start when the Google client credentials or the allow
 
 - **WHEN** the server starts without a Google client secret configured
 - **THEN** startup fails with an error naming the missing setting and not printing any secret values
+
+### Requirement: Responses carry security headers
+
+Every response SHALL carry HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, a `Referrer-Policy` and a `Permissions-Policy`. Every page response SHALL carry a Content-Security-Policy with a fresh per-request nonce that allows scripts only from the app's origin or with that nonce, never `unsafe-inline` scripts.
+
+#### Scenario: Page has a nonce-based CSP
+
+- **WHEN** a browser requests any page, including `/login`
+- **THEN** the response's Content-Security-Policy contains a `'nonce-…'` script source that differs per request, and every inline script in the HTML carries that nonce
+
+#### Scenario: App cannot be framed
+
+- **WHEN** another site embeds the app in an iframe
+- **THEN** the browser refuses to render it (`frame-ancestors 'none'`, `X-Frame-Options: DENY`)
+
+#### Scenario: Injected script is blocked
+
+- **WHEN** a page contains an inline script without the request's nonce
+- **THEN** the browser does not execute it
