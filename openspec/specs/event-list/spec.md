@@ -400,3 +400,12 @@ The programs list's column visibility and order SHALL be saved in the user's bro
 
 - **WHEN** the admin hid "Oktatók", left, and opens `/events` again in the same browser
 - **THEN** "Oktatók" is still hidden, and the Jelentkezők list's columns are unchanged
+
+### Requirement: CSV export of the filtered programs
+
+The Programok page SHALL offer an "Exportálás CSV-be" action that downloads every program matching the current tab, search and filters, across all pages. While the export runs, the action SHALL be disabled and read "Exportálás…". The CSV SHALL have the columns "Program", "Címkék", "Kezdés", "Befejezés", "Helyszín", "Partnercég", "Kapacitás", "Jelentkezők", "Oktatók" and "Státusz", with the same status rules as the table; missing values SHALL be empty.
+
+#### Scenario: Exporting across pages
+
+- **WHEN** 45 programs match the filters, 20 are shown per page, and the admin chooses "Exportálás CSV-be"
+- **THEN** the downloaded CSV has 45 data rows

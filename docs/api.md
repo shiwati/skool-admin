@@ -1,6 +1,6 @@
 # API
 
-A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/[id]/edit`, `POST /api/applicants/merge`, `POST /api/applicants/duplicates/dismiss`, `POST /api/events`, `PATCH /api/events/[id]`, `POST /api/events/[id]/sync`. Továbbiak (POST/PATCH/DELETE) várhatók. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
+A végpontok többsége `GET`; írási végpontok: `POST /api/applicants/delete`, `POST /api/applicants/[id]/edit`, `POST /api/applicants/merge`, `POST /api/applicants/duplicates/dismiss`, `POST /api/events`, `PATCH`/`DELETE /api/events/[id]`, `POST /api/events/[id]/sync`, `POST /api/events/[id]/feedback/sync`, `POST /api/events/[id]/applicants/status`, `PUT /api/events/[id]/report`, `POST /api/events/[id]/report/documents`, `POST /api/sheets/headers`. A közös szabályokat az `api-conventions` spec rögzíti. Mindegyik bejelentkezést igényel, `Cache-Control: no-store`, `runtime = "nodejs"`, `dynamic = "force-dynamic"`.
 
 A jelentkező adatlapjának és szerkesztő űrlapjának (`/applicants/[id]`, `/applicants/[id]/edit`) nincs olvasó végpontja: az oldalak szerveroldalon közvetlenül az adatbázisból olvasnak (lásd [frontend.md](frontend.md)).
 
@@ -63,7 +63,7 @@ Egyéb: `GET /api/health` (nyilvános readiness, 200/503), `/api/auth/*` (NextAu
 
 ## Közös segédek (`src/lib/api/`)
 
-- `handleQuery(request, schema, run)`: session ellenőrzés → **query** validáció → futtatás → egységes hibakezelés. Olvasó (GET) végpontokra készült; **írási végpontokhoz még nincs megfelelője** (body-validáció, módosító műveletek, History-naplózás, esetleges tranzakció), ezt az első írási igénynél kell kialakítani, a `handleQuery` mintájára.
+- `handleQuery(request, schema, run)`: session ellenőrzés → **query** validáció → futtatás → egységes hibakezelés. Olvasó (GET) végpontokra készült. Írási végpontokhoz nincs közös segéd: mindegyik maga hívja a `getAdminSession()`-t, Zod-dal validálja a body-t (`formatValidationErrors`), és maga írja a History sorokat (tudatosan így maradt, a minta egyszerű és egységes).
 - `query.ts`: `paginationSchema`, `orderSchema`, `csvList`, `repeatedList` (vesszőt nem vágó lista szabad szöveghez), `booleanParam`, `optionalText`, `searchTokens`, `containsInsensitive`, `ageRangeToBirthYear`, `budapestYearRange`, `pageResult`.
 - Rendezésnél mindig van másodlagos `id` rendezés (stabil lapozás); nullable mezőknél `nulls: "last"`.
 

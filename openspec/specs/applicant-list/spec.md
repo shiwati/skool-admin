@@ -226,15 +226,6 @@ The "E-mail lista" header button SHALL open a dialog containing the e-mail addre
 - **WHEN** no matching applicant has an e-mail address
 - **THEN** the dialog says there is no e-mail address to copy and "Másolás" is disabled
 
-### Requirement: Duplicate-check placeholder banner
-
-The page SHALL show a warning banner titled "Lehetséges duplikált jelentkezések", saying that applications from the same e-mail address should be checked and that the check is coming soon. Its "Ellenőrzés" button SHALL be disabled. The banner SHALL NOT claim a number of duplicates.
-
-#### Scenario: Banner shown
-
-- **WHEN** the applicants page is rendered
-- **THEN** the duplicate banner is shown with a disabled "Ellenőrzés" button and no duplicate count
-
 ### Requirement: Rows open the applicant detail page
 
 Clicking anywhere on an applicant row SHALL open that applicant's detail page at `/applicants/{id}`, except on the row checkbox and the row's "Műveletek" menu, which keep their own behaviour. The applicant's name in the row SHALL be a link to the same page, so the detail page can be reached with the keyboard and opened in a new tab. Rows SHALL show a pointer cursor and a hover highlight. Loading, empty and error rows SHALL NOT navigate.
