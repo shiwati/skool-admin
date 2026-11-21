@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { REQUIRED_MESSAGE } from "@/lib/events/schema";
+import { FIELD_LABELS } from "./field-labels";
 
 /**
  * A jelentkező-szerkesztő űrlap és a `POST /api/applicants/[id]/edit`
@@ -146,20 +147,24 @@ export function toApplicantFormValues(
 	};
 }
 
-/** A mezők magyar felirata (űrlap, hibaösszegző). */
+/**
+ * A mezők magyar felirata (űrlap, hibaösszegző), az űrlap sorrendjében. A
+ * közös feliratokat használja, kivéve a „Szülő / gondviselő” szekción belüli
+ * rövid „Anyja neve” és „Cím” feliratot.
+ */
 export const APPLICANT_FIELD_LABELS: Record<ApplicantEditField, string> = {
-	lastName: "Vezetéknév",
-	firstName: "Keresztnév",
-	birthYear: "Születési év",
-	email: "E-mail",
-	phoneNumber: "Telefon",
-	schoolName: "Iskola",
-	hometown: "Település",
-	parentLastName: "Szülő vezetékneve",
-	parentFirstName: "Szülő keresztneve",
+	lastName: FIELD_LABELS.lastName,
+	firstName: FIELD_LABELS.firstName,
+	birthYear: FIELD_LABELS.birthYear,
+	email: FIELD_LABELS.email,
+	phoneNumber: FIELD_LABELS.phoneNumber,
+	schoolName: FIELD_LABELS.schoolName,
+	hometown: FIELD_LABELS.hometown,
+	parentLastName: FIELD_LABELS.parentLastName,
+	parentFirstName: FIELD_LABELS.parentFirstName,
 	parentMothersName: "Anyja neve",
 	parentAddress: "Cím",
-	parentEmail: "Szülő e-mail",
-	parentPhone: "Szülő telefon",
-	newsletter: "Hírlevél",
+	parentEmail: FIELD_LABELS.parentEmail,
+	parentPhone: FIELD_LABELS.parentPhone,
+	newsletter: FIELD_LABELS.newsletter,
 };

@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TAG_BADGE_CLASSES } from "@/lib/applicants/format";
 import type { ApplicationStatus } from "@/lib/applicants/types";
 import type {
 	EventApplicationItem,
@@ -161,6 +162,15 @@ describe("ApplicationsSection", () => {
 				expect.anything(),
 			),
 		);
+	});
+
+	it("colours the 16+ badge like every other surface", async () => {
+		renderSection();
+		await screen.findByText("Kiss Anna");
+		const badge = screen.getAllByText("16+")[0];
+		for (const cls of TAG_BADGE_CLASSES.over16.split(" ")) {
+			expect(badge).toHaveClass(cls);
+		}
 	});
 
 	it("writes the status filter to the URL and returns to page 1", async () => {

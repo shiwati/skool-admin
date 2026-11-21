@@ -78,6 +78,15 @@ The program form SHALL show a collapsible "Mező-megfeleltetés" section for the
 - **WHEN** the saved mapping uses "E-mail cím" and the loaded headers do not contain it
 - **THEN** the e-mail row offers "E-mail cím (nincs a sheetben)"
 
+### Requirement: Applicant field labels
+
+The applicant mapping editor SHALL label each field with the same Hungarian label the change history and the duplicate review use (for example "Telefon", "Szülő címe", "Megoldandó probléma", "Ismeri a partnercéget"), and the timestamp field as "Jelentkezés időpontja (időbélyeg)".
+
+#### Scenario: Problem question label
+
+- **WHEN** the admin opens the applicant mapping editor
+- **THEN** the `solvedProblem` row is labelled "Megoldandó probléma", as in the change history
+
 ### Requirement: Mapping editor loading and custom questions
 
 "Visszaállítás alapértelmezésre" SHALL clear the saved mapping. A failed header load SHALL show the endpoint's message, or "A fejlécek betöltése nem sikerült.". Feedback sections SHALL allow adding and removing custom questions once headers are loaded.

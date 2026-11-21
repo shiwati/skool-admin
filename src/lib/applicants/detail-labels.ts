@@ -1,3 +1,4 @@
+import { FIELD_LABELS } from "./field-labels";
 import { STATUS_LABELS } from "./format";
 import { APPLICATION_STATUSES, type ApplicationStatus } from "./types";
 
@@ -26,33 +27,10 @@ export type FormAnswerField = (typeof FORM_ANSWER_FIELDS)[number]["field"];
 
 /** History `fieldName` (Prisma-mezőnév) → magyar felirat. */
 export const HISTORY_FIELD_LABELS: Record<string, string> = {
-	firstName: "Keresztnév",
-	lastName: "Vezetéknév",
-	birthYear: "Születési év",
-	schoolName: "Iskola",
-	hometown: "Település",
-	phoneNumber: "Telefon",
-	email: "E-mail",
-	parentFirstName: "Szülő keresztneve",
-	parentLastName: "Szülő vezetékneve",
-	parentMothersName: "Szülő anyja neve",
-	parentAddress: "Szülő címe",
-	parentEmail: "Szülő e-mail",
-	parentPhone: "Szülő telefon",
-	newsletter: "Hírlevél",
+	...FIELD_LABELS,
 	deletedAt: "Törlés",
 	status: "Státusz",
 	eventId: "Program",
-	foodPreference: "Étkezési igény",
-	heardFromWhere: "Honnan hallott rólunk",
-	heardFromWhom: "Kitől hallott rólunk",
-	solvedProblem: "Megoldandó probléma",
-	pastExpInProg: "Programozási tapasztalat",
-	pastParticipationOther: "Más programok",
-	pastParticipationSkool: "Korábbi Skool részvétel",
-	pastParticipationSkoolDesc: "Korábbi Skool program",
-	comment: "Megjegyzés",
-	companyAwareness: "Céges tájékoztatás",
 	merged_from: "Összevonva (duplikáció)",
 	duplicate_dismissed: "Nem duplikáció",
 };

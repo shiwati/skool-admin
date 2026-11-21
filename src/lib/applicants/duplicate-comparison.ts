@@ -1,3 +1,4 @@
+import { FIELD_LABELS } from "./field-labels";
 import { EMPTY, formatDateTime, fullName, STATUS_LABELS } from "./format";
 import type { DuplicateApplicant } from "./types";
 
@@ -32,17 +33,23 @@ const submitted = (x: DuplicateApplicant) =>
 
 const FIELDS: { label: string; value: (x: DuplicateApplicant) => string }[] = [
 	{ label: "Név", value: (x) => text(fullName(x)) },
-	{ label: "Születési év", value: (x) => text(x.birthYear) },
-	{ label: "E-mail", value: (x) => text(x.email) },
-	{ label: "Telefon", value: (x) => text(x.phoneNumber) },
-	{ label: "Iskola", value: (x) => text(x.schoolName) },
-	{ label: "Település", value: (x) => text(x.hometown) },
+	{ label: FIELD_LABELS.birthYear, value: (x) => text(x.birthYear) },
+	{ label: FIELD_LABELS.email, value: (x) => text(x.email) },
+	{ label: FIELD_LABELS.phoneNumber, value: (x) => text(x.phoneNumber) },
+	{ label: FIELD_LABELS.schoolName, value: (x) => text(x.schoolName) },
+	{ label: FIELD_LABELS.hometown, value: (x) => text(x.hometown) },
 	{ label: "Szülő neve", value: parentName },
-	{ label: "Szülő anyja neve", value: (x) => text(x.parentMothersName) },
-	{ label: "Szülő címe", value: (x) => text(x.parentAddress) },
-	{ label: "Szülő e-mail", value: (x) => text(x.parentEmail) },
-	{ label: "Szülő telefon", value: (x) => text(x.parentPhone) },
-	{ label: "Hírlevél", value: (x) => (x.newsletter ? "Igen" : "Nem") },
+	{
+		label: FIELD_LABELS.parentMothersName,
+		value: (x) => text(x.parentMothersName),
+	},
+	{ label: FIELD_LABELS.parentAddress, value: (x) => text(x.parentAddress) },
+	{ label: FIELD_LABELS.parentEmail, value: (x) => text(x.parentEmail) },
+	{ label: FIELD_LABELS.parentPhone, value: (x) => text(x.parentPhone) },
+	{
+		label: FIELD_LABELS.newsletter,
+		value: (x) => (x.newsletter ? "Igen" : "Nem"),
+	},
 	{ label: "Programok", value: programs },
 	{ label: "Utolsó beküldés", value: submitted },
 	{ label: "Rögzítve", value: (x) => formatDateTime(x.createdAt) },

@@ -11,7 +11,7 @@ import { AVATAR_CLASSES, tagClass } from "@/lib/events/colors";
 import type { EventColumnId } from "@/lib/events/column-settings";
 import {
 	demandRatio,
-	formatDateRange,
+	formatShortDateRange,
 	formatRatio,
 	ratioBadgeClass,
 	ratioBarClass,
@@ -87,7 +87,7 @@ export const EVENT_COLUMNS: Record<EventColumnId, EventColumnDef> = {
 		width: 150,
 		cell: (item) => (
 			<div className="font-mono text-xs leading-5">
-				{formatDateRange(item.from, item.to)}
+				{formatShortDateRange(item.from, item.to)}
 			</div>
 		),
 	},
