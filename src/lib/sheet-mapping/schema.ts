@@ -3,7 +3,6 @@ import {
 	MENTOR_QUESTIONS,
 	PARTICIPANT_QUESTIONS,
 	TIMESTAMP_KEY,
-	customQuestionKey,
 	type FeedbackRoleKey,
 	type FeedbackSheetMapping,
 } from "@/lib/feedback/questions";
@@ -103,8 +102,17 @@ export function feedbackSheetMappingSchema(role: FeedbackRoleKey) {
 			if (value.custom.some((c) => !c.header.trim())) {
 				issue("Minden egyéni kérdéshez válassz oszlopot.");
 			}
-			const keys = new Set(questions.map((q) => q.key));
-			if (labels.some((label) => keys.has(customQuestionKey(label)))) {
+			// Custom answers are stored under `custom:<label>`, so they never
+			// collide with catalog keys; the clash to avoid is a custom
+			// question named like a catalog question.
+			const catalogLabels = new Set(
+				questions.map((q) => q.label.trim().toLocaleLowerCase("hu")),
+			);
+			if (
+				labels.some((label) =>
+					catalogLabels.has(label.toLocaleLowerCase("hu")),
+				)
+			) {
 				issue("Az egyéni kérdés neve ütközik egy meglévő kérdéssel.");
 			}
 		})

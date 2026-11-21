@@ -63,6 +63,30 @@ describe("mapHeaders", () => {
 		expect(missingRequired).toEqual([]);
 	});
 
+	it("uses the first matching column and leaves later ones unmapped", () => {
+		const { columns, unmapped } = mapHeaders([
+			"  VEZETÉKNÉV ",
+			"Vezetéknév (újra)",
+			"Utónév",
+			"Póló méret",
+		]);
+		expect(columns).toEqual({ lastName: 0, firstName: 2 });
+		expect(unmapped).toEqual(["Vezetéknév (újra)", "Póló méret"]);
+	});
+
+	it("maps the parent e-mail header to the parent e-mail, not the address", () => {
+		const { columns } = mapHeaders([
+			"Szülő e-mail címe",
+			"E-mail cím",
+			"Szülő lakcíme",
+		]);
+		expect(columns).toMatchObject({
+			parentEmail: 0,
+			email: 1,
+			parentAddress: 2,
+		});
+	});
+
 	it("reports missing required columns", () => {
 		expect(mapHeaders(["Időbélyeg", "Vezetéknév"]).missingRequired).toEqual(
 			["firstName", "email"],
@@ -128,6 +152,13 @@ describe("parseRow", () => {
 });
 
 describe("serialToDate", () => {
+	it("reads the timestamp in the sheet's time zone", () => {
+		// 2025-03-01 10:00 in Budapest is CET (UTC+1).
+		expect(serialToDate(45717 + 10 / 24, "Europe/Budapest")).toEqual(
+			new Date("2025-03-01T09:00:00Z"),
+		);
+	});
+
 	it("applies the sheet's time zone including DST", () => {
 		// 2025-07-01 08:30 in Budapest is CEST (UTC+2).
 		expect(serialToDate(45839 + 8.5 / 24, "Europe/Budapest")).toEqual(

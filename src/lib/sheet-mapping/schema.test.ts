@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	applicationSheetMappingSchema,
 	feedbackSheetMappingSchema,
+	readApplicationMapping,
 	readFeedbackMapping,
 } from "./schema";
 
@@ -38,6 +39,31 @@ describe("applicationSheetMappingSchema", () => {
 	});
 });
 
+describe("readApplicationMapping", () => {
+	it("returns a valid stored mapping and ignores an invalid one", () => {
+		const mapping = {
+			lastName: "Vezetéknév",
+			firstName: "Keresztnév",
+			email: "Elérhetőség",
+		};
+		expect(readApplicationMapping(mapping)).toEqual(mapping);
+		expect(readApplicationMapping({ lastName: "Vezetéknév" })).toBeNull();
+		expect(readApplicationMapping("nonsense")).toBeNull();
+		expect(readApplicationMapping(null)).toBeNull();
+	});
+
+	it("rejects saving without an e-mail header", () => {
+		const result = applicationSheetMappingSchema.safeParse({
+			lastName: "Vezetéknév",
+			firstName: "Keresztnév",
+			email: "  ",
+		});
+		expect(messages(result)).toEqual([
+			"Kötelező mezőhöz nincs oszlop rendelve: E-mail.",
+		]);
+	});
+});
+
 describe("feedbackSheetMappingSchema", () => {
 	const valid = {
 		columns: { timestamp: "Időbélyeg", overallRating: "Összesen" },
@@ -60,6 +86,22 @@ describe("feedbackSheetMappingSchema", () => {
 		]);
 	});
 
+	it("rejects a custom question named like a catalog question", () => {
+		const result = feedbackSheetMappingSchema("PARTICIPANT").safeParse({
+			columns: {
+				timestamp: "Időbélyeg",
+				mentorRating: "M",
+				instructorRating: "O",
+			},
+			custom: [
+				{ label: " ajánlaná másoknak ", kind: "text", header: "X" },
+			],
+		});
+		expect(messages(result)).toContain(
+			"Az egyéni kérdés neve ütközik egy meglévő kérdéssel.",
+		);
+	});
+
 	it("validates custom questions", () => {
 		const result = feedbackSheetMappingSchema("MENTOR").safeParse({
 			...valid,
@@ -72,6 +114,55 @@ describe("feedbackSheetMappingSchema", () => {
 			"Két egyéni kérdésnek nem lehet ugyanaz a neve.",
 			"Minden egyéni kérdéshez válassz oszlopot.",
 		]);
+	});
+
+	it("rejects unknown question keys and unnamed custom questions", () => {
+		const result = feedbackSheetMappingSchema("MENTOR").safeParse({
+			columns: { ...valid.columns, shoeSize: "Cipő" },
+			custom: [{ label: " ", kind: "scale", header: "H" }],
+		});
+		expect(messages(result)).toEqual([
+			"Ismeretlen kérdés: shoeSize.",
+			"Minden egyéni kérdésnek adj nevet.",
+		]);
+	});
+
+	it("allows at most 50 custom questions", () => {
+		const custom = Array.from({ length: 51 }, (_, i) => ({
+			label: `K${i}`,
+			kind: "text",
+			header: `H${i}`,
+		}));
+		expect(
+			feedbackSheetMappingSchema("MENTOR").safeParse({ ...valid, custom })
+				.success,
+		).toBe(false);
+	});
+
+	it("trims headers and labels and drops empty columns", () => {
+		expect(
+			feedbackSheetMappingSchema("MENTOR").parse({
+				columns: {
+					timestamp: " Időbélyeg ",
+					overallRating: "Összesen",
+					highlight: "",
+				},
+				custom: [{ label: " Pizza ", kind: "choice", header: " P " }],
+			}),
+		).toEqual({
+			columns: { timestamp: "Időbélyeg", overallRating: "Összesen" },
+			custom: [{ label: "Pizza", kind: "choice", header: "P" }],
+		});
+	});
+
+	it("ignores a stored mapping without the timestamp", () => {
+		expect(
+			readFeedbackMapping("MENTOR", {
+				columns: { overallRating: "Összesen" },
+				custom: [],
+			}),
+		).toBeNull();
+		expect(readFeedbackMapping("MENTOR", valid)).toEqual(valid);
 	});
 
 	it("falls back to the default for invalid stored values", () => {
