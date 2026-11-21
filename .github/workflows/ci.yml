@@ -1,0 +1,75 @@
+# Code checks for every PR and for pushes to main/develop. Migrations are
+# checked separately in migrations.yml.
+name: CI
+
+on:
+    pull_request:
+        branches: [main, develop]
+    push:
+        branches: [main, develop]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+    NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+    checks:
+        name: Format, lint, typecheck, test
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@v6
+            - uses: ./.github/actions/setup
+
+            # `!cancelled()` runs every check even if an earlier one fails,
+            # so one run reports all problems.
+            - name: Format
+              if: ${{ !cancelled() }}
+              run: npm run format:check
+            - name: Lint
+              if: ${{ !cancelled() }}
+              run: npm run lint
+            - name: Typecheck
+              if: ${{ !cancelled() }}
+              run: npm run typecheck
+            - name: Test
+              if: ${{ !cancelled() }}
+              run: npm test
+
+    build:
+        name: Build
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        env:
+            # Placeholder values that only satisfy the env schema; the build needs no
+            # database or Google access. Never put real secrets here.
+            DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+            NEXTAUTH_SECRET: ci-only-placeholder-not-a-real-secret-0123456789
+            NEXTAUTH_URL: http://localhost:3000
+            GOOGLE_CLIENT_ID: ci-placeholder
+            GOOGLE_CLIENT_SECRET: ci-placeholder
+            AUTH_ALLOWED_DOMAIN: example.org
+            REPORT_TEMPLATE_DOC_ID: ci-placeholder
+        steps:
+            - uses: actions/checkout@v6
+            - uses: ./.github/actions/setup
+            - run: npm run build
+
+    specs:
+        name: OpenSpec validate
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-node@v6
+              with:
+                  node-version-file: package.json
+            - name: Validate specs and active changes
+              run: npx --yes @fission-ai/openspec@2.1.1 validate --all --strict --no-interactive
