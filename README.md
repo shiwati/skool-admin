@@ -222,19 +222,14 @@ Production runs on Vercel and deploys on every push to `main`. `vercel.json` set
 
 Because a manual production deploy (for example `vercel deploy --prod` from another branch) also has `VERCEL_ENV=production`, it migrates the production database too: deploy to production only from `main`.
 
-GitHub Actions: `.github/workflows/migrations.yml` runs on every pull request to `main` or `develop`. It applies all migrations to an empty PostgreSQL 18 service container (`prisma migrate deploy`), then fails if `prisma/schema.prisma` differs from the migrated database (`prisma migrate diff --exit-code`, i.e. a schema change without a migration). Make it a required status check in the `main` branch protection rule so a broken migration cannot reach production.
+GitHub Actions: `.github/workflows/migrations.yml` runs on every pull request to `main` or `develop`. It applies all migrations to an empty PostgreSQL 18 service container (`prisma migrate deploy`), then fails if `prisma/schema.prisma` differs from the migrated database (`prisma migrate diff --exit-code`, i.e. a schema change without a migration). Make it, and the CI jobs below, required status checks in the `main` branch protection rule so a broken change cannot reach production.
 
-No other CI checks are configured yet. A future pipeline can use:
+`.github/workflows/ci.yml` runs on pull requests to `main`/`develop` and on pushes to them, in three parallel jobs:
 
-```sh
-npm ci
-npm run format:check
-npm run lint
-npm run typecheck
-npm test
-npm run build
-```
+- **Format, lint, typecheck, test**: `npm run format:check`, `lint`, `typecheck`, `npm test`. Every step runs even if an earlier one fails, so one run reports all problems.
+- **Build**: `npm run build` with placeholder env values that only satisfy the env schema (the build needs no database or Google access; never put real secrets there).
+- **OpenSpec validate**: `openspec validate --all --strict` (specs and active changes; pinned `@fission-ai/openspec` via `npx`). Strict mode also fails on warnings, e.g. a requirement text over 500 characters: split it or move detail into scenarios.
 
-Provide validated environment variables to build and runtime.
+Both workflows share `.github/actions/setup` (Node from `volta.node`, npm from `packageManager`, `npm ci`). Locally, the same checks are the commands above plus `openspec validate --all --strict`.
 
 For production, provision managed/external PostgreSQL, configure secret management and TLS at your hosting platform, run migrations as a release step (on Vercel this is `vercel-build`, see above), and start with `npm start` after `npm run build`. The runtime needs Node.js, production dependencies, the generated Prisma client, and the Next.js build. Local Compose configuration is not a production deployment strategy.
