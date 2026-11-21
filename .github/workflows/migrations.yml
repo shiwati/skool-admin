@@ -1,0 +1,57 @@
+# Checks every PR's Prisma migrations against a throwaway PostgreSQL before merge.
+# Production migrations run in the Vercel build (`npm run vercel-build`), so a
+# broken migration must be caught here, not on `main`.
+name: Migrations
+
+on:
+    pull_request:
+        branches: [main, develop]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: migrations-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    migrations:
+        name: Apply migrations and check schema drift
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        services:
+            postgres:
+                image: postgres:18
+                env:
+                    POSTGRES_USER: ci
+                    POSTGRES_PASSWORD: ci
+                    POSTGRES_DB: skool_admin
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U ci -d skool_admin"
+                    --health-interval 5s
+                    --health-timeout 5s
+                    --health-retries 10
+        env:
+            # Throwaway CI database; never a real one.
+            DATABASE_URL: postgresql://ci:ci@localhost:5432/skool_admin?schema=public
+        steps:
+            - uses: actions/checkout@v6
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version-file: package.json
+                  cache: npm
+
+            - name: Use the pinned npm version
+              run: npm install -g "$(node -p "require('./package.json').packageManager")"
+
+            - run: npm ci
+
+            - name: Apply all migrations to an empty database
+              run: npx prisma migrate deploy
+
+            - name: Fail if schema.prisma has changes without a migration
+              run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code

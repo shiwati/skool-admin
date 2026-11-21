@@ -214,7 +214,17 @@ ESLint 9 is pinned to match the supported peer ranges of the plugins bundled by 
 
 ## CI and deployment
 
-No CI vendor or workflow is configured yet. A future pipeline can use:
+Production runs on Vercel and deploys on every push to `main`. `vercel.json` sets an ignored build step (`ignoreCommand`: `[ "$VERCEL_GIT_COMMIT_REF" != "main" ]`), so **only `main` builds automatically**; pushes to any other branch are skipped and other branches deploy only when started by hand. It also sets the build command to `npm run vercel-build`, which runs `prisma generate`, `next build` and then, **only when `VERCEL_ENV=production`**, `prisma migrate deploy` against `DATABASE_URL` (the direct connection). Preview builds never migrate. Migration runs after a successful `next build`, before the deployment is promoted, so:
+
+- A failed build applies no migration; a failed migration fails the deployment and the previous one keeps serving. A partially applied, failed migration blocks every later `migrate deploy` until it is fixed by hand (`prisma migrate resolve`).
+- For a short window the previous code runs against the new schema, and Instant Rollback never reverts the schema. Keep migrations backward compatible with the currently deployed code (expand/contract: add first, drop or rename in a later deploy).
+- The Vercel Production environment needs `DATABASE_URL` (direct, non-pooled: migrations take an advisory lock that a transaction-mode pooler breaks) at build time and `DATABASE_URL_POOLED` at runtime. The database must accept connections from Vercel's build machines.
+
+Because a manual production deploy (for example `vercel deploy --prod` from another branch) also has `VERCEL_ENV=production`, it migrates the production database too: deploy to production only from `main`.
+
+GitHub Actions: `.github/workflows/migrations.yml` runs on every pull request to `main` or `develop`. It applies all migrations to an empty PostgreSQL 18 service container (`prisma migrate deploy`), then fails if `prisma/schema.prisma` differs from the migrated database (`prisma migrate diff --exit-code`, i.e. a schema change without a migration). Make it a required status check in the `main` branch protection rule so a broken migration cannot reach production.
+
+No other CI checks are configured yet. A future pipeline can use:
 
 ```sh
 npm ci
@@ -227,4 +237,4 @@ npm run build
 
 Provide validated environment variables to build and runtime.
 
-For production, provision managed/external PostgreSQL, configure secret management and TLS at your hosting platform, run migrations as a release step, and start with `npm start` after `npm run build`. The runtime needs Node.js, production dependencies, the generated Prisma client, and the Next.js build. Local Compose configuration is not a production deployment strategy.
+For production, provision managed/external PostgreSQL, configure secret management and TLS at your hosting platform, run migrations as a release step (on Vercel this is `vercel-build`, see above), and start with `npm start` after `npm run build`. The runtime needs Node.js, production dependencies, the generated Prisma client, and the Next.js build. Local Compose configuration is not a production deployment strategy.

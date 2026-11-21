@@ -9,6 +9,10 @@
 
 - Új migráció: `npm run db:migrate -- --name leiras` → **commitold** a `prisma/migrations/` tartalmát.
 - Alkalmazás (deploy/CI): `npm run db:deploy`. Prodban soha `db push` vagy `migrate dev`.
+- **Éles migráció a Vercel buildben fut**: a `vercel.json` build parancsa az `npm run vercel-build` (`prisma generate` → `next build` → `prisma migrate deploy`, de az utolsó lépés **csak `VERCEL_ENV=production`** esetén; preview build nem migrál). A migráció a `DATABASE_URL`-t (direkt kapcsolat) használja, a sikeres build után, a deployment élesítése előtt fut. Sikertelen build → nincs migráció; sikertelen migráció → a deployment elbukik, a régi marad élesben, de a félbemaradt migrációt kézzel kell rendbe tenni (`prisma migrate resolve`), addig minden további `migrate deploy` megáll.
+- **Csak a `main` buildel automatikusan**: a `vercel.json` `ignoreCommand`-ja (`[ "$VERCEL_GIT_COMMIT_REF" != "main" ]`) minden más branch pusht kihagy, azokat csak kézzel lehet deployolni. Kézi production deploy (pl. `vercel deploy --prod` másik branchről) is `VERCEL_ENV=production`, tehát **az is migrálja az éles DB-t**: prodra csak `main`-ről deployolj.
+- **PR-ellenőrzés** (`.github/workflows/migrations.yml`, PR `main`-re vagy `develop`-ra): üres PostgreSQL 18-on lefuttatja az összes migrációt (`prisma migrate deploy`), majd elbukik, ha a `schema.prisma` eltér a migrált adatbázistól (`prisma migrate diff --exit-code`: sémaváltozás migráció nélkül). Lokálisan ugyanez: `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code`.
+- **A migráció legyen visszafelé kompatibilis** a jelenleg élesben futó kóddal (expand/contract): rövid ideig a régi kód fut az új sémán, és a Vercel Instant Rollback a sémát nem állítja vissza. Oszlop törlése/átnevezése két külön deployban: előbb a kód ne használja, aztán a migráció törölje.
 - `20261028212000_auth_infrastructure`: NextAuth táblák.
 - `20261119171300_domain_models`: `applicant`, `application`, `event`, `history`, `application_status` enum.
 - `20261119172536_applicants_soft_delete`: `applicant.deleted_at` / `deleted_by` (GDPR-törlés, lásd lent).
