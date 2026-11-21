@@ -59,12 +59,14 @@ export type DashboardData = {
 
 export type DashboardFilters = { period?: string; program?: string };
 
-/** Anonimizált (GDPR-törölt) jelentkező nem számít bele egyik mutatóba sem. */
-const activeApplicant = { applicant: { deletedAt: null } };
-
 const within = (range: DateRange, date: Date) =>
 	date >= range.gte && date < range.lt;
 
+/**
+ * Az anonimizált (GDPR-törölt) jelentkezők jelentkezései minden mutatóba
+ * beleszámítanak: az anonimizálás épp a statisztikák megőrzéséért nem töröl.
+ * Szűrés `deletedAt`-re csak személyeket listázó lekérdezésben kell.
+ */
 export async function loadDashboard(
 	filters: DashboardFilters = {},
 	now = new Date(),
@@ -82,7 +84,7 @@ export async function loadDashboard(
 
 	const applicationsIn = (range: DateRange) =>
 		db.application.count({
-			where: { ...activeApplicant, ...programWhere, receivedAt: range },
+			where: { ...programWhere, receivedAt: range },
 		});
 
 	// Az összevetett időszak elejétől (KPI) vagy a trend kezdetétől induló
@@ -110,17 +112,11 @@ export async function loadDashboard(
 					from: true,
 					to: true,
 					capacity: true,
-					_count: {
-						select: { applications: { where: activeApplicant } },
-					},
+					_count: { select: { applications: true } },
 				},
 			}),
 			db.application.findMany({
-				where: {
-					...activeApplicant,
-					...programWhere,
-					event: { from: period.range },
-				},
+				where: { ...programWhere, event: { from: period.range } },
 				select: {
 					event: { select: { from: true } },
 					applicant: { select: { birthYear: true, hometown: true } },
@@ -146,10 +142,7 @@ export async function loadDashboard(
 	const statusRows = rawEvents.length
 		? await db.application.groupBy({
 				by: ["eventId", "status"],
-				where: {
-					...activeApplicant,
-					eventId: { in: rawEvents.map((e) => e.id) },
-				},
+				where: { eventId: { in: rawEvents.map((e) => e.id) } },
 				_count: { _all: true },
 			})
 		: [];

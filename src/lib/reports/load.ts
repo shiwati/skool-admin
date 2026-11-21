@@ -64,12 +64,9 @@ export const getEventReport = cache(
 		if (!event) return null;
 
 		const [participants, feedback, documents] = await Promise.all([
+			// Az anonimizált résztvevők is számítanak (statisztika, nem lista).
 			db.application.count({
-				where: {
-					eventId,
-					status: "ATTENDED",
-					applicant: { deletedAt: null },
-				},
+				where: { eventId, status: "ATTENDED" },
 			}),
 			db.feedback.findMany({
 				where: { eventId },
