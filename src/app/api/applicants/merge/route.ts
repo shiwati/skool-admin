@@ -25,11 +25,16 @@ const bodySchema = z
 	});
 
 class NotFoundError extends Error {}
+class NotDuplicateError extends Error {}
 
 /**
- * Merges duplicate applicants: every application of the merged applicants
- * moves to the primary one (application data is kept as is), the merged
- * applicants are deleted, and each merge is recorded in `History`.
+ * Merges duplicate applicants: every application and every `applicant`
+ * History row of the merged applicants moves to the primary one
+ * (application data is kept as is), each merge is recorded in `History`,
+ * and the merged applicants are deleted permanently. The hard delete is
+ * intentional (unlike GDPR deletion, which anonymizes): they are the same
+ * person, and re-imports stay matched through `Application.sourceKey`.
+ * Only non-deleted applicants sharing one duplicate key can be merged.
  * `duplicateKey` stays, so a later matching applicant is flagged again.
  */
 export async function POST(request: Request) {
@@ -59,14 +64,24 @@ export async function POST(request: Request) {
 	try {
 		const result = await db.$transaction(async (tx) => {
 			const applicants = await tx.applicant.findMany({
-				where: { id: { in: ids } },
+				where: { id: { in: ids }, deletedAt: null },
 				select: { id: true, duplicateKey: true },
 			});
 			if (applicants.length !== ids.length) throw new NotFoundError();
+			const key = applicants[0].duplicateKey;
+			if (!key || applicants.some((a) => a.duplicateKey !== key)) {
+				throw new NotDuplicateError();
+			}
 
 			const moved = await tx.application.updateMany({
 				where: { applicantId: { in: mergeIds } },
 				data: { applicantId: primaryId, updatedById: userId },
+			});
+			// The merged applicants' own change history now belongs to the
+			// kept one, so no History row points at a deleted applicant.
+			await tx.history.updateMany({
+				where: { tableName: "applicant", recordId: { in: mergeIds } },
+				data: { recordId: primaryId },
 			});
 			await tx.history.createMany({
 				data: mergeIds.map((mergedId) => ({
@@ -84,30 +99,15 @@ export async function POST(request: Request) {
 				data: { updatedById: userId },
 			});
 
-			// Re-evaluate the flag for every affected key: an applicant stays
-			// flagged only while another one with the same key exists.
-			const keys = [
-				...new Set(
-					applicants
-						.map((a) => a.duplicateKey)
-						.filter((k): k is string => k !== null),
-				),
-			];
-			for (const key of keys) {
-				const remaining = await tx.applicant.count({
-					where: { duplicateKey: key },
-				});
-				await tx.applicant.updateMany({
-					where: { duplicateKey: key },
-					data: { duplicateFlag: remaining > 1 },
-				});
-			}
-			if (!applicants.find((a) => a.id === primaryId)?.duplicateKey) {
-				await tx.applicant.update({
-					where: { id: primaryId },
-					data: { duplicateFlag: false },
-				});
-			}
+			// The kept applicant stays flagged only while another non-deleted
+			// applicant still has the same key.
+			const remaining = await tx.applicant.count({
+				where: { duplicateKey: key, deletedAt: null },
+			});
+			await tx.applicant.updateMany({
+				where: { duplicateKey: key, deletedAt: null },
+				data: { duplicateFlag: remaining > 1 },
+			});
 
 			return tx.applicant
 				.findUniqueOrThrow({
@@ -130,6 +130,12 @@ export async function POST(request: Request) {
 	} catch (error) {
 		if (error instanceof NotFoundError) {
 			return jsonResponse({ error: "Applicant not found" }, 404);
+		}
+		if (error instanceof NotDuplicateError) {
+			return jsonResponse(
+				{ error: "Applicants are not duplicates" },
+				409,
+			);
 		}
 		logger.error(
 			{ event: "applicant.merge_failed", userId, err: error },

@@ -13,7 +13,7 @@ const { getSession, tx } = vi.hoisted(() => ({
 			findUniqueOrThrow: vi.fn(),
 		},
 		application: { updateMany: vi.fn() },
-		history: { createMany: vi.fn() },
+		history: { createMany: vi.fn(), updateMany: vi.fn() },
 	},
 }));
 vi.mock("@/lib/session", () => ({ getAdminSession: getSession }));
@@ -53,9 +53,9 @@ describe("POST /api/applicants/merge", () => {
 
 	it("rejects signed-out requests", async () => {
 		getSession.mockResolvedValue(null);
-		expect((await call({ primaryId: "p", mergeIds: ["m"] })).status).toBe(
-			401,
-		);
+		const res = await call({ primaryId: "p", mergeIds: ["m"] });
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ error: "Unauthorized" });
 	});
 
 	it.each([
@@ -74,6 +74,51 @@ describe("POST /api/applicants/merge", () => {
 			404,
 		);
 		expect(tx.applicant.deleteMany).not.toHaveBeenCalled();
+	});
+
+	it("only loads non-deleted applicants, so an anonymized one is 404", async () => {
+		tx.applicant.findMany.mockResolvedValue([
+			{ id: "p", duplicateKey: "k" },
+		]);
+		const res = await call({ primaryId: "p", mergeIds: ["anon"] });
+		expect(res.status).toBe(404);
+		expect(tx.applicant.findMany.mock.calls[0][0].where).toEqual({
+			id: { in: ["p", "anon"] },
+			deletedAt: null,
+		});
+	});
+
+	it.each([
+		["keys differ", "k", "other"],
+		["a key is missing", "k", null],
+		["both keys are missing", null, null],
+	])("returns 409 and changes nothing when %s", async (_, a, b) => {
+		tx.applicant.findMany.mockResolvedValue([
+			{ id: "p", duplicateKey: a },
+			{ id: "m", duplicateKey: b },
+		]);
+		const res = await call({ primaryId: "p", mergeIds: ["m"] });
+		expect(res.status).toBe(409);
+		expect(tx.application.updateMany).not.toHaveBeenCalled();
+		expect(tx.history.updateMany).not.toHaveBeenCalled();
+		expect(tx.history.createMany).not.toHaveBeenCalled();
+		expect(tx.applicant.deleteMany).not.toHaveBeenCalled();
+	});
+
+	it("moves the merged applicants' history to the kept applicant", async () => {
+		await call({ primaryId: "p", mergeIds: ["m"] });
+		expect(tx.history.updateMany).toHaveBeenCalledWith({
+			where: { tableName: "applicant", recordId: { in: ["m"] } },
+			data: { recordId: "p" },
+		});
+		const order = (fn: { mock: { invocationCallOrder: number[] } }) =>
+			fn.mock.invocationCallOrder[0];
+		expect(order(tx.history.updateMany)).toBeLessThan(
+			order(tx.history.createMany),
+		);
+		expect(order(tx.history.updateMany)).toBeLessThan(
+			order(tx.applicant.deleteMany),
+		);
 	});
 
 	it("moves applications, logs history, deletes merged and clears the flag", async () => {
@@ -98,7 +143,7 @@ describe("POST /api/applicants/merge", () => {
 			where: { id: { in: ["m"] } },
 		});
 		expect(tx.applicant.updateMany).toHaveBeenCalledWith({
-			where: { duplicateKey: "k" },
+			where: { duplicateKey: "k", deletedAt: null },
 			data: { duplicateFlag: false },
 		});
 	});
@@ -107,7 +152,7 @@ describe("POST /api/applicants/merge", () => {
 		tx.applicant.count.mockResolvedValue(2);
 		await call({ primaryId: "p", mergeIds: ["m"] });
 		expect(tx.applicant.updateMany).toHaveBeenCalledWith({
-			where: { duplicateKey: "k" },
+			where: { duplicateKey: "k", deletedAt: null },
 			data: { duplicateFlag: true },
 		});
 	});
