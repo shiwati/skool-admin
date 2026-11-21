@@ -52,13 +52,14 @@ const RULES: [Field, (h: string) => boolean][] = [
 	["parentMothersName", (h) => isParent(h) && has(h, "anyj")],
 	["parentLastName", (h) => isParent(h) && has(h, "vezetékne")],
 	["parentFirstName", (h) => isParent(h) && has(h, "utóne", "keresztne")],
-	["parentAddress", (h) => isParent(h) && has(h, "cím", "lakcím")],
+	// Before the address rule: "Szülő e-mail címe" also contains "cím".
 	[
 		"parentEmail",
 		(h) =>
 			has(h, "e-mail", "email") &&
 			(isParent(h) || has(h, "visszaigazol")),
 	],
+	["parentAddress", (h) => isParent(h) && has(h, "cím", "lakcím")],
 	[
 		"parentPhone",
 		(h) => has(h, "telefon") && (isParent(h) || has(h, "telefonszámod")),
