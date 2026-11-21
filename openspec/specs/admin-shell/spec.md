@@ -147,3 +147,31 @@ The user's name and e-mail address SHALL be shown inside the menu instead of in 
 
 - **WHEN** the user taps the avatar in the mobile top bar and chooses sign-out
 - **THEN** their session ends and `/login` is shown
+
+### Requirement: Application error pages
+
+When rendering a page fails, the app SHALL show an error page titled "Hiba történt" with the note "…Próbáld újra; ha a hiba megmarad, szólj a rendszer üzemeltetőjének." and a "Próbáld újra" button. The button SHALL re-fetch the failed content from the server and re-render it. When the root layout itself fails, a standalone page with the same text and button SHALL be shown.
+
+#### Scenario: Page fails to render
+
+- **WHEN** rendering `/applicants` throws
+- **THEN** the "Hiba történt" page with a "Próbáld újra" button is shown
+
+#### Scenario: Retrying after a transient error
+
+- **WHEN** the user presses "Próbáld újra" on the error page
+- **THEN** the failed content is fetched from the server again and re-rendered
+
+#### Scenario: Root layout fails
+
+- **WHEN** rendering the root layout throws
+- **THEN** a standalone "Hiba történt" page with a "Próbáld újra" button is shown
+
+### Requirement: Generic not-found page
+
+When a URL matches no page, and no more specific not-found page applies, the app SHALL answer with HTTP status 404 and show the title "Az oldal nem található", the note "Lehet, hogy az oldalt áthelyezték, vagy hibás a hivatkozás." and a "Vissza a kezdőlapra" link to `/`.
+
+#### Scenario: Unknown URL
+
+- **WHEN** a user opens `/nincs-ilyen-oldal`
+- **THEN** the response status is 404 and "Az oldal nem található" is shown with a "Vissza a kezdőlapra" link to `/`
