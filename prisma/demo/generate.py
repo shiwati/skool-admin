@@ -59,6 +59,12 @@ EVENTS = [
     ("Webfejlesztés alapjai", "TechNova Kft.", "Budapest", datetime(2026, 4, 11, 9), 1, 20, 22, ["web", "workshop"], "14-18"),
     ("AI és vibe coding hétvége", "DataWave Kft.", "Budapest", datetime(2026, 11, 19, 9), 4, 20, 30, ["ai", "workshop"], "14-18"),
     ("Téli játékfejlesztő tábor", "PixelForge Zrt.", "Szeged", datetime(2026, 12, 28, 9), 4, 24, 33, ["tábor", "játék"], "12-16"),
+    # 2026 jún–okt: a dashboard túljelentkezés-trendjéhez (a végére fűzve, hogy a meglévő id-k ne tolódjanak)
+    ("Mobilapp workshop", "TechNova Kft.", "Budapest", datetime(2026, 6, 13, 9), 1, 18, 23, ["mobil", "workshop"], "14-18"),
+    ("Kiberbiztonság nyári tábor", "SecureNet Zrt.", "Pécs", datetime(2026, 7, 13, 9), 5, 20, 34, ["tábor", "biztonság"], "15-18"),
+    ("Robotika hétvége", "MechaLab Kft.", "Győr", datetime(2026, 8, 22, 9), 2, 16, 15, ["robotika", "hardver"], "12-15"),
+    ("Adatvizualizáció workshop", "DataWave Kft.", "Debrecen", datetime(2026, 9, 26, 9), 1, 16, 29, ["adat", "workshop"], "15-18"),
+    ("Webfejlesztés alapjai őszi", "TechNova Kft.", "Budapest", datetime(2026, 10, 17, 9), 1, 20, 27, ["web", "workshop"], "14-18"),
 ]
 INSTRUCTORS = ["Kovács Anna", "Szabó Réka", "Tóth Eszter", "Nagy Dóra"]
 MENTOR_POOL = ["Balogh Petra", "Fehér Lili", "Varga Zsófia", "Molnár Kata", "Kiss Bianka", "Horváth Noémi", "Lakatos Emma"]
@@ -231,7 +237,7 @@ for ei, (name, company, loc, start, days, cap, n_apps, tags, age) in enumerate(E
     if ph != "future":
         n_att = sum(1 for x in applications if x["eventId"] == eid and x["status"] == "attended")
         n_part = int(n_att * (0.75 if ph == "past" else 0.3))
-        mood = [0.3, -0.6, 0.6, 0.1, -0.2, 0.4, -0.1, 0.5, 0.2, 0][ei - 1]  # eventenként eltérő hangulat
+        mood = [0.3, -0.6, 0.6, 0.1, -0.2, 0.4, -0.1, 0.5, 0.2, 0, 0.3, -0.3, 0.1, 0.4, 0.2][ei - 1]  # eventenként eltérő hangulat
         for k in range(n_part):
             def sc(bias=0.0):
                 return max(1, min(5, round(rng.gauss(3.9 + mood + bias, 0.9))))
