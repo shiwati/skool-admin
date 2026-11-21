@@ -149,11 +149,11 @@ describe("loadDashboard", () => {
 		]);
 	});
 
-	it("counts applications (not distinct applicants) of non-deleted applicants", async () => {
+	it("counts applications (not distinct applicants), anonymized applicants included", async () => {
 		const data = await loadDashboard({}, now);
 		expect(applicationCount.mock.calls.map((c) => c[0].where)).toEqual([
-			{ applicant: { deletedAt: null }, receivedAt: range(2026) },
-			{ applicant: { deletedAt: null }, receivedAt: range(2025) },
+			{ receivedAt: range(2026) },
+			{ receivedAt: range(2025) },
 		]);
 		expect(data.applications).toEqual({ current: 120, previous: 100 });
 		expect(data.period).toEqual({
@@ -164,13 +164,17 @@ describe("loadDashboard", () => {
 		expect(data.program).toBeNull();
 	});
 
-	it("counts only applications of non-deleted applicants per event", async () => {
+	it("counts applications of anonymized applicants per event, by status and in demographics", async () => {
 		await loadDashboard({}, now);
 		expect(eventFindMany.mock.calls[1][0].select._count).toEqual({
-			select: {
-				applications: { where: { applicant: { deletedAt: null } } },
-			},
+			select: { applications: true },
 		});
+		expect(applicationGroupBy.mock.calls[0][0].where).toEqual({
+			eventId: { in: ["a", "b", "c"] },
+		});
+		expect(applicationFindMany.mock.calls[0][0].where).not.toHaveProperty(
+			"applicant",
+		);
 	});
 
 	it("compares oversubscription of events starting in each period", async () => {
@@ -201,7 +205,6 @@ describe("loadDashboard", () => {
 	it("builds demographics per application of the period", async () => {
 		const data = await loadDashboard({}, now);
 		expect(applicationFindMany.mock.calls[0][0].where).toEqual({
-			applicant: { deletedAt: null },
 			event: { from: range(2026) },
 		});
 		expect(data.demographics.total).toBe(3);

@@ -150,11 +150,11 @@ async function stats(query: FeedbackQuery): Promise<FeedbackStats> {
 	// A kitöltési arányt csak a szövegkereséstől független halmazon értelmezzük.
 	let responseRate: number | null = null;
 	if (!query.q && participantEvents.length > 0) {
+		// Az anonimizált résztvevők is a nevezőbe számítanak.
 		const attended = await db.application.count({
 			where: {
 				status: "ATTENDED",
 				eventId: { in: participantEvents.map((g) => g.eventId) },
-				applicant: { deletedAt: null },
 			},
 		});
 		const responses = participantEvents.reduce(

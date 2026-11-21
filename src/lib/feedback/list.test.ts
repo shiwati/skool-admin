@@ -55,3 +55,110 @@ describe("feedback period filter", () => {
 		expect(feedback.count.mock.calls[0][0].where).toEqual({});
 	});
 });
+
+describe("feedback response rate", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		feedback.count.mockResolvedValue(3);
+		feedback.findMany.mockResolvedValue([]);
+		feedback.aggregate.mockResolvedValue({
+			_count: { _all: 3 },
+			_avg: { overallScore: 4 },
+		});
+		feedback.groupBy.mockImplementation(async ({ by }) =>
+			by[0] === "eventId" ? [{ eventId: "e1", _count: { _all: 3 } }] : [],
+		);
+		applicationCount.mockResolvedValue(4);
+	});
+
+	it("counts anonymized attendees in the Kitöltési arány denominator", async () => {
+		const page = await listFeedback(parseFeedbackQuery({}));
+		expect(applicationCount).toHaveBeenCalledTimes(1);
+		expect(applicationCount.mock.calls[0][0].where).toEqual({
+			status: "ATTENDED",
+			eventId: { in: ["e1"] },
+		});
+		expect(page.stats.responseRate).toBe(3 / 4);
+	});
+});
+
+describe("parseFeedbackQuery", () => {
+	it("falls back to defaults for an invalid role or page", () => {
+		expect(parseFeedbackQuery({ role: "ADMIN", page: "abc" })).toEqual({
+			page: 1,
+		});
+		expect(parseFeedbackQuery({ page: "0" }).page).toBe(1);
+		expect(parseFeedbackQuery({ page: "-3" }).page).toBe(1);
+		expect(parseFeedbackQuery({ role: "MENTOR", page: "3" })).toEqual({
+			role: "MENTOR",
+			page: 3,
+		});
+	});
+
+	it("uses the first value of a repeated parameter", () => {
+		expect(
+			parseFeedbackQuery({
+				role: ["MENTOR", "PARTICIPANT"],
+				page: ["2", "5"],
+				q: ["pizza", "tészta"],
+			}),
+		).toEqual({ role: "MENTOR", page: 2, q: "pizza" });
+	});
+});
+
+describe("feedback stats", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		feedback.count.mockResolvedValue(3);
+		feedback.findMany.mockResolvedValue([]);
+		feedback.aggregate.mockResolvedValue({
+			_count: { _all: 3 },
+			_avg: { overallScore: 4 },
+		});
+		feedback.groupBy.mockImplementation(async ({ by }) =>
+			by[0] === "eventId" ? [{ eventId: "e1", _count: { _all: 3 } }] : [],
+		);
+		applicationCount.mockResolvedValue(4);
+	});
+
+	it("has no response rate while a text search is active", async () => {
+		const page = await listFeedback(parseFeedbackQuery({ q: "pizza" }));
+		expect(page.stats.responseRate).toBeNull();
+		expect(applicationCount).not.toHaveBeenCalled();
+	});
+
+	it("has no response rate when only mentors are shown", async () => {
+		const page = await listFeedback(parseFeedbackQuery({ role: "MENTOR" }));
+		expect(page.stats.responseRate).toBeNull();
+		expect(applicationCount).not.toHaveBeenCalled();
+	});
+
+	it("has no response rate without an attended applicant", async () => {
+		applicationCount.mockResolvedValue(0);
+		const page = await listFeedback(parseFeedbackQuery({}));
+		expect(page.stats.responseRate).toBeNull();
+	});
+
+	it("computes the recommend rate as yes over all answers", async () => {
+		feedback.groupBy.mockImplementation(async ({ by }) =>
+			by[0] === "recommend"
+				? [
+						{ recommend: "yes", _count: { _all: 3 } },
+						{ recommend: "maybe", _count: { _all: 2 } },
+						{ recommend: "no", _count: { _all: 1 } },
+					]
+				: [],
+		);
+		const page = await listFeedback(parseFeedbackQuery({}));
+		expect(page.stats).toMatchObject({
+			count: 3,
+			averageScore: 4,
+			recommendRate: 3 / 6,
+		});
+	});
+
+	it("has no recommend rate without recommend answers", async () => {
+		const page = await listFeedback(parseFeedbackQuery({}));
+		expect(page.stats.recommendRate).toBeNull();
+	});
+});
