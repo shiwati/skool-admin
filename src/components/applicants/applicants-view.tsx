@@ -1,11 +1,10 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 import { useApplicants } from "@/hooks/use-applicants";
 import { useColumnSettings } from "@/hooks/use-column-settings";
 import { csvFilename, useCsvExport } from "@/hooks/use-csv-export";
-import { apiFetch } from "@/lib/api/client";
 import { fetchAllPages } from "@/lib/api/fetch-all-pages";
 import {
 	APPLICANT_COLUMN_CONFIG,
@@ -24,7 +23,6 @@ import {
 import type {
 	ApplicantListItem,
 	ApplicantsPage,
-	DuplicatesResponse,
 	EventOption,
 } from "@/lib/applicants/types";
 import { ApplicantsHeader } from "./applicants-header";
@@ -35,54 +33,23 @@ import { DuplicateBanner } from "./duplicate-banner";
 import { DuplicateReviewDialog } from "./duplicate-review-dialog";
 import { EmailListDialog } from "./email-list-dialog";
 
-function useEventOptions(): EventOption[] {
-	const [events, setEvents] = useState<EventOption[]>([]);
-	useEffect(() => {
-		const controller = new AbortController();
-		apiFetch<{ items: EventOption[] }>(
-			"/api/events?pageSize=100&sort=from&order=desc",
-			{ signal: controller.signal },
-		)
-			.then((data) =>
-				setEvents(data.items.map(({ id, name }) => ({ id, name }))),
-			)
-			.catch(() => {
-				// The Program chip then shows "Nincs választható program".
-			});
-		return () => controller.abort();
-	}, []);
-	return events;
-}
-
-/** Eldöntetlen duplikátumpárok száma a bannerhez; `null`, amíg nem ismert. */
-function useDuplicateCount() {
-	const [count, setCount] = useState<number | null>(null);
-	useEffect(() => {
-		const controller = new AbortController();
-		apiFetch<DuplicatesResponse>("/api/applicants/duplicates", {
-			signal: controller.signal,
-		})
-			.then((data) => setCount(data.total))
-			.catch(() => {
-				// No banner when the count is unavailable.
-			});
-		return () => controller.abort();
-	}, []);
-	return [count, setCount] as const;
-}
-
 /** A szerveren már lekért első oldal, és a query, amire válaszol. */
 export type InitialApplicants = { apiQuery: string; data: ApplicantsPage };
 
 export function ApplicantsView({
 	initial,
 	years = [],
+	events = [],
+	duplicateCount: initialDuplicateCount = null,
 }: {
 	initial?: InitialApplicants;
 	/** A „Program éve” választó évei (a szerver a DB-ből adja). */
 	years?: number[];
+	/** A „Program” szűrő választható programjai (a szerver adja). */
+	events?: EventOption[];
+	/** Eldöntetlen duplikátumpárok száma a bannerhez; `null`: nem ismert. */
+	duplicateCount?: number | null;
 }) {
-	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const searchKey = searchParams.toString();
@@ -92,8 +59,7 @@ export function ApplicantsView({
 	);
 
 	const applicants = useApplicants(toApiQuery(state).toString(), initial);
-	const events = useEventOptions();
-	const [duplicateCount, setDuplicateCount] = useDuplicateCount();
+	const [duplicateCount, setDuplicateCount] = useState(initialDuplicateCount);
 	const [duplicatesOpen, setDuplicatesOpen] = useState(false);
 	const [duplicatesRun, setDuplicatesRun] = useState(0);
 	const [columnSettings, setColumnSettings] = useColumnSettings(
@@ -105,14 +71,19 @@ export function ApplicantsView({
 	// Bumped on every open so the dialog remounts with fresh state.
 	const [emailListRun, setEmailListRun] = useState(0);
 
+	// Native history API: Next syncs `useSearchParams` without re-rendering
+	// the page on the server, so the list is queried only once, by
+	// `useApplicants` (the server renders just the first load).
 	const navigate = useCallback(
 		(next: ListState) => {
 			const query = toSearchParams(next).toString();
-			router.replace(query ? `${pathname}?${query}` : pathname, {
-				scroll: false,
-			});
+			window.history.replaceState(
+				null,
+				"",
+				query ? `${pathname}?${query}` : pathname,
+			);
 		},
-		[pathname, router],
+		[pathname],
 	);
 	const change = (patch: Partial<ListState>) =>
 		navigate(updateListState(state, patch));

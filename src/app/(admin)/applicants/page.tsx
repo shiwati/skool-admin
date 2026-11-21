@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PageShell } from "@/components/admin-shell/page-shell";
 import { searchParamsToObject } from "@/lib/api/query";
+import { countDuplicatePairs } from "@/lib/applicants/duplicates";
 import { applicantsQuerySchema, listApplicants } from "@/lib/applicants/list";
 import { parseListState, toApiQuery } from "@/lib/applicants/list-params";
 import type { ApplicantsPage as ApplicantsPageData } from "@/lib/applicants/types";
 import { logger } from "@/lib/logger";
+import { listEventOptions } from "@/lib/events/list";
 import { programYears } from "@/lib/events/program-years";
 import { eventYearBounds } from "@/lib/dashboard/first-year";
 import {
@@ -47,11 +49,26 @@ async function loadInitial(
 	}
 }
 
+/**
+ * Kiegészítő adat a szerverről; hiba esetén `fallback` (a Program szűrő
+ * üres marad, illetve a duplikáció-banner nem jelenik meg).
+ */
+async function optional<T>(load: Promise<T>, fallback: T, what: string) {
+	try {
+		return await load;
+	} catch (error) {
+		logger.error({ err: error }, `Initial ${what} load failed`);
+		return fallback;
+	}
+}
+
 // Access is enforced by the (admin) layout.
 export default async function ApplicantsPage({ searchParams }: Props) {
-	const [initial, bounds] = await Promise.all([
+	const [initial, bounds, events, duplicateCount] = await Promise.all([
 		loadInitial(await searchParams),
 		eventYearBounds(),
+		optional(listEventOptions(), [], "event options"),
+		optional(countDuplicatePairs(), null, "duplicate count"),
 	]);
 	return (
 		<PageShell>
@@ -60,6 +77,8 @@ export default async function ApplicantsPage({ searchParams }: Props) {
 				<ApplicantsView
 					initial={initial}
 					years={programYears(bounds)}
+					events={events}
+					duplicateCount={duplicateCount}
 				/>
 			</Suspense>
 		</PageShell>

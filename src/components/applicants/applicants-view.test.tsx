@@ -1,6 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { parseListState, toApiQuery } from "@/lib/applicants/list-params";
 import { ApplicantsView } from "./applicants-view";
 import {
 	applicant,
@@ -11,11 +12,11 @@ import {
 } from "./test-fixtures";
 
 const nav = vi.hoisted(() => ({
-	replace: vi.fn(),
 	search: "",
 }));
 vi.mock("next/navigation", () => ({
-	useRouter: () => ({ replace: nav.replace }),
+	// Rows navigate to the detail page; the list itself never uses the router.
+	useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 	usePathname: () => "/applicants",
 	useSearchParams: () => new URLSearchParams(nav.search),
 }));
@@ -26,14 +27,20 @@ const { toast } = vi.hoisted(() => ({
 vi.mock("sonner", () => ({ toast }));
 
 const items = [applicant(), boroka, noEmail];
+const events = [{ id: "e2", name: "Robotika tábor" }];
 
 describe("ApplicantsView", () => {
 	const fetchMock = vi.fn();
 	const writeText = vi.fn();
 
+	let replaceState: ReturnType<typeof vi.spyOn>;
+
 	beforeEach(() => {
 		nav.search = "";
 		vi.stubGlobal("fetch", fetchMock);
+		replaceState = vi
+			.spyOn(window.history, "replaceState")
+			.mockImplementation(() => {});
 		Object.defineProperty(navigator, "clipboard", {
 			value: { writeText },
 			configurable: true,
@@ -41,10 +48,6 @@ describe("ApplicantsView", () => {
 		writeText.mockResolvedValue(undefined);
 		fetchMock.mockImplementation(
 			async (url: string, init?: RequestInit) => {
-				if (url.startsWith("/api/events"))
-					return jsonResponse({
-						items: [{ id: "e2", name: "Robotika tábor" }],
-					});
 				if (url === "/api/applicants/delete" && init?.method === "POST")
 					return jsonResponse({ deleted: 1 });
 				return jsonResponse(pageOf(items, 3));
@@ -53,9 +56,12 @@ describe("ApplicantsView", () => {
 	});
 	afterEach(() => {
 		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
 		vi.resetAllMocks();
 		window.localStorage.clear();
 	});
+
+	const fetchedUrls = () => fetchMock.mock.calls.map((c) => c[0] as string);
 
 	const applicantCalls = () =>
 		fetchMock.mock.calls
@@ -81,7 +87,7 @@ describe("ApplicantsView", () => {
 
 	it("writes filter changes to the URL and returns to page 1", async () => {
 		nav.search = "page=3";
-		render(<ApplicantsView />);
+		render(<ApplicantsView events={events} />);
 		await screen.findByRole("row", { name: /Nagy Luca/ });
 		await userEvent.click(
 			screen.getByRole("button", { name: /^Program(?! éve)/ }),
@@ -89,9 +95,10 @@ describe("ApplicantsView", () => {
 		await userEvent.click(
 			await screen.findByRole("checkbox", { name: "Robotika tábor" }),
 		);
-		expect(nav.replace).toHaveBeenLastCalledWith(
+		expect(replaceState).toHaveBeenLastCalledWith(
+			null,
+			"",
 			"/applicants?eventIds=e2",
-			{ scroll: false },
 		);
 	});
 
@@ -101,10 +108,45 @@ describe("ApplicantsView", () => {
 		await userEvent.click(
 			screen.getByRole("button", { name: /Név \/ e-mail/ }),
 		);
-		expect(nav.replace).toHaveBeenLastCalledWith(
+		expect(replaceState).toHaveBeenLastCalledWith(
+			null,
+			"",
 			"/applicants?sort=name&order=asc",
-			{ scroll: false },
 		);
+	});
+
+	it("uses the server-rendered first page, programs and duplicate count without fetching", () => {
+		nav.search = "eventIds=e2";
+		render(
+			<ApplicantsView
+				initial={{
+					apiQuery: toApiQuery(
+						parseListState(new URLSearchParams(nav.search)),
+					).toString(),
+					data: pageOf(items, 3),
+				}}
+				events={events}
+				duplicateCount={2}
+			/>,
+		);
+		expect(screen.getByText("Találatok száma: 3 fő")).toBeInTheDocument();
+		expect(
+			screen.getByText(/2 lehetséges duplikált jelentkezés/),
+		).toBeInTheDocument();
+		// The active program chip names the program from the server's list.
+		expect(screen.getAllByText(/Robotika tábor/).length).toBeGreaterThan(0);
+		expect(fetchedUrls()).toEqual([]);
+	});
+
+	it("shows no duplicate banner when the count is unknown", async () => {
+		render(<ApplicantsView events={events} duplicateCount={null} />);
+		await screen.findByRole("row", { name: /Nagy Luca/ });
+		expect(
+			screen.queryByText(/lehetséges duplikált jelentkezés/),
+		).not.toBeInTheDocument();
+		expect(
+			fetchedUrls().every((u) => u.startsWith("/api/applicants?")),
+		).toBe(true);
 	});
 });
 
@@ -114,10 +156,8 @@ describe("ApplicantsView column settings on mobile", () => {
 	beforeEach(() => {
 		nav.search = "";
 		vi.stubGlobal("fetch", fetchMock);
-		fetchMock.mockImplementation(async (url: string) =>
-			url.startsWith("/api/events")
-				? jsonResponse({ items: [] })
-				: jsonResponse(pageOf(items, 3)),
+		fetchMock.mockImplementation(async () =>
+			jsonResponse(pageOf(items, 3)),
 		);
 	});
 	afterEach(() => {
