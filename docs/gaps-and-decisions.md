@@ -39,7 +39,7 @@ Tudatosan nem javított viselkedések (2026-11-21-i audit). Ha ezekkel kapcsolat
 - Az anonimizálás megtartja a születési évet és a lakóhelyet (szándékos döntés), így ezek a dashboard demográfiájában továbbra is szerepelnek.
 - Kapacitás: a szerver a 0-t „nincs korlát”-ként kezeli, de az űrlap legalább 1-et kér, így 0 csak API-n keresztül állítható be.
 - A `PUT /api/events/[id]/report` hibás JSON-ra `Invalid request body`-t ad, a többi végpont `Invalid JSON body`-t.
-- A `src/proxy.ts` matchere minden `login`-nal kezdődő útvonalat kihagy (pl. `/loginx` is), nem csak a `/login`-t.
+- A statikus `/_not-found` oldal scriptjei nem kapnak CSP nonce-ot (a nonce csak dinamikus renderelésnél kerül rájuk), így a 404 oldalon a kliensoldali JS nem fut; a szöveg megjelenik.
 
 ## Döntési napló
 
