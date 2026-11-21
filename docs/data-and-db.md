@@ -1,6 +1,7 @@
 # Adatbázis
 
 - PostgreSQL, Prisma 7. A `db` singleton: `src/lib/db.ts` (`@prisma/adapter-pg` pool, dev hot reload alatt újrahasznosítva).
+- Két kapcsolati URL: a `DATABASE_URL` a **direkt** (pooler nélküli) kapcsolat, ezt használja a Prisma CLI (`prisma.config.ts`: migrációk, Studio) és a seed; a `DATABASE_URL_POOLED` (opcionális) a **poololt** kapcsolat, ezt kapja futásidőben a `db`. Ha a poololt nincs megadva, a `db` is a `DATABASE_URL`-t használja. Prisma 7-ben nincs `directUrl`: a sémában nincs URL, a CLI a configból, az app az adapterből veszi.
 - Generátor: `prisma-client-js` (a `@next-auth/prisma-adapter` miatt). A Prisma CLI konfigja: `prisma.config.ts`.
 - `pino`, `pino-pretty` és a Prisma csomagok a `next.config.ts` `serverExternalPackages` listájában vannak.
 

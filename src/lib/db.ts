@@ -11,7 +11,8 @@ export const db =
 	globalForPrisma.prisma ??
 	new PrismaClient({
 		adapter: new PrismaPg({
-			connectionString: env.DATABASE_URL,
+			// Futásidőben a poololt URL; a migrációk a prisma.config.ts-ben a direktet használják.
+			connectionString: env.DATABASE_URL_POOLED ?? env.DATABASE_URL,
 			max: 10,
 			connectionTimeoutMillis: 5_000,
 			idleTimeoutMillis: 30_000,
