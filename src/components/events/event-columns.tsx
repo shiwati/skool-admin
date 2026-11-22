@@ -8,11 +8,8 @@ import {
 } from "@/components/ui/tooltip";
 import { AVATAR_CLASSES, tagClass } from "@/lib/events/colors";
 import type { EventColumnId } from "@/lib/events/column-settings";
-import {
-	demandRatio,
-	ratioBadgeClass,
-	ratioBarClass,
-} from "@/lib/events/format";
+import { demandRatio, ratioBarClass } from "@/lib/events/format";
+import { RatioBadge } from "./ratio-badge";
 import { eventHref } from "@/lib/events/links";
 import type { EventSortKey } from "@/lib/events/list-params";
 import {
@@ -203,15 +200,10 @@ function DemandCell({ item }: { item: EventListItem }) {
 						: `${formatCount(applications)} jelentkező`}
 				</span>
 				{ratio !== null && (
-					<span
-						className={cn(
-							"rounded-full px-2 font-mono text-xs leading-5 font-medium",
-							ratioBadgeClass(ratio),
-						)}
+					<RatioBadge
+						ratio={ratio}
 						aria-label={`Túljelentkezés: ${formatRatio(ratio)}`}
-					>
-						{formatRatio(ratio)}
-					</span>
+					/>
 				)}
 			</div>
 			{ratio !== null && (

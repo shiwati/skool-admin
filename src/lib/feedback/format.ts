@@ -53,6 +53,8 @@ export type FeedbackUrlState = {
 	q?: string;
 	role?: FeedbackRoleKey;
 	eventId?: string;
+	/** A program cége. */
+	company?: string;
 	/** Naptári év, a program kezdete szerint. */
 	period?: string;
 	page?: number;
@@ -65,6 +67,7 @@ export function feedbackSearch(state: FeedbackUrlState): string {
 	if (state.q) params.set("q", state.q);
 	if (state.role) params.set("role", state.role);
 	if (state.eventId) params.set("eventId", state.eventId);
+	if (state.company) params.set("company", state.company);
 	if (state.period) params.set("period", state.period);
 	if (state.page && state.page > 1) params.set("page", String(state.page));
 	if (state.open) params.set("open", state.open);

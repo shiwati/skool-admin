@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	ageFit,
+	companyDetail,
 	companyRanking,
 	feedbackCompletion,
 	funnel,
@@ -86,6 +87,73 @@ describe("companyRanking", () => {
 			{ companyName: "Gamma", applications: 9 },
 		]);
 		expect(result.map((c) => c.name)).toEqual(["Gamma", "Alfa", "Béta"]);
+	});
+});
+
+describe("companyDetail", () => {
+	const event = (
+		id: string,
+		from: string,
+		mentors: string[],
+		applications = 10,
+	) => ({
+		id,
+		name: id,
+		from: new Date(from),
+		to: new Date(from),
+		capacity: 20,
+		applications,
+		mentors,
+	});
+	const fb = (
+		eventId: string,
+		role: "PARTICIPANT" | "MENTOR",
+		overallScore: number | null,
+	) => ({ eventId, role, overallScore, recommend: null });
+
+	const detail = companyDetail(
+		"Alfa",
+		[
+			event("old", "2024-03-01", ["Kiss Anna", " kiss anna ", ""]),
+			event("new", "2025-03-01", ["Kiss Anna", "Nagy Béla"]),
+		],
+		17,
+		[
+			fb("old", "PARTICIPANT", 3),
+			fb("new", "PARTICIPANT", 5),
+			fb("new", "PARTICIPANT", 4),
+			fb("new", "MENTOR", 2),
+			fb("old", "MENTOR", null),
+		],
+	);
+
+	it("counts a mentor of several programs once", () => {
+		expect(detail.mentors).toBe(2);
+	});
+
+	it("passes the program and student counts through", () => {
+		expect(detail.programs).toBe(2);
+		expect(detail.students).toBe(17);
+	});
+
+	it("summarises feedback and lists programs newest first with their rating", () => {
+		expect(detail.satisfaction.PARTICIPANT.responses).toBe(3);
+		expect(detail.satisfaction.MENTOR.responses).toBe(2);
+		expect(detail.rows.map((r) => [r.id, r.rating])).toEqual([
+			["new", 4.5],
+			["old", 3],
+		]);
+	});
+
+	it("has no rating for a program without participant scores", () => {
+		const empty = companyDetail(
+			"Béta",
+			[event("x", "2025-01-01", [])],
+			0,
+			[],
+		);
+		expect(empty.rows[0].rating).toBeNull();
+		expect(empty.mentors).toBe(0);
 	});
 });
 

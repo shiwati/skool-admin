@@ -21,6 +21,8 @@ export const feedbackQuerySchema = z.object({
 	q: optionalText.catch(undefined),
 	role: z.enum(["PARTICIPANT", "MENTOR"]).optional().catch(undefined),
 	eventId: optionalText.catch(undefined),
+	/** A program cége (`Event.companyName`, pontos egyezés). */
+	company: optionalText.catch(undefined),
 	/** Naptári év (pl. „2026”): a program kezdete szerint. */
 	period: z
 		.string()
@@ -85,8 +87,13 @@ async function where(query: FeedbackQuery): Promise<Prisma.FeedbackWhereInput> {
 	return {
 		...(query.eventId && { eventId: query.eventId }),
 		...(query.role && { role: query.role }),
-		...(query.period && {
-			event: { from: budapestYearRange(Number(query.period)) },
+		...((query.period || query.company) && {
+			event: {
+				...(query.period && {
+					from: budapestYearRange(Number(query.period)),
+				}),
+				...(query.company && { companyName: query.company }),
+			},
 		}),
 		...(folded && { searchText: foldedContains(folded) }),
 	};
@@ -227,6 +234,19 @@ export async function feedbackEventOptions(): Promise<
 		select: { id: true, name: true },
 		orderBy: { from: "desc" },
 	});
+}
+
+/** Cégek a szűrőhöz: amelyek programjaihoz van visszajelzés, ábécé szerint. */
+export async function feedbackCompanyOptions(): Promise<string[]> {
+	const rows = await db.event.findMany({
+		where: { companyName: { not: null }, feedbacks: { some: {} } },
+		select: { companyName: true },
+		distinct: ["companyName"],
+	});
+	return rows
+		.map((r) => r.companyName)
+		.filter((name): name is string => Boolean(name?.trim()))
+		.sort((a, b) => a.localeCompare(b, "hu"));
 }
 
 /** Az utolsó importált visszajelzés ideje (a fejléc „utolsó szinkron” sorához). */

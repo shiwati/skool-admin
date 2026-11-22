@@ -59,6 +59,28 @@ describe("feedback period filter", () => {
 		await listFeedback(parseFeedbackQuery({}));
 		expect(feedback.count.mock.calls[0][0].where).toEqual({});
 	});
+
+	it("filters by the company of the program", async () => {
+		await listFeedback(parseFeedbackQuery({ company: " Alfa Zrt. " }));
+		expect(feedback.count.mock.calls[0][0].where).toEqual({
+			event: { companyName: "Alfa Zrt." },
+		});
+	});
+
+	it("combines the company with the year on the same event filter", async () => {
+		await listFeedback(
+			parseFeedbackQuery({ company: "Alfa Zrt.", period: "2026" }),
+		);
+		expect(feedback.count.mock.calls[0][0].where).toEqual({
+			event: {
+				companyName: "Alfa Zrt.",
+				from: {
+					gte: new Date("2025-12-31T23:00:00Z"),
+					lt: new Date("2026-12-31T23:00:00Z"),
+				},
+			},
+		});
+	});
 });
 
 describe("feedback response rate", () => {

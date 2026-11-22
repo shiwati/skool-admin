@@ -35,22 +35,34 @@ export type PeriodComparison = {
 	satisfactionByProgram: ProgramSatisfaction[];
 };
 
+/** Az áttekintés bontása: egyszerre csak egy aktív. */
+export type DashboardMode = "year" | "program" | "company";
+
 export type DashboardData = {
-	/** A kiválasztott év; `null` = összes év. */
+	mode: DashboardMode;
+	/** A kiválasztott év; `null` = összes év (vagy nem éves bontás). */
 	year: number | null;
 	/** A választható évek, a legfrissebb elöl. */
 	years: number[];
-	/** A kiválasztott év időkerete; `null` = összes év. */
+	/** A kiválasztott év időkerete; `null` = összes év (vagy nem éves bontás). */
 	range: DateRange | null;
-	/** A kiválasztott évben induló programok (az összes évnél mind): a programszűrő listája. */
+	/** Az összes program, a legfrissebb elöl: a programszűrő listája. */
 	programs: ProgramOption[];
-	/** A kiválasztott program, vagy `null` = összes program. */
+	/** A kiválasztott program (csak programbontásnál). */
 	program: ProgramOption | null;
-	/** Csak év kiválasztva, program nélkül; egyébként `null`. */
+	/** Az összes cégnév ábécé szerint: a cégszűrő listája. */
+	companies: string[];
+	/** A kiválasztott cég (csak cégbontásnál). */
+	company: string | null;
+	/** Csak év kiválasztva; egyébként `null`. */
 	comparison: PeriodComparison | null;
 };
 
-export type DashboardFilters = { period?: string; program?: string };
+export type DashboardFilters = {
+	period?: string;
+	program?: string;
+	company?: string;
+};
 
 const within = (range: DateRange, date: Date) =>
 	date >= range.gte && date < range.lt;
@@ -65,23 +77,44 @@ export async function loadDashboard(
 	now = new Date(),
 ): Promise<DashboardData> {
 	const firstYear = await firstEventYear();
-	const period = resolvePeriod(filters.period, now, firstYear);
 
-	const programs = await db.event.findMany({
-		where: period ? { from: period.range } : {},
-		select: { id: true, name: true },
+	const allEvents = await db.event.findMany({
+		select: { id: true, name: true, companyName: true },
 		orderBy: [{ from: "desc" }, { id: "asc" }],
 	});
+	const programs = allEvents.map(({ id, name }) => ({ id, name }));
+	const companyNames = new Set<string>();
+	for (const e of allEvents) {
+		if (e.companyName?.trim()) companyNames.add(e.companyName);
+	}
+	const companies = [...companyNames].sort((a, b) =>
+		a.localeCompare(b, "hu"),
+	);
+
+	// A három szűrő kölcsönösen kizárja egymást: program > cég > év.
 	const program = programs.find((p) => p.id === filters.program) ?? null;
+	const company = program
+		? null
+		: (companies.find((c) => c === filters.company) ?? null);
+	const mode: DashboardMode = program
+		? "program"
+		: company
+			? "company"
+			: "year";
+	const period =
+		mode === "year" ? resolvePeriod(filters.period, now, firstYear) : null;
 
 	const base = {
+		mode,
 		year: period?.year ?? null,
 		years: periodYears(now, firstYear),
 		range: period?.range ?? null,
 		programs,
 		program,
+		companies,
+		company,
 	};
-	if (!period || program) return { ...base, comparison: null };
+	if (!period) return { ...base, comparison: null };
 
 	const applicationsIn = (range: DateRange) =>
 		db.application.count({

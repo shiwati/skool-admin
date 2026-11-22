@@ -1,3 +1,5 @@
+import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -11,6 +13,8 @@ export function KpiCard({
 	tone = "neutral",
 	note,
 	wide = false,
+	href,
+	hrefLabel,
 }: {
 	label: string;
 	value: string;
@@ -21,17 +25,31 @@ export function KpiCard({
 	note: ReactNode;
 	/** Mobilon (2 oszlopos rácsban) a teljes szélességet foglalja. */
 	wide?: boolean;
+	/** Ha van, a kártya hivatkozás: nyíl jelzi, hover/fókusz kiemeli. */
+	href?: string;
+	/** A hivatkozás képernyőolvasós szövege (pl. „Értékelések megnyitása”). */
+	hrefLabel?: string;
 }) {
-	return (
+	const card = (
 		<Card
 			className={cn(
 				"flex flex-col gap-1 p-3.5 md:gap-2 md:p-5",
-				wide && "col-span-2 md:col-span-1",
+				href
+					? "h-full transition-colors group-hover:border-ink group-focus-visible:border-ink"
+					: wide && "col-span-2 md:col-span-1",
 			)}
 		>
-			<h2 className="font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase">
-				{label}
-			</h2>
+			<div className="flex items-center justify-between gap-2">
+				<h2 className="font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase">
+					{label}
+				</h2>
+				{href && (
+					<ArrowUpRight
+						aria-hidden="true"
+						className="size-4 shrink-0 text-text-tertiary transition-colors group-hover:text-text-primary"
+					/>
+				)}
+			</div>
 			<p className="flex items-center gap-2 text-2xl leading-[30px] font-bold tracking-tight md:text-[32px] md:leading-10">
 				{icon}
 				{value}
@@ -45,6 +63,20 @@ export function KpiCard({
 				</span>
 			</div>
 		</Card>
+	);
+
+	if (!href) return card;
+	return (
+		<Link
+			href={href}
+			aria-label={hrefLabel ? `${label}: ${hrefLabel}` : undefined}
+			className={cn(
+				"group block rounded-[14px] outline-none focus-visible:ring-2 focus-visible:ring-ink",
+				wide && "col-span-2 md:col-span-1",
+			)}
+		>
+			{card}
+		</Link>
 	);
 }
 

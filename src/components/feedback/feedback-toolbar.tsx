@@ -46,6 +46,7 @@ function Option({
 export function FeedbackToolbar({
 	state,
 	events,
+	companies,
 	periods,
 }: {
 	state: FeedbackUrlState;
@@ -53,13 +54,15 @@ export function FeedbackToolbar({
 	periods?: { key: string; label: string }[];
 	/** A programszűrő opciói; `undefined`, ha a nézet egy programra szűkített. */
 	events?: { id: string; name: string }[];
+	/** A cégszűrő opciói; `undefined`, ha a nézet egy programra szűkített. */
+	companies?: string[];
 }) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const [pending, startTransition] = useTransition();
 	const [q, setQ] = useState(state.q ?? "");
 	const [openChip, setOpenChip] = useState<
-		"role" | "event" | "period" | null
+		"role" | "event" | "company" | "period" | null
 	>(null);
 
 	function go(patch: FeedbackUrlState) {
@@ -192,6 +195,44 @@ export function FeedbackToolbar({
 									wrap
 									checked={state.eventId === event.id}
 									onSelect={() => go({ eventId: event.id })}
+								/>
+							))}
+						</fieldset>
+					)}
+				</FilterChip>
+			)}
+			{companies && (
+				<FilterChip
+					label="Cég"
+					value={state.company}
+					onClear={() => go({ company: undefined })}
+					open={openChip === "company"}
+					onOpenChange={(open) =>
+						setOpenChip(open ? "company" : null)
+					}
+					contentClassName="w-[min(28rem,calc(100vw-2rem))]"
+				>
+					{companies.length === 0 ? (
+						<p className="text-sm text-text-secondary">
+							Még egyik céghez sincs visszajelzés.
+						</p>
+					) : (
+						<fieldset className="flex max-h-72 min-w-0 flex-col gap-1 overflow-y-auto">
+							<legend className="sr-only">Cég</legend>
+							<Option
+								name="company"
+								label="Minden cég"
+								checked={!state.company}
+								onSelect={() => go({ company: undefined })}
+							/>
+							{companies.map((company) => (
+								<Option
+									key={company}
+									name="company"
+									label={company}
+									wrap
+									checked={state.company === company}
+									onSelect={() => go({ company })}
 								/>
 							))}
 						</fieldset>

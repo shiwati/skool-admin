@@ -10,7 +10,9 @@ import {
 	ageDistribution,
 	hometownDistribution,
 	orderByCount,
+	satisfactionByRole,
 	type CountRow,
+	type FeedbackScore,
 	type Satisfaction,
 	type StatusBreakdown,
 } from "./compute";
@@ -231,6 +233,61 @@ export type Overview = {
 	/** A programok visszajelzései (résztvevő / mentor külön). */
 	satisfaction: Satisfaction;
 };
+
+export type CompanyProgramRow = {
+	id: string;
+	name: string;
+	from: Date;
+	to: Date;
+	capacity: number;
+	applications: number;
+	/** Résztvevői átlagértékelés; `null`, ha nincs pontszám. */
+	rating: number | null;
+};
+
+export type CompanyDetail = {
+	name: string;
+	programs: number;
+	/** Egyedi diákok a cég programjain. */
+	students: number;
+	/** Egyedi mentornevek: a több programon részt vevő mentor egyszer számít. */
+	mentors: number;
+	satisfaction: Satisfaction;
+	rows: CompanyProgramRow[];
+};
+
+/** Egy cég mutatói a programjaiból; a sorok a legutóbbi program elől. */
+export function companyDetail(
+	name: string,
+	events: (Omit<CompanyProgramRow, "rating"> & { mentors: string[] })[],
+	students: number,
+	feedback: (FeedbackScore & { eventId: string })[],
+): CompanyDetail {
+	const mentors = new Set(
+		events.flatMap((e) => e.mentors.map((m) => m.trim().toLowerCase())),
+	);
+	mentors.delete("");
+	return {
+		name,
+		programs: events.length,
+		students,
+		mentors: mentors.size,
+		satisfaction: satisfactionByRole(feedback),
+		rows: [...events]
+			.sort((a, b) => b.from.getTime() - a.from.getTime())
+			.map((event) => ({
+				id: event.id,
+				name: event.name,
+				from: event.from,
+				to: event.to,
+				capacity: event.capacity,
+				applications: event.applications,
+				rating: satisfactionByRole(
+					feedback.filter((f) => f.eventId === event.id),
+				).PARTICIPANT.score.average,
+			})),
+	};
+}
 
 export type Completion = {
 	responses: number;

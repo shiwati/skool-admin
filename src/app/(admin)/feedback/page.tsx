@@ -5,6 +5,7 @@ import { FeedbackView } from "@/components/feedback/feedback-view";
 import { firstEventYear } from "@/lib/dashboard/first-year";
 import { periodYears } from "@/lib/dashboard/period";
 import {
+	feedbackCompanyOptions,
 	feedbackEventOptions,
 	parseFeedbackQuery,
 	getFeedback,
@@ -20,13 +21,15 @@ export default async function FeedbackPage({
 	searchParams,
 }: PageProps<"/feedback">) {
 	const query = parseFeedbackQuery(await searchParams);
-	const [data, events, lastImport, openItem, firstYear] = await Promise.all([
-		listFeedback(query),
-		feedbackEventOptions(),
-		lastFeedbackImport(),
-		query.open ? getFeedback(query.open) : null,
-		firstEventYear(),
-	]);
+	const [data, events, companies, lastImport, openItem, firstYear] =
+		await Promise.all([
+			listFeedback(query),
+			feedbackEventOptions(),
+			feedbackCompanyOptions(),
+			lastFeedbackImport(),
+			query.open ? getFeedback(query.open) : null,
+			firstEventYear(),
+		]);
 
 	return (
 		<PageShell>
@@ -35,6 +38,7 @@ export default async function FeedbackPage({
 				state={query}
 				basePath="/feedback"
 				events={events}
+				companies={companies}
 				periods={periodYears(new Date(), firstYear).map((y) => ({
 					key: String(y),
 					label: String(y),
