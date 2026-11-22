@@ -3,14 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	applicationCount,
-	applicationFindMany,
 	applicationGroupBy,
 	eventFindMany,
 	eventAggregate,
 	feedbackFindMany,
 } = vi.hoisted(() => ({
 	applicationCount: vi.fn(),
-	applicationFindMany: vi.fn(),
 	applicationGroupBy: vi.fn(),
 	eventFindMany: vi.fn(),
 	eventAggregate: vi.fn(),
@@ -20,7 +18,6 @@ vi.mock("@/lib/db", () => ({
 	db: {
 		application: {
 			count: applicationCount,
-			findMany: applicationFindMany,
 			groupBy: applicationGroupBy,
 		},
 		event: { findMany: eventFindMany, aggregate: eventAggregate },
@@ -132,104 +129,103 @@ describe("loadDashboard", () => {
 				"no",
 			),
 		]);
-		applicationFindMany.mockResolvedValue([
-			{
-				event: { from: new Date("2026-10-01T08:00:00Z") },
-				applicant: { birthYear: 2012, hometown: "Ózd" },
-			},
-			// The same applicant on another program counts again.
-			{
-				event: { from: new Date("2026-03-01T08:00:00Z") },
-				applicant: { birthYear: 2012, hometown: "Ózd" },
-			},
-			{
-				event: { from: new Date("2026-03-01T08:00:00Z") },
-				applicant: { birthYear: null, hometown: null },
-			},
-		]);
+	});
+
+	const year = (key = "2026") => loadDashboard({ period: key }, now);
+
+	it("defaults to all years without a comparison or period queries", async () => {
+		const data = await loadDashboard({}, now);
+		expect(data.year).toBeNull();
+		expect(data.range).toBeNull();
+		expect(data.comparison).toBeNull();
+		expect(data.years).toEqual([2026, 2025]);
+		expect(eventFindMany).toHaveBeenCalledTimes(1);
+		expect(eventFindMany.mock.calls[0][0].where).toEqual({});
+		expect(applicationCount).not.toHaveBeenCalled();
+		expect(feedbackFindMany).not.toHaveBeenCalled();
+	});
+
+	it("treats an unknown period as all years", async () => {
+		const data = await loadDashboard({ period: "1999" }, now);
+		expect(data.comparison).toBeNull();
+	});
+
+	it("lists every program for all years, and a selected one is kept", async () => {
+		const data = await loadDashboard({ program: "c" }, now);
+		expect(data.program).toEqual({ id: "c", name: "Tavaszi tábor" });
+		expect(data.comparison).toBeNull();
 	});
 
 	it("counts applications (not distinct applicants), anonymized applicants included", async () => {
-		const data = await loadDashboard({}, now);
+		const data = await year();
 		expect(applicationCount.mock.calls.map((c) => c[0].where)).toEqual([
 			{ receivedAt: range(2026) },
 			{ receivedAt: range(2025) },
 		]);
-		expect(data.applications).toEqual({ current: 120, previous: 100 });
-		expect(data.period).toEqual({
-			key: "2026",
-			label: "2026 (idei év)",
-			previousLabel: "2025",
+		expect(data.comparison?.applications).toEqual({
+			current: 120,
+			previous: 100,
 		});
+		expect(data.year).toBe(2026);
+		expect(data.comparison?.previousLabel).toBe("2025");
+		expect(data.range).toEqual(range(2026));
 		expect(data.program).toBeNull();
 	});
 
-	it("counts applications of anonymized applicants per event, by status and in demographics", async () => {
-		await loadDashboard({}, now);
+	it("lists only the programs starting in the year", async () => {
+		await year();
+		expect(eventFindMany.mock.calls[0][0].where).toEqual({
+			from: range(2026),
+		});
+	});
+
+	it("counts applications of anonymized applicants per event and by status", async () => {
+		await year();
 		expect(eventFindMany.mock.calls[1][0].select._count).toEqual({
 			select: { applications: true },
 		});
 		expect(applicationGroupBy.mock.calls[0][0].where).toEqual({
 			eventId: { in: ["a", "b", "c"] },
 		});
-		expect(applicationFindMany.mock.calls[0][0].where).not.toHaveProperty(
-			"applicant",
-		);
 	});
 
 	it("compares oversubscription of events starting in each period", async () => {
-		const data = await loadDashboard({}, now);
-		expect(data.oversubscription).toEqual({
+		const data = await year();
+		expect(data.comparison?.oversubscription).toEqual({
 			current: 55 / 30,
 			previous: 1.5,
 		});
 	});
 
-	it("shows the events starting in the period in the capacity chart", async () => {
-		const data = await loadDashboard({}, now);
-		expect(data.capacity.map((r) => [r.id, r.state])).toEqual([
+	it("shows the events starting in the year in the capacity chart", async () => {
+		const data = await year();
+		expect(data.comparison?.capacity.map((r) => [r.id, r.state])).toEqual([
 			["a", "upcoming"],
 			["c", "past"],
 		]);
 	});
 
 	it("breaks the capacity rows down by application status", async () => {
-		const data = await loadDashboard({}, now);
-		expect(data.capacity.find((r) => r.id === "a")?.byStatus).toEqual({
+		const data = await year();
+		const rows = data.comparison?.capacity;
+		expect(rows?.find((r) => r.id === "a")?.byStatus).toEqual({
 			APPLIED: 30,
 			ACCEPTED: 20,
 		});
-		expect(data.capacity.find((r) => r.id === "c")?.byStatus).toEqual({});
+		expect(rows?.find((r) => r.id === "c")?.byStatus).toEqual({});
 	});
 
-	it("builds demographics per application of the period", async () => {
-		const data = await loadDashboard({}, now);
-		expect(applicationFindMany.mock.calls[0][0].where).toEqual({
-			event: { from: range(2026) },
-		});
-		expect(data.demographics.total).toBe(3);
-		expect(data.demographics.age).toContainEqual({
-			label: "13–15",
-			count: 2,
-		});
-		expect(data.demographics.hometown).toEqual([
-			{ label: "Ózd", count: 2 },
-			{ label: "Nincs adat", count: 1 },
-		]);
-	});
-
-	it("restricts every query to the selected program of the period", async () => {
-		const data = await loadDashboard({ program: "a" }, now);
+	it("skips the comparison when a program of the year is selected", async () => {
+		const data = await loadDashboard({ period: "2026", program: "a" }, now);
 		expect(data.program).toEqual({ id: "a", name: "Python ősz" });
-		expect(applicationCount.mock.calls[0][0].where.eventId).toBe("a");
-		expect(applicationFindMany.mock.calls[0][0].where.eventId).toBe("a");
-		expect(eventFindMany.mock.calls[1][0].where.id).toBe("a");
+		expect(data.comparison).toBeNull();
+		expect(applicationCount).not.toHaveBeenCalled();
 	});
 
-	it("ignores a program that does not start in the period", async () => {
-		const data = await loadDashboard({ program: "b" }, now);
+	it("ignores a program that does not start in the year", async () => {
+		const data = await loadDashboard({ period: "2026", program: "b" }, now);
 		expect(data.program).toBeNull();
-		expect(applicationCount.mock.calls[0][0].where.eventId).toBeUndefined();
+		expect(data.comparison).not.toBeNull();
 	});
 
 	it("offers years back to the first program in the database", async () => {
@@ -237,19 +233,15 @@ describe("loadDashboard", () => {
 			_min: { from: new Date("2024-03-16T08:00:00Z") },
 			_max: { from: null },
 		});
-		const data = await loadDashboard({ period: "2024" }, now);
-		expect(data.periodOptions.map((o) => o.key)).toEqual([
-			"2026",
-			"2025",
-			"2024",
-		]);
-		expect(data.period.key).toBe("2024");
-		expect(data.period.previousLabel).toBe("2023");
+		const data = await year("2024");
+		expect(data.years).toEqual([2026, 2025, 2024]);
+		expect(data.year).toBe(2024);
+		expect(data.comparison?.previousLabel).toBe("2023");
 	});
 
 	it("returns six trend months ending with the current one", async () => {
-		const data = await loadDashboard({ period: "2025" }, now);
-		expect(data.trend.map((p) => p.key)).toEqual([
+		const data = await year("2025");
+		expect(data.comparison?.trend.map((p) => p.key)).toEqual([
 			"2026-06",
 			"2026-07",
 			"2026-08",
@@ -257,17 +249,17 @@ describe("loadDashboard", () => {
 			"2026-10",
 			"2026-11",
 		]);
-		expect(data.trend[4].ratio).toBe(2.5);
+		expect(data.comparison?.trend[4].ratio).toBe(2.5);
 	});
 
 	it("splits satisfaction by role and assigns feedback by program start", async () => {
-		const data = await loadDashboard({}, now);
+		const data = await year();
 		expect(feedbackFindMany.mock.calls[0][0].where).toEqual({
 			event: {
 				from: { gte: range(2025).gte, lt: range(2026).lt },
 			},
 		});
-		const { current, previous } = data.satisfaction;
+		const { current, previous } = data.comparison!.satisfaction;
 		expect(current.PARTICIPANT.score).toEqual({ average: 4.5, count: 2 });
 		expect(current.PARTICIPANT.responses).toBe(3);
 		expect(current.PARTICIPANT.recommend).toEqual({
@@ -279,7 +271,7 @@ describe("loadDashboard", () => {
 		expect(current.MENTOR.score).toEqual({ average: 3, count: 1 });
 		expect(previous.PARTICIPANT.score).toEqual({ average: 2, count: 1 });
 		expect(
-			data.satisfactionByProgram.map((p) => [
+			data.comparison?.satisfactionByProgram.map((p) => [
 				p.id,
 				p.participant.average,
 				p.mentor.average,
@@ -288,10 +280,5 @@ describe("loadDashboard", () => {
 			["a", 4.5, 3],
 			["c", null, null],
 		]);
-	});
-
-	it("restricts feedback to the selected program", async () => {
-		await loadDashboard({ program: "a" }, now);
-		expect(feedbackFindMany.mock.calls[0][0].where.eventId).toBe("a");
 	});
 });

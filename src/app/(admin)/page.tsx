@@ -1,11 +1,25 @@
+import { Star } from "lucide-react";
 import type { Metadata } from "next";
+import type { ComponentProps } from "react";
 import { PageHeader } from "@/components/admin-shell/page-header";
 import { PageShell } from "@/components/admin-shell/page-shell";
 import { CapacityChart } from "@/components/dashboard/capacity-chart";
 import { DashboardActions } from "@/components/dashboard/dashboard-actions";
 import { DemographicsCard } from "@/components/dashboard/demographics-card";
-import { KpiCard, KpiGrid } from "@/components/dashboard/kpi-card";
+import {
+	KpiCard,
+	KpiGrid,
+	SectionHeader,
+} from "@/components/dashboard/kpi-card";
 import { OversubscriptionTrend } from "@/components/dashboard/oversubscription-trend";
+import {
+	ChannelsCard,
+	PartnersCard,
+} from "@/components/dashboard/overview-cards";
+import {
+	ProgramFeedbackCard,
+	ProgramFunnelCard,
+} from "@/components/dashboard/program-cards";
 import { SatisfactionCard } from "@/components/dashboard/satisfaction-card";
 import type { Tone } from "@/components/dashboard/stat-badge";
 import {
@@ -14,8 +28,18 @@ import {
 	formatSignedPercent,
 	greeting,
 	percentChange,
+	share,
+	type Satisfaction,
 } from "@/lib/dashboard/compute";
-import { loadDashboard, type DashboardData } from "@/lib/dashboard/load";
+import type {
+	FeedbackCompletion,
+	Overview,
+	ProgramDetail,
+	Returning,
+} from "@/lib/dashboard/insights";
+import { loadOverview, loadProgramDetail } from "@/lib/dashboard/insights-load";
+import { ALL_YEARS_LABEL } from "@/lib/dashboard/period";
+import { loadDashboard, type PeriodComparison } from "@/lib/dashboard/load";
 import { requireAdmin } from "@/lib/session";
 import { formatCount, formatRatio } from "@/lib/format";
 
@@ -29,7 +53,7 @@ type Props = {
 const single = (value: string | string[] | undefined) =>
 	Array.isArray(value) ? value[0] : value;
 
-function applicationsKpi({ applications, period }: DashboardData) {
+function applicationsKpi({ applications, previousLabel }: PeriodComparison) {
 	const change = percentChange(applications.current, applications.previous);
 	return {
 		value: formatCount(applications.current),
@@ -41,15 +65,15 @@ function applicationsKpi({ applications, period }: DashboardData) {
 				: "alert") as Tone,
 		note:
 			change === null
-				? `nincs adat összevetéshez (${period.previousLabel})`
-				: `vs. ${period.previousLabel} (${formatCount(applications.previous)})`,
+				? `nincs adat összevetéshez (${previousLabel})`
+				: `vs. ${previousLabel} (${formatCount(applications.previous)})`,
 	};
 }
 
 function oversubscriptionKpi({
 	oversubscription: { current, previous },
-	period,
-}: DashboardData) {
+	previousLabel,
+}: PeriodComparison) {
 	if (current === null)
 		return {
 			value: "—",
@@ -62,21 +86,20 @@ function oversubscriptionKpi({
 			value: formatRatio(current),
 			badge: undefined,
 			tone: "neutral" as Tone,
-			note: `nincs adat összevetéshez (${period.previousLabel})`,
+			note: `nincs adat összevetéshez (${previousLabel})`,
 		};
 	return {
 		value: formatRatio(current),
 		badge: formatSignedDecimal(current - previous),
 		tone: "info" as Tone,
-		note: `jelentkezők / kapacitás · ${period.previousLabel}: ${formatRatio(previous)}`,
+		note: `jelentkezők / kapacitás · ${previousLabel}: ${formatRatio(previous)}`,
 	};
 }
 
 function satisfactionKpi({
 	satisfaction: { current, previous },
-	period,
-	program,
-}: DashboardData) {
+	previousLabel,
+}: PeriodComparison) {
 	const participant = current.PARTICIPANT.score;
 	const before = previous.PARTICIPANT.score.average;
 	const mentor = current.MENTOR.score;
@@ -86,9 +109,7 @@ function satisfactionKpi({
 			value: "—",
 			badge: undefined,
 			tone: "neutral" as Tone,
-			note: program
-				? "ehhez a programhoz még nincs visszajelzés"
-				: "nincs visszajelzés az időszak programjaira",
+			note: "nincs visszajelzés az év programjaira",
 		};
 	const mentorNote =
 		mentor.average === null
@@ -103,7 +124,7 @@ function satisfactionKpi({
 					: `${formatScore(participant.average)} / 5`,
 			badge: undefined,
 			tone: "neutral" as Tone,
-			note: `${counts} · nincs adat összevetéshez (${period.previousLabel})`,
+			note: `${counts} · nincs adat összevetéshez (${previousLabel})`,
 		};
 	const diff = participant.average - before;
 	return {
@@ -114,8 +135,217 @@ function satisfactionKpi({
 			: diff > 0
 				? "ok"
 				: "alert") as Tone,
-		note: `vs. ${period.previousLabel} (${formatScore(before)}) · ${counts}`,
+		note: `vs. ${previousLabel} (${formatScore(before)}) · ${counts}`,
 	};
+}
+
+/**
+ * Megjegyzés egymás utáni részekből: elfér egy sorban, különben a részek
+ * egyben, a következő sorba törnek (a pötty az előző sor végén marad).
+ */
+function noteParts(parts: string[]) {
+	return (
+		<span className="flex flex-wrap gap-x-1">
+			{parts.map((part, i) => (
+				<span key={part} className="whitespace-nowrap">
+					{part}
+					{i < parts.length - 1 && " ·"}
+				</span>
+			))}
+		</span>
+	);
+}
+
+function completionKpi(completion: FeedbackCompletion | null) {
+	const participants = completion?.participants;
+	if (!completion || !participants || participants.expected === null)
+		return {
+			value: "—",
+			note: "nincs részt vevőnek jelölt jelentkező az évben",
+		};
+	const mentors = completion.mentors;
+	const mentorNote =
+		mentors.expected === null
+			? "mentorok: —"
+			: `mentorok: ${formatCount(mentors.responses)} / ${formatCount(mentors.expected)}`;
+	return {
+		value: `${share(participants.responses, participants.expected)}%`,
+		note: noteParts([
+			`${formatCount(participants.responses)} / ${formatCount(participants.expected)} résztvevő`,
+			mentorNote,
+		]),
+	};
+}
+
+/** Értékelés-kártya: az érték előtt csillag (mint az Elégedettség kártyán), ha van érték. */
+function RatingKpiCard(props: ComponentProps<typeof KpiCard>) {
+	return (
+		<KpiCard
+			{...props}
+			icon={
+				props.value === "—" ? undefined : (
+					<Star
+						aria-hidden="true"
+						className="size-6 fill-current text-warning-fg"
+					/>
+				)
+			}
+		/>
+	);
+}
+
+function ratingKpi({ PARTICIPANT, MENTOR }: Satisfaction) {
+	const responses = PARTICIPANT.responses + MENTOR.responses;
+	if (responses === 0) return { value: "—", note: "még nincs visszajelzés" };
+	const mentor =
+		MENTOR.score.average === null
+			? "mentorok: —"
+			: `mentorok: ${formatScore(MENTOR.score.average)}`;
+	return {
+		value:
+			PARTICIPANT.score.average === null
+				? "—"
+				: `${formatScore(PARTICIPANT.score.average)} / 5`,
+		note: noteParts([`${formatCount(responses)} kitöltés`, mentor]),
+	};
+}
+
+function returningKpi({ returning, total }: Returning, scope: string) {
+	return {
+		value: total > 0 ? `${share(returning, total)}%` : "—",
+		note:
+			total > 0
+				? `${formatCount(returning)} / ${formatCount(total)} ${scope}`
+				: "még nincs jelentkező",
+	};
+}
+
+function OverviewSection({
+	overview,
+	periodLabel,
+	allYears,
+}: {
+	overview: Overview;
+	periodLabel: string;
+	allYears: boolean;
+}) {
+	return (
+		<>
+			<KpiGrid columns={5}>
+				<KpiCard
+					label="Programok"
+					value={formatCount(overview.programs)}
+					note={allYears ? "összesen" : "ebben az évben indult"}
+				/>
+				<KpiCard
+					label="Diákok"
+					value={formatCount(overview.students)}
+					note="egyedi jelentkező"
+				/>
+				<KpiCard
+					label="Visszatérő diákok"
+					{...returningKpi(
+						overview.returning,
+						allYears
+							? "diák jelentkezett 2+ programra"
+							: "diák járt már korábbi év programján",
+					)}
+				/>
+				{allYears ? (
+					<KpiCard
+						label="Hírlevél"
+						value={formatCount(overview.newsletter)}
+						note={`feliratkozó · ${share(overview.newsletter, overview.students)}% a diákokból`}
+					/>
+				) : (
+					<KpiCard
+						label="Értékelések kitöltöttsége"
+						{...completionKpi(overview.completion)}
+					/>
+				)}
+				<RatingKpiCard
+					label="Átlagos értékelés"
+					{...ratingKpi(overview.satisfaction)}
+					wide
+				/>
+			</KpiGrid>
+
+			<div className="grid items-start gap-4 lg:grid-cols-2">
+				<DemographicsCard
+					data={overview.demographics}
+					subtitle={periodLabel}
+					unit="diák"
+					emptyText="Még nincs jelentkező."
+					ageNote="Életkor = a diák legutóbbi programjának kezdő éve − születési év."
+				/>
+				<div className="flex min-w-0 flex-col gap-4">
+					<PartnersCard rows={overview.companies} />
+					<ChannelsCard
+						rows={overview.channels}
+						subtitle="A jelentkezők válasza arra, honnan hallottak a programról"
+					/>
+				</div>
+			</div>
+		</>
+	);
+}
+
+function ProgramSection({ detail }: { detail: ProgramDetail }) {
+	const { funnel } = detail;
+	return (
+		<>
+			<KpiGrid>
+				<KpiCard
+					label="Jelentkezők"
+					value={formatCount(funnel.total)}
+					note={
+						detail.oversubscription === null
+							? "nincs megadva kapacitás"
+							: `${formatRatio(detail.oversubscription)} túljelentkezés · ${formatCount(detail.capacity)} férőhely`
+					}
+				/>
+				<KpiCard
+					label="Kitöltöttség"
+					value={
+						detail.capacity > 0
+							? `${share(funnel.accepted, detail.capacity)}%`
+							: "—"
+					}
+					note={
+						detail.capacity > 0
+							? `${formatCount(funnel.accepted)} elfogadott / ${formatCount(detail.capacity)} férőhely`
+							: "nincs megadva kapacitás"
+					}
+				/>
+				<KpiCard
+					label="Visszatérők"
+					{...returningKpi(
+						detail.returning,
+						"jelentkező járt már korábbi programon",
+					)}
+					wide
+				/>
+			</KpiGrid>
+
+			<div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+				<ProgramFunnelCard funnel={funnel} finished={detail.finished} />
+				<ProgramFeedbackCard detail={detail} />
+			</div>
+
+			<div className="grid items-start gap-4 lg:grid-cols-2">
+				<DemographicsCard
+					data={detail.demographics}
+					subtitle="A program jelentkezői"
+					emptyText="Ehhez a programhoz még nincs jelentkezés."
+					ageFit={detail.ageFit}
+				/>
+				<ChannelsCard
+					rows={detail.channels}
+					subtitle="A jelentkezők válasza arra, honnan hallottak a programról"
+				/>
+			</div>
+		</>
+	);
 }
 
 // Access is enforced by the (admin) layout; the session is read for the greeting.
@@ -128,13 +358,28 @@ export default async function DashboardPage({ searchParams }: Props) {
 		{ period: single(params.period), program: single(params.program) },
 		now,
 	);
+	const programDetail = data.program
+		? await loadProgramDetail(data.program.id, now)
+		: null;
+	const overview = programDetail ? null : await loadOverview(data.range);
+	const { comparison } = data;
+	const periodLabel =
+		data.year === null ? ALL_YEARS_LABEL : String(data.year);
 
 	return (
 		<PageShell>
 			<PageHeader
 				eyebrow="Áttekintés"
 				title={`${greeting(now)}, ${name}!`}
-				description={`${data.period.label} · ${data.program?.name ?? "összes program"} · összevetés: ${data.period.previousLabel}`}
+				description={
+					programDetail
+						? data.range
+							? `${programDetail.name} · ${periodLabel}`
+							: programDetail.name
+						: comparison
+							? `${periodLabel} · összevetés: ${comparison.previousLabel}`
+							: periodLabel
+				}
 				actions={
 					// Mobile: one horizontally scrollable row below the title.
 					<div className="relative -mx-4 flex w-[calc(100%+2rem)] gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:w-auto md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
@@ -143,35 +388,55 @@ export default async function DashboardPage({ searchParams }: Props) {
 				}
 			/>
 
-			<KpiGrid>
-				<KpiCard label="Összes jelentkező" {...applicationsKpi(data)} />
-				<KpiCard
-					label="Átlagos túljelentkezés"
-					{...oversubscriptionKpi(data)}
-				/>
-				<KpiCard
-					label="Átlagos elégedettség"
-					{...satisfactionKpi(data)}
-					wide
-				/>
-			</KpiGrid>
+			{programDetail && <ProgramSection detail={programDetail} />}
 
-			<div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-				<CapacityChart rows={data.capacity} />
-				<OversubscriptionTrend points={data.trend} />
-			</div>
+			{overview && (
+				<OverviewSection
+					overview={overview}
+					periodLabel={periodLabel}
+					allYears={data.range === null}
+				/>
+			)}
 
-			<div className="grid items-start gap-4 lg:grid-cols-2">
-				<DemographicsCard
-					data={data.demographics}
-					periodLabel={data.period.label}
-				/>
-				<SatisfactionCard
-					programs={data.satisfactionByProgram}
-					satisfaction={data.satisfaction.current}
-					programSelected={data.program !== null}
-				/>
-			</div>
+			{overview && comparison && (
+				<>
+					<SectionHeader
+						title="Összevetés az előző évvel"
+						subtitle={`${periodLabel} vs. ${comparison.previousLabel}`}
+					/>
+
+					<KpiGrid>
+						<KpiCard
+							label="Összes jelentkező"
+							{...applicationsKpi(comparison)}
+						/>
+						<KpiCard
+							label="Átlagos túljelentkezés"
+							{...oversubscriptionKpi(comparison)}
+						/>
+						<RatingKpiCard
+							label="Átlagos elégedettség"
+							{...satisfactionKpi(comparison)}
+							wide
+						/>
+					</KpiGrid>
+
+					<SectionHeader
+						title="Programok"
+						subtitle={`A(z) ${periodLabel}. évben induló programok`}
+					/>
+
+					<div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+						<CapacityChart rows={comparison.capacity} />
+						<OversubscriptionTrend points={comparison.trend} />
+					</div>
+
+					<SatisfactionCard
+						programs={comparison.satisfactionByProgram}
+						satisfaction={comparison.satisfaction.current}
+					/>
+				</>
+			)}
 		</PageShell>
 	);
 }
