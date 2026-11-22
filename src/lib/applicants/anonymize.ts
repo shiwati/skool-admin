@@ -1,5 +1,6 @@
 import "server-only";
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { recomputeDuplicateFlags } from "./duplicate-flags";
 
 /**
  * GDPR-törlés: a jelentkező személyes adatait visszafordíthatatlanul
@@ -84,13 +85,6 @@ export async function anonymizeApplicants(
 		const active = found.filter((a) => a.deletedAt === null);
 		const targets = active.map((a) => a.id);
 		if (targets.length === 0) return { deleted: 0 };
-		const duplicateKeys = [
-			...new Set(
-				active
-					.map((a) => a.duplicateKey)
-					.filter((k): k is string => k !== null),
-			),
-		];
 
 		await tx.applicant.updateMany({
 			where: { id: { in: targets }, deletedAt: null },
@@ -103,16 +97,11 @@ export async function anonymizeApplicants(
 		});
 
 		// The remaining applicants that shared a key stay flagged only while
-		// another one with the same key still exists (same rule as merging).
-		for (const key of duplicateKeys) {
-			const remaining = await tx.applicant.count({
-				where: { duplicateKey: key },
-			});
-			await tx.applicant.updateMany({
-				where: { duplicateKey: key },
-				data: { duplicateFlag: remaining > 1 },
-			});
-		}
+		// another one with the same key still exists.
+		await recomputeDuplicateFlags(
+			tx,
+			active.map((a) => a.duplicateKey),
+		);
 
 		const applications = await tx.application.findMany({
 			where: { applicantId: { in: targets } },

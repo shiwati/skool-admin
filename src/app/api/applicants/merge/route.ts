@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { handleBody, jsonResponse } from "@/lib/api/handler";
+import { duplicateErrorResponse } from "@/lib/applicants/duplicate-errors";
+import { mergeApplicants } from "@/lib/applicants/merge";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
@@ -22,88 +24,22 @@ const bodySchema = z
 		path: ["mergeIds"],
 	});
 
-class NotFoundError extends Error {}
-class NotDuplicateError extends Error {}
-
 /**
- * Merges duplicate applicants: every application and every `applicant`
- * History row of the merged applicants moves to the primary one
- * (application data is kept as is), each merge is recorded in `History`,
- * and the merged applicants are deleted permanently. The hard delete is
- * intentional (unlike GDPR deletion, which anonymizes): they are the same
- * person, and re-imports stay matched through `Application.sourceKey`.
- * Only non-deleted applicants sharing one duplicate key can be merged.
- * `duplicateKey` stays, so a later matching applicant is flagged again.
+ * Duplikált jelentkezők összevonása (lásd `src/lib/applicants/merge.ts`).
+ * Az `(admin)` layout nem védi a Route Handlereket; a session-t a
+ * `handleBody` ellenőrzi.
  */
 export async function POST(request: Request) {
 	return handleBody(
 		request,
 		bodySchema,
 		async ({ primaryId, mergeIds }, { userId }) => {
-			const ids = [primaryId, ...mergeIds];
-			const result = await db.$transaction(async (tx) => {
-				const applicants = await tx.applicant.findMany({
-					where: { id: { in: ids }, deletedAt: null },
-					select: { id: true, duplicateKey: true },
-				});
-				if (applicants.length !== ids.length) throw new NotFoundError();
-				const key = applicants[0].duplicateKey;
-				if (!key || applicants.some((a) => a.duplicateKey !== key)) {
-					throw new NotDuplicateError();
-				}
-
-				const moved = await tx.application.updateMany({
-					where: { applicantId: { in: mergeIds } },
-					data: { applicantId: primaryId, updatedById: userId },
-				});
-				// The merged applicants' own change history now belongs to the
-				// kept one, so no History row points at a deleted applicant.
-				await tx.history.updateMany({
-					where: {
-						tableName: "applicant",
-						recordId: { in: mergeIds },
-					},
-					data: { recordId: primaryId },
-				});
-				await tx.history.createMany({
-					data: mergeIds.map((mergedId) => ({
-						tableName: "applicant",
-						fieldName: "merged_from",
-						oldValue: mergedId,
-						newValue: primaryId,
-						recordId: primaryId,
-						createdById: userId,
-					})),
-				});
-				await tx.applicant.deleteMany({
-					where: { id: { in: mergeIds } },
-				});
-				await tx.applicant.update({
-					where: { id: primaryId },
-					data: { updatedById: userId },
-				});
-
-				// The kept applicant stays flagged only while another non-deleted
-				// applicant still has the same key.
-				const remaining = await tx.applicant.count({
-					where: { duplicateKey: key, deletedAt: null },
-				});
-				await tx.applicant.updateMany({
-					where: { duplicateKey: key, deletedAt: null },
-					data: { duplicateFlag: remaining > 1 },
-				});
-
-				return tx.applicant
-					.findUniqueOrThrow({
-						where: { id: primaryId },
-						include: { applications: true },
-					})
-					.then((applicant) => ({
-						applicant,
-						movedApplications: moved.count,
-					}));
-			});
-
+			const result = await mergeApplicants(
+				db,
+				primaryId,
+				mergeIds,
+				userId,
+			);
 			logger.info({
 				event: "applicant.merged",
 				userId,
@@ -114,17 +50,7 @@ export async function POST(request: Request) {
 		},
 		{
 			event: "applicant.merge_failed",
-			mapError: (error) => {
-				if (error instanceof NotFoundError) {
-					return jsonResponse({ error: "Applicant not found" }, 404);
-				}
-				if (error instanceof NotDuplicateError) {
-					return jsonResponse(
-						{ error: "Applicants are not duplicates" },
-						409,
-					);
-				}
-			},
+			mapError: duplicateErrorResponse,
 		},
 	);
 }

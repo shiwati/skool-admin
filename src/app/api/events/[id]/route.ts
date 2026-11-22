@@ -9,16 +9,17 @@ import {
 	END_BEFORE_START_API_MESSAGE,
 	updateEventSchema,
 } from "@/lib/events/api-schema";
-import { diffEvent, EVENT_TABLE } from "@/lib/events/changes";
-import { withJsonNulls } from "@/lib/events/prisma-data";
+import {
+	deleteEvent,
+	EventEndBeforeStartError,
+	EventNotFoundError,
+	updateEvent,
+} from "@/lib/events/mutations";
 import { getEvent } from "@/lib/events/queries";
 import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-class NotFoundError extends Error {}
-class EndBeforeStartError extends Error {}
 
 const eventNotFound = () => jsonResponse({ error: "Event not found" }, 404);
 
@@ -37,10 +38,7 @@ export async function GET(
 	);
 }
 
-/**
- * Hard-deletes the event; its applications cascade (applicants stay).
- * Records the deletion in `History`. Responds with `{ id }`.
- */
+/** Hard-deletes the event (see `deleteEvent`). Responds with `{ id }`. */
 export async function DELETE(
 	request: Request,
 	{ params }: RouteContext<"/api/events/[id]">,
@@ -49,41 +47,15 @@ export async function DELETE(
 		request,
 		async ({ userId }) => {
 			const { id } = await params;
-			await db.$transaction(async (tx) => {
-				const current = await tx.event.findUnique({
-					where: { id },
-					select: { name: true },
-				});
-				if (!current) throw new NotFoundError();
-
-				await tx.event.delete({ where: { id } });
-				await tx.history.create({
-					data: {
-						tableName: EVENT_TABLE,
-						recordId: id,
-						createdById: userId,
-						fieldName: "deleted",
-						oldValue: current.name,
-						newValue: null,
-					},
-				});
-			});
-
+			await deleteEvent(db, id, userId);
 			logger.info({ event: "event.deleted", userId, eventId: id });
 			return jsonResponse({ id });
 		},
-		{
-			event: "event.delete_failed",
-			mapError: (error) =>
-				error instanceof NotFoundError ? eventNotFound() : undefined,
-		},
+		{ event: "event.delete_failed", mapError: eventErrorResponse },
 	);
 }
 
-/**
- * Updates the sent fields (optional text fields can be cleared with `null`)
- * and records every changed field in `History`. Responds with `{ id }`.
- */
+/** Updates the sent fields (see `updateEvent`). Responds with `{ id }`. */
 export async function PATCH(
 	request: Request,
 	{ params }: RouteContext<"/api/events/[id]">,
@@ -93,32 +65,7 @@ export async function PATCH(
 		updateEventSchema,
 		async (patch, { userId }) => {
 			const { id } = await params;
-			const changed = await db.$transaction(async (tx) => {
-				const current = await tx.event.findUnique({ where: { id } });
-				if (!current) throw new NotFoundError();
-
-				const from = patch.from ?? current.from;
-				const to = patch.to ?? current.to;
-				if (to < from) throw new EndBeforeStartError();
-
-				const changes = diffEvent(current, patch);
-				if (changes.length === 0) return 0;
-
-				await tx.event.update({
-					where: { id },
-					data: withJsonNulls(patch),
-				});
-				await tx.history.createMany({
-					data: changes.map((change) => ({
-						tableName: EVENT_TABLE,
-						recordId: id,
-						createdById: userId,
-						...change,
-					})),
-				});
-				return changes.length;
-			});
-
+			const changed = await updateEvent(db, id, patch, userId);
 			logger.info({
 				event: "event.updated",
 				userId,
@@ -127,13 +74,12 @@ export async function PATCH(
 			});
 			return jsonResponse({ id });
 		},
-		{
-			event: "event.update_failed",
-			mapError: (error) => {
-				if (error instanceof NotFoundError) return eventNotFound();
-				if (error instanceof EndBeforeStartError)
-					return invalidField("to", END_BEFORE_START_API_MESSAGE);
-			},
-		},
+		{ event: "event.update_failed", mapError: eventErrorResponse },
 	);
+}
+
+function eventErrorResponse(error: unknown) {
+	if (error instanceof EventNotFoundError) return eventNotFound();
+	if (error instanceof EventEndBeforeStartError)
+		return invalidField("to", END_BEFORE_START_API_MESSAGE);
 }

@@ -1,8 +1,8 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { duplicateKey } from "@/lib/applicants/duplicate-flags";
 import type { SheetCell } from "@/lib/google/sheets";
 import {
-	duplicateKey,
 	mapHeaders,
 	parseRow,
 	type ApplicationSheetMapping,

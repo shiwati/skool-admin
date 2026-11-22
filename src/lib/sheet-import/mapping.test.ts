@@ -3,7 +3,6 @@ import { historyFieldLabel } from "@/lib/applicants/detail-labels";
 import {
 	APPLICATION_FIELD_LABELS,
 	APPLICATION_FIELDS,
-	duplicateKey,
 	mapHeaders,
 	parseRow,
 	serialToDate,
@@ -171,17 +170,6 @@ describe("serialToDate", () => {
 		// 2025-07-01 08:30 in Budapest is CEST (UTC+2).
 		expect(serialToDate(45839 + 8.5 / 24, "Europe/Budapest")).toEqual(
 			new Date("2025-07-01T06:30:00Z"),
-		);
-	});
-});
-
-describe("duplicateKey", () => {
-	it("ignores case, accents and extra spaces", () => {
-		expect(duplicateKey(" Kovács", "Anna  Mária", "Anna@Example.com")).toBe(
-			duplicateKey("kovacs", "anna maria", "anna@example.com"),
-		);
-		expect(duplicateKey("Kovács", "Anna", "a@x.hu")).not.toBe(
-			duplicateKey("Kovács", "Anna", "b@x.hu"),
 		);
 	});
 });

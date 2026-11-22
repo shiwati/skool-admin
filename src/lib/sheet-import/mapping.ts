@@ -273,27 +273,6 @@ export function serialToDate(serial: number, timeZone: string): Date {
 	return new Date(wallClock - zoneOffset(first, timeZone));
 }
 
-/**
- * Same person = same name and email, ignoring case, accents and spacing.
- * Only flags candidates; merging is an admin decision.
- */
-export function duplicateKey(
-	lastName: string,
-	firstName: string,
-	email: string,
-): string {
-	return [lastName, firstName, email]
-		.map((part) =>
-			part
-				.normalize("NFD")
-				.replace(/\p{Diacritic}/gu, "")
-				.toLowerCase()
-				.replace(/\s+/g, " ")
-				.trim(),
-		)
-		.join("|");
-}
-
 export type ParsedRow =
 	| {
 			ok: true;
