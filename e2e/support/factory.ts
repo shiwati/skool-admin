@@ -3,6 +3,7 @@ import type {
 	Application,
 	ApplicationStatus,
 	Event,
+	History,
 	Prisma,
 	PrismaClient,
 } from "@prisma/client";
@@ -113,7 +114,12 @@ export function createFactory(db: PrismaClient, token: string) {
 			email: `${tag}@example.com`.toLowerCase(),
 			...overrides,
 		};
-		const first = await applicant({ ...shared, hometown: "Pecs" });
+		// The review dialog shows the older one as "A · korábbi".
+		const first = await applicant({
+			...shared,
+			hometown: "Pecs",
+			createdAt: new Date(Date.now() - 60_000),
+		});
 		const second = await applicant({ ...shared, hometown: "Gyor" });
 		return [
 			await db.applicant.findUniqueOrThrow({ where: { id: first.id } }),
@@ -121,5 +127,21 @@ export function createFactory(db: PrismaClient, token: string) {
 		];
 	}
 
-	return { token, event, applicant, application, duplicatePair };
+	/** Egy korábbi változásnapló-bejegyzés (pl. egy e-mail-cím módosítása). */
+	async function history(
+		data: Pick<
+			Prisma.HistoryUncheckedCreateInput,
+			"tableName" | "recordId" | "fieldName" | "oldValue" | "newValue"
+		>,
+	): Promise<History> {
+		return db.history.create({
+			data: {
+				id: `f-history-${next()}`,
+				createdById: "e2e-admin",
+				...data,
+			},
+		});
+	}
+
+	return { token, event, applicant, application, duplicatePair, history };
 }
