@@ -1,23 +1,26 @@
 import "server-only";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { recomputeDuplicateFlags } from "./duplicate-flags";
+import {
+	APPLICANT_TABLE,
+	applicantHistoryWhere,
+	historyRows,
+} from "@/lib/history/write";
 
 /**
  * GDPR-törlés: a jelentkező személyes adatait visszafordíthatatlanul
  * eltávolítja, a nem azonosító előzményeket (születési év, település,
  * jelentkezések programmal és státusszal) megtartja.
  *
- * History-konvenció: `tableName` az adatbázistábla neve (`@@map`, pl.
- * `applicant`, `application`), `recordId` a rekord id-ja, `fieldName` a
- * Prisma-mezőnév. A History-t író kódnak ugyanezeket az értékeket kell
- * használnia, különben a törlés nem tudja kitisztítani a régi értékeket.
+ * History-konvenció: `tableName` az adatbázistábla neve (`@@map`, a
+ * konstansok: `src/lib/history/write.ts`), `recordId` a rekord id-ja,
+ * `fieldName` a Prisma-mezőnév. A History-t író kódnak ugyanezeket az
+ * értékeket kell használnia, különben a törlés nem tudja kitisztítani a
+ * régi értékeket.
  */
 
 export const DELETED_FIRST_NAME = "Törölt";
 export const DELETED_LAST_NAME = "jelentkező";
-
-export const APPLICANT_TABLE = "applicant";
-export const APPLICATION_TABLE = "application";
 
 /** Az anonimizált jelentkezőre írt mezők (az időbélyegek és a végző nélkül). */
 export const anonymizedApplicantData = {
@@ -117,32 +120,22 @@ export async function anonymizeApplicants(
 		}
 
 		await tx.history.updateMany({
-			where: {
-				OR: [
-					{ tableName: APPLICANT_TABLE, recordId: { in: targets } },
-					...(applicationIds.length > 0
-						? [
-								{
-									tableName: APPLICATION_TABLE,
-									recordId: { in: applicationIds },
-								},
-							]
-						: []),
-				],
-			},
+			where: applicantHistoryWhere(targets, applicationIds),
 			data: { oldValue: null, newValue: null },
 		});
 
 		await tx.history.createMany({
-			data: targets.map((recordId) => ({
-				tableName: APPLICANT_TABLE,
-				fieldName: "deletedAt",
-				recordId,
-				oldValue: null,
-				newValue: null,
-				createdById: actorUserId,
-				createdAt: now,
-			})),
+			data: historyRows(
+				APPLICANT_TABLE,
+				actorUserId,
+				targets.map((recordId) => ({
+					recordId,
+					fieldName: "deletedAt",
+					oldValue: null,
+					newValue: null,
+				})),
+				now,
+			),
 		});
 
 		return { deleted: targets.length };

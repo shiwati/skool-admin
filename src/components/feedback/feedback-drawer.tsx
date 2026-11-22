@@ -11,7 +11,6 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Dialog as DialogPrimitive } from "radix-ui";
-import { EMPTY, formatDateTime } from "@/lib/applicants/format";
 import { formatScore, respondentLabel } from "@/lib/feedback/format";
 import type { FeedbackListItem } from "@/lib/feedback/list";
 import {
@@ -23,6 +22,7 @@ import {
 } from "@/lib/feedback/questions";
 import { cn } from "@/lib/utils";
 import { RecommendBadge } from "./recommend-badge";
+import { EMPTY, formatDateTime } from "@/lib/format";
 
 const iconButton =
 	"flex size-8 items-center justify-center rounded-full border border-border-default hover:bg-surface-subtle aria-disabled:pointer-events-none aria-disabled:opacity-40";

@@ -1,7 +1,7 @@
-import { formatDate } from "@/lib/applicants/format";
 import { toCsv } from "@/lib/csv";
 import { eventPeople } from "./format";
 import { EVENT_STATUS_LABELS, eventStatus } from "./phase";
+import { formatDate } from "@/lib/format";
 
 /** A program exportálásához szükséges mezők (a `GET /api/events` elemének része). */
 export type ExportableEvent = {

@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { isAbortError } from "@/lib/api/client";
-import { formatCount, formatDate } from "@/lib/applicants/format";
 import { downloadCsv } from "@/lib/download";
+import { formatCount, formatDate } from "@/lib/format";
 
 /** `jelentkezok-2026-11-20.csv` */
 export function csvFilename(base: string, now: Date = new Date()): string {

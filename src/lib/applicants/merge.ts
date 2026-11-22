@@ -1,7 +1,7 @@
 import "server-only";
 import type { PrismaClient } from "@prisma/client";
-import { APPLICANT_TABLE } from "./anonymize";
 import { recomputeDuplicateFlags } from "./duplicate-flags";
+import { APPLICANT_TABLE, historyRows } from "@/lib/history/write";
 
 type Db = Pick<PrismaClient, "$transaction">;
 
@@ -52,14 +52,16 @@ export async function mergeApplicants(
 			data: { recordId: primaryId },
 		});
 		await tx.history.createMany({
-			data: merged.map((mergedId) => ({
-				tableName: APPLICANT_TABLE,
-				fieldName: "merged_from",
-				oldValue: mergedId,
-				newValue: primaryId,
-				recordId: primaryId,
-				createdById: actorUserId,
-			})),
+			data: historyRows(
+				APPLICANT_TABLE,
+				actorUserId,
+				merged.map((mergedId) => ({
+					recordId: primaryId,
+					fieldName: "merged_from",
+					oldValue: mergedId,
+					newValue: primaryId,
+				})),
+			),
 		});
 		await tx.applicant.deleteMany({ where: { id: { in: merged } } });
 		await tx.applicant.update({

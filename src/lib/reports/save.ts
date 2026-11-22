@@ -1,6 +1,5 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { EVENT_TABLE } from "@/lib/events/changes";
 import {
 	batchUpdateDocument,
 	copyDriveFile,
@@ -23,6 +22,7 @@ import {
 	replaceRequests,
 	templateValues,
 } from "./template";
+import { EVENT_TABLE, historyRow } from "@/lib/history/write";
 
 /** History `fieldName` a generált dokumentumhoz (`tableName: "event"`). */
 export const REPORT_DOCUMENT_HISTORY_FIELD = "reportDocument";
@@ -131,14 +131,12 @@ export async function generateReportDocument(
 			select: { id: true, title: true, docUrl: true, createdAt: true },
 		});
 		await tx.history.create({
-			data: {
-				tableName: EVENT_TABLE,
+			data: historyRow(EVENT_TABLE, userId, {
 				recordId: eventId,
 				fieldName: REPORT_DOCUMENT_HISTORY_FIELD,
 				oldValue: null,
 				newValue: title,
-				createdById: userId,
-			},
+			}),
 		});
 		return created;
 	});

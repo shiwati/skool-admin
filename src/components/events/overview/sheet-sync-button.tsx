@@ -1,12 +1,7 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { ApiError, apiErrorMessage, apiFetch } from "@/lib/api/client";
-import { formatCount } from "@/lib/applicants/format";
+import { SyncButton } from "@/components/shared/sync-button";
+import { formatCount } from "@/lib/format";
 
 type SyncResult = {
 	created: number;
@@ -15,7 +10,6 @@ type SyncResult = {
 	errors: unknown[];
 };
 
-const SYNC_FAILED = "A szinkronizálás nem sikerült. Próbáld újra.";
 export const SYNC_HINT =
 	"A szinkronizálás beolvassa a Google Sheetet, és felveszi a legutóbbi szinkronizálás óta beérkezett új jelentkezéseket. A sheetben utólag módosított sorok nem frissülnek.";
 
@@ -33,7 +27,6 @@ function syncMessage(result: SyncResult): string {
 	return parts.join(", ");
 }
 
-/** A szerver magyar hibaüzenetét mutatjuk; ismeretlen válasznál általános szöveget. */
 /**
  * A program jelentkezői sheetjének szinkronizálása (`POST /api/events/[id]/sync`).
  * Siker után frissíti a szerveroldali adatokat, és meghívja az `onSynced`-et.
@@ -47,42 +40,15 @@ export function SheetSyncButton({
 	className?: string;
 	onSynced?: () => void;
 }) {
-	const router = useRouter();
-	const [pending, setPending] = useState(false);
-
-	async function sync() {
-		if (pending) return;
-		setPending(true);
-		try {
-			const result = await apiFetch<SyncResult>(
-				`/api/events/${encodeURIComponent(eventId)}/sync`,
-				{ method: "POST" },
-			);
-			toast.success(`Szinkronizálva: ${syncMessage(result)}.`);
-			onSynced?.();
-			router.refresh();
-		} catch (error) {
-			if (error instanceof ApiError && error.status === 401) return;
-			toast.error(apiErrorMessage(error, SYNC_FAILED));
-		} finally {
-			setPending(false);
-		}
-	}
-
 	return (
-		<Button
-			variant="surface"
+		<SyncButton<SyncResult>
+			url={`/api/events/${encodeURIComponent(eventId)}/sync`}
+			successMessage={(result) =>
+				`Szinkronizálva: ${syncMessage(result)}.`
+			}
+			onSynced={onSynced}
 			className={className}
-			disabled={pending}
-			aria-busy={pending || undefined}
 			title={SYNC_HINT}
-			onClick={() => void sync()}
-		>
-			<RefreshCw
-				aria-hidden="true"
-				className={pending ? "animate-spin" : undefined}
-			/>
-			Szinkronizálás most
-		</Button>
+		/>
 	);
 }

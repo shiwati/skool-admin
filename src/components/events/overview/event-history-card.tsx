@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { DetailCard } from "@/components/applicants/detail/detail-card";
-import { EMPTY, formatDateTime } from "@/lib/applicants/format";
 import {
 	eventHistoryFieldLabel,
 	eventHistoryValue,
 } from "@/lib/events/history-labels";
 import type { EventHistoryEntry } from "@/lib/events/overview";
 import { historyHref } from "@/lib/history/href";
+import { EMPTY, formatDateTime } from "@/lib/format";
 
 /** Az utolsó néhány változás, link a teljes naplóra (`/history/[id]`). */
 export function EventHistoryCard({

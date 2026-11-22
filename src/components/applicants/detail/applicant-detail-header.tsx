@@ -2,13 +2,13 @@ import type { ReactNode } from "react";
 import {
 	ALUMNI_LABEL,
 	applicantInitials,
-	formatDateTime,
 	fullName,
 	TAG_BADGE_CLASSES,
 } from "@/lib/applicants/format";
 import type { ApplicantDetail } from "@/lib/applicants/detail";
 import { applicantTags } from "./applicant-tags";
 import { Pill } from "./detail-card";
+import { formatDateTime } from "@/lib/format";
 
 export function ApplicantDetailHeader({
 	applicant,

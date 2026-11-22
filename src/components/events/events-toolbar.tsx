@@ -1,10 +1,8 @@
 "use client";
 
-import {
-	SearchField,
-	TextChip,
-} from "@/components/applicants/applicants-toolbar";
-import { YearChip } from "@/components/applicants/year-chip";
+import { SearchField } from "@/components/list/search-field";
+import { TextChip } from "@/components/list/text-chip";
+import { YearChip } from "@/components/list/year-chip";
 import { Button } from "@/components/ui/button";
 import {
 	hasActiveEventFilters,

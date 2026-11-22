@@ -3,11 +3,10 @@ import {
 	demandRatio,
 	eventPeople,
 	formatAgeRange,
-	formatShortDateRange,
-	formatRatio,
 	ratioBadgeClass,
 	ratioBarClass,
 } from "./format";
+import { formatRatio, formatShortDateRange } from "@/lib/format";
 
 describe("formatAgeRange", () => {
 	it("writes the range with years", () => {

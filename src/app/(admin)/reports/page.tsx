@@ -3,7 +3,6 @@ import Link from "next/link";
 import { PageHeader } from "@/components/admin-shell/page-header";
 import { PageShell } from "@/components/admin-shell/page-shell";
 import { ReportsFilter } from "@/components/reports/reports-filter";
-import { formatCount } from "@/lib/applicants/format";
 import {
 	filterReports,
 	listReports,
@@ -11,6 +10,7 @@ import {
 	type ReportTab,
 } from "@/lib/reports/list";
 import { cn } from "@/lib/utils";
+import { formatCount } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Riportok" };
 

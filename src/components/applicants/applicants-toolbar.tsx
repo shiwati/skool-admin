@@ -1,13 +1,7 @@
 "use client";
 
-import { Search, SlidersHorizontal } from "lucide-react";
-import {
-	useEffect,
-	useEffectEvent,
-	useId,
-	useState,
-	type ReactNode,
-} from "react";
+import { SlidersHorizontal } from "lucide-react";
+import { useId, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -26,10 +20,10 @@ import {
 	type ListFilters,
 } from "@/lib/applicants/list-params";
 import type { EventOption } from "@/lib/applicants/types";
-import { BooleanOptions, FilterChip } from "./filter-chip";
-import { YearChip } from "./year-chip";
-
-export const SEARCH_DEBOUNCE_MS = 300;
+import { BooleanOptions, FilterChip } from "@/components/list/filter-chip";
+import { SearchField } from "@/components/list/search-field";
+import { TextChip } from "@/components/list/text-chip";
+import { YearChip } from "@/components/list/year-chip";
 
 type Props = {
 	filters: ListFilters;
@@ -211,55 +205,6 @@ function FilterChips({
 	);
 }
 
-export function SearchField({
-	value,
-	onSearch,
-	label = "Keresés a listában",
-	placeholder = "Keresés a listában…",
-}: {
-	value: string;
-	onSearch: (q: string | undefined) => void;
-	label?: string;
-	placeholder?: string;
-}) {
-	const [draft, setDraft] = useState(value);
-	// The last query this field sent, so its own echo from the URL does not
-	// overwrite what the user kept typing in the meantime.
-	const [sent, setSent] = useState<string | null>(null);
-	const [seenValue, setSeenValue] = useState(value);
-
-	// External change (e.g. "Szűrők törlése"): adopt it during render.
-	if (value !== seenValue) {
-		setSeenValue(value);
-		if (value !== sent) setDraft(value);
-	}
-
-	const emit = useEffectEvent((q: string) => {
-		if (q === value) return;
-		setSent(q);
-		onSearch(q || undefined);
-	});
-
-	useEffect(() => {
-		const timer = setTimeout(() => emit(draft.trim()), SEARCH_DEBOUNCE_MS);
-		return () => clearTimeout(timer);
-	}, [draft]);
-
-	return (
-		<label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-border-strong bg-white px-3 text-text-tertiary md:h-8 md:w-64 md:flex-none">
-			<Search aria-hidden="true" className="size-4" />
-			<input
-				type="search"
-				aria-label={label}
-				placeholder={placeholder}
-				value={draft}
-				onChange={(e) => setDraft(e.target.value)}
-				className="min-w-0 flex-1 bg-transparent text-sm text-text-primary md:text-xs"
-			/>
-		</label>
-	);
-}
-
 function ProgramChip({
 	events,
 	selected,
@@ -415,55 +360,6 @@ function RangeChip({
 						{error}
 					</p>
 				)}
-				<Button type="submit" size="sm" className="self-end">
-					Alkalmaz
-				</Button>
-			</form>
-		</FilterChip>
-	);
-}
-
-export function TextChip({
-	label,
-	value,
-	placeholder,
-	onChange,
-}: {
-	label: string;
-	value?: string;
-	placeholder: string;
-	onChange: (value: string | undefined) => void;
-}) {
-	const [open, setOpen] = useState(false);
-	const [draft, setDraft] = useState(value ?? "");
-
-	return (
-		<FilterChip
-			label={label}
-			value={value}
-			open={open}
-			onOpenChange={(next) => {
-				setOpen(next);
-				if (next) setDraft(value ?? "");
-			}}
-			onClear={() => onChange(undefined)}
-		>
-			<form
-				className="flex flex-col gap-3"
-				onSubmit={(e) => {
-					e.preventDefault();
-					onChange(draft.trim() || undefined);
-					setOpen(false);
-				}}
-			>
-				<label className="flex flex-col gap-1 text-xs font-medium">
-					{label}
-					<Input
-						value={draft}
-						placeholder={placeholder}
-						onChange={(e) => setDraft(e.target.value)}
-					/>
-				</label>
 				<Button type="submit" size="sm" className="self-end">
 					Alkalmaz
 				</Button>

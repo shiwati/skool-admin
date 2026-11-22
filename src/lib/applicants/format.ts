@@ -1,12 +1,10 @@
+import { EMPTY, formatCount } from "@/lib/format";
 import { initials } from "@/lib/initials";
 import type {
 	ApplicantApplication,
 	ApplicantListItem,
 	ApplicationStatus,
 } from "./types";
-
-/** Hiányzó érték jelölése a táblában. */
-export const EMPTY = "—";
 
 export function fullName(a: Pick<ApplicantListItem, "firstName" | "lastName">) {
 	return `${a.lastName} ${a.firstName}`.trim();
@@ -51,47 +49,6 @@ export function historyLabel(applications: ApplicantApplication[]): string {
 	return count > 0 ? `${count} program` : EMPTY;
 }
 
-const dateParts = new Intl.DateTimeFormat("en-CA", {
-	timeZone: "Europe/Budapest",
-	year: "numeric",
-	month: "2-digit",
-	day: "2-digit",
-});
-
-const timeParts = new Intl.DateTimeFormat("en-GB", {
-	timeZone: "Europe/Budapest",
-	hour: "2-digit",
-	minute: "2-digit",
-	hourCycle: "h23",
-});
-
-function toDate(value: Date | string): Date | null {
-	const date = value instanceof Date ? value : new Date(value);
-	return Number.isNaN(date.getTime()) ? null : date;
-}
-
-/** `ÉÉÉÉ.HH.NN` budapesti idő szerint. */
-export function formatDate(value: Date | string): string {
-	const date = toDate(value);
-	if (!date) return EMPTY;
-	return dateParts.format(date).replaceAll("-", ".");
-}
-
-/** `ÉÉÉÉ.HH.NN ÓÓ:PP` budapesti idő szerint. */
-export function formatDateTime(value: Date | string): string {
-	const date = toDate(value);
-	if (!date) return EMPTY;
-	return `${formatDate(date)} ${timeParts.format(date)}`;
-}
-
-/** `ÉÉÉÉ.HH.NN – ÉÉÉÉ.HH.NN` budapesti idő szerint. */
-export function formatDateRange(
-	from: Date | string,
-	to: Date | string,
-): string {
-	return `${formatDate(from)} – ${formatDate(to)}`;
-}
-
 /** Automatikus/jelölő címkék (16+, Hírlevél, Veterán) színei – egy helyen, minden felület ezt használja. */
 export const TAG_BADGE_CLASSES = {
 	over16: "bg-info-bg text-info-fg",
@@ -124,13 +81,6 @@ export function programsSummary(
 ): string {
 	const done = applications.filter((a) => a.status === "ATTENDED").length;
 	return `${formatCount(applications.length)} jelentkezés · ${formatCount(done)} elvégzett`;
-}
-
-const countFormat = new Intl.NumberFormat("hu-HU", { useGrouping: "always" });
-
-/** Magyar ezres tagolás nem törő szóközzel: 1248 → "1 248". */
-export function formatCount(value: number): string {
-	return countFormat.format(value);
 }
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {

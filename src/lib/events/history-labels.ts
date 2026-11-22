@@ -1,6 +1,6 @@
-import { formatDateTime } from "@/lib/applicants/format";
 import type { TrackedEventField } from "./changes";
 import { formatAgeRange } from "./format";
+import { formatDateTime } from "@/lib/format";
 
 /**
  * A program változástörténetének feliratai. Kliensről is importálható

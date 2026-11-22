@@ -3,12 +3,12 @@ import type { ColumnId } from "./column-settings";
 import {
 	ageFromBirthYear,
 	attendedCount,
-	formatDate,
 	latestApplication,
 	parentLabel,
 	STATUS_LABELS,
 } from "./format";
 import type { ApplicantListItem } from "./types";
+import { formatDate } from "@/lib/format";
 
 type ExportColumn = {
 	header: string;

@@ -1,7 +1,5 @@
 import type { Event } from "@prisma/client";
 
-export const EVENT_TABLE = "event";
-
 export const TRACKED_EVENT_FIELDS = [
 	"name",
 	"from",

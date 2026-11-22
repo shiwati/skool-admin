@@ -15,7 +15,6 @@ import { Pager } from "@/components/shared/pager";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
 	ageFromBirthYear,
-	EMPTY,
 	fullName,
 	isOver16,
 	TAG_BADGE_CLASSES,
@@ -26,6 +25,7 @@ import type { PageSize, SortOrder } from "@/lib/list-state";
 import { openRowHref } from "@/lib/row-nav";
 import { cn } from "@/lib/utils";
 import { StatusCell } from "./status-cell";
+import { EMPTY } from "@/lib/format";
 
 export type ApplicationsData = ListData<EventApplicationItem>;
 

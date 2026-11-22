@@ -2,11 +2,11 @@ import {
 	historyFieldLabel,
 	historyValue,
 } from "@/lib/applicants/detail-labels";
-import { EMPTY } from "@/lib/applicants/format";
 import {
 	eventHistoryFieldLabel,
 	eventHistoryValue,
 } from "@/lib/events/history-labels";
+import { EMPTY } from "@/lib/format";
 
 /** Jelentkező vagy program változása: a feliratok ettől függenek. */
 export type HistoryKind = "applicant" | "event";

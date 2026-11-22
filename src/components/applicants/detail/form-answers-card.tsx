@@ -1,7 +1,7 @@
 import { FORM_ANSWER_FIELDS } from "@/lib/applicants/detail-labels";
 import type { ApplicantDetailApplication } from "@/lib/applicants/detail";
-import { formatDateTime } from "@/lib/applicants/format";
 import { DetailCard } from "./detail-card";
+import { formatDateTime } from "@/lib/format";
 
 /** A megválaszolt kérdések; a „Részt vettél már…” csak igen esetén. */
 export function answeredQuestions(application: ApplicantDetailApplication) {

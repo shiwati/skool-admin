@@ -99,7 +99,7 @@ describe("getHistoryEntries", () => {
 		const entries = await getHistoryEntries(subject, 5);
 		expect(historyFindMany.mock.calls[0][0].where).toEqual({
 			OR: [
-				{ tableName: "applicant", recordId: "a1" },
+				{ tableName: "applicant", recordId: { in: ["a1"] } },
 				{ tableName: "application", recordId: { in: ["app1"] } },
 			],
 		});

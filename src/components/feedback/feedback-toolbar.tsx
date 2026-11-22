@@ -3,7 +3,7 @@
 import { Search } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { FilterChip } from "@/components/applicants/filter-chip";
+import { FilterChip } from "@/components/list/filter-chip";
 import { feedbackSearch, type FeedbackUrlState } from "@/lib/feedback/format";
 import { ROLE_LABELS, type FeedbackRoleKey } from "@/lib/feedback/questions";
 

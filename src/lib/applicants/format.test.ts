@@ -4,10 +4,6 @@ import {
 	applicantInitials,
 	attendedCount,
 	buildEmailList,
-	formatCount,
-	formatDate,
-	formatDateRange,
-	formatDateTime,
 	fullName,
 	historyLabel,
 	isAlumni,
@@ -20,6 +16,12 @@ import {
 	STATUS_LABELS,
 } from "./format";
 import type { ApplicantApplication, ApplicantListItem } from "./types";
+import {
+	formatCount,
+	formatDate,
+	formatDateRange,
+	formatDateTime,
+} from "@/lib/format";
 
 const app = (
 	id: string,

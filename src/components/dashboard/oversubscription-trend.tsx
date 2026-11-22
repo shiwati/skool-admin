@@ -13,9 +13,9 @@ import {
 import { Info } from "lucide-react";
 import { ChartContainer } from "@/components/charts/chart-container";
 import { Card } from "@/components/ui/card";
-import { formatCount } from "@/lib/applicants/format";
-import { formatRatio, type MonthlyRatio } from "@/lib/dashboard/compute";
+import { type MonthlyRatio } from "@/lib/dashboard/compute";
 import { SectionHeader } from "./kpi-card";
+import { formatCount, formatRatio } from "@/lib/format";
 
 const SKY = "#a6c7e7";
 const INK = "#0f0f0f";

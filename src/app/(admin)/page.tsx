@@ -8,9 +8,7 @@ import { KpiCard, KpiGrid } from "@/components/dashboard/kpi-card";
 import { OversubscriptionTrend } from "@/components/dashboard/oversubscription-trend";
 import { SatisfactionCard } from "@/components/dashboard/satisfaction-card";
 import type { Tone } from "@/components/dashboard/stat-badge";
-import { formatCount } from "@/lib/applicants/format";
 import {
-	formatRatio,
 	formatScore,
 	formatSignedDecimal,
 	formatSignedPercent,
@@ -19,6 +17,7 @@ import {
 } from "@/lib/dashboard/compute";
 import { loadDashboard, type DashboardData } from "@/lib/dashboard/load";
 import { requireAdmin } from "@/lib/session";
+import { formatCount, formatRatio } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Áttekintés" };
 export const dynamic = "force-dynamic";

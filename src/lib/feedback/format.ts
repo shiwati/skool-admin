@@ -1,7 +1,7 @@
 /** Visszajelzések megjelenítése (kliensről és szerverről is importálható). */
-import { EMPTY } from "@/lib/applicants/format";
 import type { Answers } from "./parse";
 import { ROLE_LABELS, type FeedbackRoleKey } from "./questions";
+import { EMPTY } from "@/lib/format";
 
 const decimal = new Intl.NumberFormat("hu-HU", {
 	minimumFractionDigits: 1,

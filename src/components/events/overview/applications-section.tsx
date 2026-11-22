@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePagedQuery } from "@/hooks/use-paged-query";
 import { ApiError, apiFetch, jsonInit } from "@/lib/api/client";
-import { formatCount, STATUS_LABELS } from "@/lib/applicants/format";
+import { STATUS_LABELS } from "@/lib/applicants/format";
 import type { ApplicationStatus } from "@/lib/applicants/types";
 import {
 	acceptedAfter,
@@ -40,6 +40,7 @@ import { ApplicationsTable, type ApplicationsData } from "./applications-table";
 import { BulkStatusBar } from "./bulk-status-bar";
 import { SheetSyncButton } from "./sheet-sync-button";
 import { StatusFilterChips } from "./status-filter-chips";
+import { formatCount } from "@/lib/format";
 
 const SORT_LABELS: Record<ApplicationsView["sort"], string> = {
 	receivedAt: "jelentkezés ideje",

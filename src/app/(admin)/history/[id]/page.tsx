@@ -7,9 +7,9 @@ import {
 	HistoryChangeSummary,
 } from "@/components/history/history-change";
 import { PageShell } from "@/components/admin-shell/page-shell";
-import { formatCount, programColorClass } from "@/lib/applicants/format";
+import { programColorClass } from "@/lib/applicants/format";
 import { eventHref } from "@/lib/events/links";
-import { formatTime, groupByDay } from "@/lib/history/group";
+import { groupByDay } from "@/lib/history/group";
 import {
 	getHistoryEntries,
 	getHistorySubject,
@@ -19,6 +19,7 @@ import {
 import { initials } from "@/lib/initials";
 import { requireAdmin } from "@/lib/session";
 import { cn } from "@/lib/utils";
+import { formatCount, formatTime } from "@/lib/format";
 
 type Props = { params: Promise<{ id: string }> };
 

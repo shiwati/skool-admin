@@ -7,7 +7,7 @@
 
 import type { ApplicationStatus } from "@/lib/applicants/types";
 
-const TIME_ZONE = "Europe/Budapest";
+import { formatDecimal, TIME_ZONE } from "@/lib/format";
 
 export type StatusBreakdown = Partial<Record<ApplicationStatus, number>>;
 
@@ -280,21 +280,11 @@ export function hometownDistribution(
 	return rows;
 }
 
-const ratioFormat = new Intl.NumberFormat("hu-HU", {
-	minimumFractionDigits: 1,
-	maximumFractionDigits: 1,
-});
-
-/** 2.43 → "2,4×" */
-export function formatRatio(ratio: number): string {
-	return `${ratioFormat.format(ratio)}×`;
-}
-
 /** Előjeles szám egy tizedesre: 0.3 → "+0,3", −0.3 → "−0,3". */
 export function formatSignedDecimal(value: number): string {
 	const rounded = Math.round(value * 10) / 10;
 	const sign = rounded > 0 ? "+" : rounded < 0 ? "−" : "±";
-	return `${sign}${ratioFormat.format(Math.abs(rounded))}`;
+	return `${sign}${formatDecimal(Math.abs(rounded))}`;
 }
 
 /** Előjeles egész százalék: 18.2 → "+18%". */
@@ -409,7 +399,7 @@ export function programSatisfaction(
 
 /** 4.63 → "4,6" */
 export function formatScore(score: number): string {
-	return ratioFormat.format(score);
+	return formatDecimal(score);
 }
 
 /** Egész százalék a teljeshez képest (0, ha nincs teljes). */

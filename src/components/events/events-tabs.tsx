@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { formatCount } from "@/lib/applicants/format";
 import type { PhaseCounts } from "@/lib/events/list";
 import { EVENT_TABS, type EventTab } from "@/lib/events/list-params";
 import { PHASE_LABELS } from "@/lib/events/phase";
 import { cn } from "@/lib/utils";
+import { formatCount } from "@/lib/format";
 
 export const EVENTS_TABLE_ID = "events-table";
 

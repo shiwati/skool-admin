@@ -1,7 +1,5 @@
 import Link from "next/link";
 import {
-	formatDate,
-	formatDateRange,
 	programColorClass,
 	programsSummary,
 	STATUS_BADGE_CLASSES,
@@ -10,6 +8,7 @@ import {
 import type { ApplicantDetailApplication } from "@/lib/applicants/detail";
 import { cn } from "@/lib/utils";
 import { Pill } from "./detail-card";
+import { formatDate, formatDateRange } from "@/lib/format";
 
 const TH =
 	"px-4 py-2.5 font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase";

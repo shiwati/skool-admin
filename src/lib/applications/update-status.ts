@@ -1,6 +1,6 @@
 import "server-only";
 import type { ApplicationStatus, PrismaClient } from "@prisma/client";
-import { APPLICATION_TABLE } from "@/lib/applicants/anonymize";
+import { APPLICATION_TABLE, historyRows } from "@/lib/history/write";
 
 export class ApplicationsNotFoundError extends Error {
 	constructor() {
@@ -45,15 +45,17 @@ export async function updateApplicationStatuses(
 		});
 
 		await tx.history.createMany({
-			data: changing.map((a) => ({
-				tableName: APPLICATION_TABLE,
-				fieldName: "status",
-				recordId: a.id,
-				oldValue: a.status,
-				newValue: status,
-				createdById: actorUserId,
-				createdAt: now,
-			})),
+			data: historyRows(
+				APPLICATION_TABLE,
+				actorUserId,
+				changing.map((a) => ({
+					recordId: a.id,
+					fieldName: "status",
+					oldValue: a.status,
+					newValue: status,
+				})),
+				now,
+			),
 		});
 
 		return {

@@ -1,10 +1,13 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { cache } from "react";
-import { APPLICANT_TABLE, APPLICATION_TABLE } from "@/lib/applicants/anonymize";
 import { fullName } from "@/lib/applicants/format";
 import { db } from "@/lib/db";
-import { EVENT_TABLE } from "@/lib/events/changes";
+import {
+	APPLICATION_TABLE,
+	applicantHistoryWhere,
+	EVENT_TABLE,
+} from "@/lib/history/write";
 
 /** Ennyi bejegyzés jelenik meg a jelentkező adatlapjának kártyáján. */
 export const HISTORY_PREVIEW_LIMIT = 5;
@@ -77,20 +80,10 @@ function subjectFilter(subject: HistorySubject): Prisma.HistoryWhereInput {
 	if (subject.kind === "event")
 		return { tableName: EVENT_TABLE, recordId: subject.id };
 
-	const applicationIds = subject.applications.map((a) => a.id);
-	return {
-		OR: [
-			{ tableName: APPLICANT_TABLE, recordId: subject.id },
-			...(applicationIds.length > 0
-				? [
-						{
-							tableName: APPLICATION_TABLE,
-							recordId: { in: applicationIds },
-						},
-					]
-				: []),
-		],
-	};
+	return applicantHistoryWhere(
+		[subject.id],
+		subject.applications.map((a) => a.id),
+	);
 }
 
 /**
