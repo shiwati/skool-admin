@@ -1,6 +1,6 @@
 "use client";
 
-import { History } from "lucide-react";
+import { History, Info } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,10 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch, isAbortError, jsonInit } from "@/lib/api/client";
-import { comparisonRows } from "@/lib/applicants/duplicate-comparison";
+import {
+	comparisonRows,
+	mergedPrograms,
+} from "@/lib/applicants/duplicate-comparison";
 import {
 	fullName,
 	STATUS_BADGE_CLASSES,
@@ -302,6 +305,33 @@ export function DuplicateReviewDialog({
 								description="Pl. testvérek ugyanazzal a szülői e-mail címmel. Ez a pár nem jelenik meg újra; egy később érkező, azonos jelentkező viszont igen."
 							/>
 						</fieldset>
+						{decision === "merge" && (
+							<div
+								role="note"
+								aria-label="Mi történik összevonáskor?"
+								className="flex gap-2 rounded-xl bg-info-bg px-4 py-3 text-xs text-info-fg"
+							>
+								<Info
+									aria-hidden="true"
+									className="mt-0.5 size-4 shrink-0"
+								/>
+								<div className="flex flex-col gap-1">
+									<p className="font-semibold">
+										Mi történik összevonáskor?
+									</p>
+									<p>
+										Csak a jelentkező személyes adatai közül
+										marad meg a kiválasztott adatlapé (név,
+										elérhetőségek, iskola, szülői adatok). A
+										két jelentkező minden jelentkezése –
+										program, státusz, beküldés ideje és az
+										űrlap válaszai – változatlanul megmarad,
+										és a megmaradó adatlaphoz kerül. Semmi
+										sem cserélődik le.
+									</p>
+								</div>
+							</div>
+						)}
 						{decision === "merge" && !primary && (
 							<p className="text-xs text-warning-fg">
 								Válaszd ki a táblázat fejlécében, melyik adatlap
@@ -369,6 +399,14 @@ export function DuplicateReviewDialog({
 								</tbody>
 							</table>
 						</div>
+						{decision === "merge" && (
+							<p className="text-xs text-text-secondary">
+								<span className="font-medium text-text-primary">
+									Összevonás után:
+								</span>{" "}
+								{mergedPrograms(pair.a, pair.b)}
+							</p>
+						)}
 						<div className="flex items-center gap-2 text-xs text-text-secondary">
 							<span
 								aria-hidden="true"

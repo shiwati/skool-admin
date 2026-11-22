@@ -22,12 +22,32 @@ const text = (value: string | number | null | undefined) =>
 const parentName = (x: DuplicateApplicant) =>
 	text(`${x.parentLastName ?? ""} ${x.parentFirstName ?? ""}`.trim());
 
-const programs = (x: DuplicateApplicant) =>
+type PairApplication = DuplicateApplicant["applications"][number];
+
+const programList = (applications: readonly PairApplication[]) =>
 	text(
-		x.applications
+		applications
 			.map((app) => `${app.event.name} (${STATUS_LABELS[app.status]})`)
 			.join(", "),
 	);
+
+const programs = (x: DuplicateApplicant) => programList(x.applications);
+
+/**
+ * Összevonás után a megmaradó jelentkező programjai: mindkét jelentkező
+ * összes jelentkezése, változatlanul (programmal és státusszal), a
+ * legfrissebb elöl. Az összevonás egyiket sem cseréli le.
+ */
+export function mergedPrograms(
+	a: DuplicateApplicant,
+	b: DuplicateApplicant,
+): string {
+	return programList(
+		[...a.applications, ...b.applications].toSorted((x, y) =>
+			y.receivedAt.localeCompare(x.receivedAt),
+		),
+	);
+}
 
 const submitted = (x: DuplicateApplicant) =>
 	x.applications[0] ? formatDateTime(x.applications[0].receivedAt) : EMPTY;

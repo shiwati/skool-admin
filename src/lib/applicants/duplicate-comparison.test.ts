@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { comparisonRows } from "./duplicate-comparison";
+import { comparisonRows, mergedPrograms } from "./duplicate-comparison";
 import type { DuplicateApplicant } from "./types";
 
 const base: DuplicateApplicant = {
@@ -45,5 +45,31 @@ describe("comparisonRows", () => {
 		expect(byLabel["Település"]).toMatchObject({ a: "—", differs: false });
 		expect(byLabel["Programok"].a).toBe("Robotika tábor (Elfogadva)");
 		expect(byLabel["Szülő neve"].a).toBe("Kiss Ádám");
+	});
+});
+
+describe("mergedPrograms", () => {
+	it("lists every application of both applicants, newest first", () => {
+		const other: DuplicateApplicant = {
+			...base,
+			id: "b",
+			applications: [
+				{
+					id: "app2",
+					receivedAt: "2026-11-01T10:00:00.000Z",
+					status: "APPLIED",
+					event: { id: "e2", name: "Python alapok – ősz" },
+				},
+				{
+					id: "app3",
+					receivedAt: "2025-07-01T10:00:00.000Z",
+					status: "ATTENDED",
+					event: { id: "e1", name: "Robotika tábor" },
+				},
+			],
+		};
+		expect(mergedPrograms(base, other)).toBe(
+			"Python alapok – ősz (Új jelentkező), Robotika tábor (Elfogadva), Robotika tábor (Részt vett)",
+		);
 	});
 });

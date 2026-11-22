@@ -61,6 +61,22 @@ The review dialog SHALL show one pair at a time: both applicants' fields side by
 - **WHEN** the admin clicks "Kihagyás most"
 - **THEN** the next undecided pair is shown and nothing is saved
 
+### Requirement: Merge choice explains that applications are combined
+
+While "Duplikáció – összevonás" is selected, the review dialog SHALL show a note "Mi történik összevonáskor?" stating that only the personal data comes from the kept applicant, and that every application of both applicants is kept unchanged and moves to the kept one. Below the comparison it SHALL show "Összevonás után:" with every application of both applicants as "program (státusz)", newest first.
+
+#### Scenario: Merge explains that applications are combined
+
+- **GIVEN** applicant A applied to "Python alapok – ősz" (Elfogadva) and B to "Robotika tábor" (Részt vett)
+- **WHEN** the admin selects "Duplikáció – összevonás"
+- **THEN** the note "Mi történik összevonáskor?" reads "Csak a jelentkező személyes adatai közül marad meg a kiválasztott adatlapé (név, elérhetőségek, iskola, szülői adatok). A két jelentkező minden jelentkezése – program, státusz, beküldés ideje és az űrlap válaszai – változatlanul megmarad, és a megmaradó adatlaphoz kerül. Semmi sem cserélődik le."
+- **AND** "Összevonás után: Python alapok – ősz (Elfogadva), Robotika tábor (Részt vett)" is shown
+
+#### Scenario: No merge note when kept apart
+
+- **WHEN** the admin selects "Nem duplikáció – mindkét jelentkező megmarad"
+- **THEN** neither the note nor the "Összevonás után" line is shown
+
 ### Requirement: Merging duplicates into one applicant
 
 `POST /api/applicants/merge` with `{ primaryId, mergeIds }` (1–50 unique ids, `primaryId` not among them) SHALL move every application of the merged applicants, unchanged, to the kept applicant and then permanently delete the merged applicants, so they count as one applicant everywhere. The kept applicant's personal data SHALL be kept as is.
