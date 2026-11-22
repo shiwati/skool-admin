@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { NO_INDEX_HEADER } from "./src/lib/no-index";
 
 /**
  * Security headers on every response. The CSP is deliberately limited to
@@ -21,6 +22,7 @@ const securityHeaders = [
 		key: "Content-Security-Policy",
 		value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
 	},
+	NO_INDEX_HEADER,
 ];
 
 const nextConfig: NextConfig = {
