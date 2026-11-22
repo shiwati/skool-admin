@@ -10,6 +10,7 @@ import {
 	orderSchema,
 	pageResult,
 	paginationSchema,
+	searchParamsToObject,
 	searchTokens,
 } from "@/lib/api/query";
 import type { InitialApplications } from "./applications";
@@ -118,7 +119,7 @@ export async function loadEventApplicationsPage(
 ): Promise<InitialApplications> {
 	const apiQuery = toApplicationsApiQuery(view);
 	const parsed = eventApplicationsQuerySchema.parse(
-		Object.fromEntries(apiQuery),
+		searchParamsToObject(apiQuery),
 	);
 	const page = await listEventApplications(eventId, parsed);
 	const data = {

@@ -1,13 +1,20 @@
 import { z } from "zod";
+import {
+	apiSort,
+	parseOrder,
+	parsePage,
+	parsePageSize,
+	withPageReset,
+	type ApiSortMap,
+	type PageSize,
+	type SortOrder,
+} from "@/lib/list-state";
 
 /**
  * A Jelentkezők lista állapota és annak leképezése az URL-re és a
  * `GET /api/applicants` query-re. Tiszta modul: a kliens és a teszt is
  * használja.
  */
-
-export const PAGE_SIZES = [10, 25, 50, 100] as const;
-export type PageSize = (typeof PAGE_SIZES)[number];
 
 export const SORT_KEYS = [
 	"name",
@@ -17,7 +24,6 @@ export const SORT_KEYS = [
 	"createdAt",
 ] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
-export type SortOrder = "asc" | "desc";
 
 export type ListFilters = {
 	q?: string;
@@ -48,7 +54,7 @@ export const DEFAULT_STATE: ListState = {
 };
 
 /** UI-oszlop → API `sort`. Az életkor fordítva rendez: fiatalabb = nagyobb születési év. */
-const API_SORT: Record<SortKey, { key: string; invert: boolean }> = {
+const API_SORT: ApiSortMap<SortKey> = {
 	name: { key: "lastName", invert: false },
 	age: { key: "birthYear", invert: true },
 	location: { key: "hometown", invert: false },
@@ -130,25 +136,13 @@ export function parseListState(params: URLSearchParams): ListState {
 	}
 
 	const sort = z.enum(SORT_KEYS).catch(DEFAULT_STATE.sort).parse(get("sort"));
-	const order = z
-		.enum(["asc", "desc"])
-		.catch(
-			// Explicit sort without order: dates newest first, the rest A→Z.
-			sort === "createdAt" ? "desc" : "asc",
-		)
-		.parse(get("order"));
-	const pageSize = z.coerce
-		.number()
-		.pipe(z.union(PAGE_SIZES.map((n) => z.literal(n))))
-		.catch(DEFAULT_STATE.pageSize)
-		.parse(get("pageSize")) as PageSize;
-	const page = z.coerce
-		.number()
-		.int()
-		.min(1)
-		.max(100_000)
-		.catch(1)
-		.parse(get("page"));
+	// Explicit sort without order: dates newest first, the rest A→Z.
+	const order = parseOrder(
+		get("order"),
+		sort === "createdAt" ? "desc" : "asc",
+	);
+	const pageSize = parsePageSize(get("pageSize"), DEFAULT_STATE.pageSize);
+	const page = parsePage(get("page"));
 
 	return {
 		q: text.parse(get("q")),
@@ -210,12 +204,9 @@ export function toApiQuery(
 	const params = new URLSearchParams();
 	params.set("page", String(overrides.page ?? state.page));
 	params.set("pageSize", String(overrides.pageSize ?? state.pageSize));
-	const { key, invert } = API_SORT[state.sort];
-	params.set("sort", key);
-	params.set(
-		"order",
-		invert ? (state.order === "asc" ? "desc" : "asc") : state.order,
-	);
+	const sort = apiSort(API_SORT, state.sort, state.order);
+	params.set("sort", sort.sort);
+	params.set("order", sort.order);
 	setFilters(params, state);
 	return params;
 }
@@ -227,10 +218,7 @@ export function updateListState(
 	state: ListState,
 	patch: Partial<ListState>,
 ): ListState {
-	const next = { ...state, ...patch };
-	const onlyPage = Object.keys(patch).every((key) => key === "page");
-	if (!onlyPage) next.page = 1;
-	return next;
+	return withPageReset(state, patch);
 }
 
 export function hasActiveFilters(state: ListFilters): boolean {

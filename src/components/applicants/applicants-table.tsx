@@ -1,27 +1,25 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import type {
-	PageSize,
-	SortKey,
-	SortOrder,
-} from "@/lib/applicants/list-params";
+import type { SortKey } from "@/lib/applicants/list-params";
+import type { PageSize, SortOrder } from "@/lib/list-state";
 import type { ApplicantListItem } from "@/lib/applicants/types";
 import { openRowHref } from "@/lib/row-nav";
 import { cn } from "@/lib/utils";
 import { ApplicantCardList } from "./applicant-card-list";
 import { applicantHref, COLUMNS, type ColumnId } from "./columns";
-import { ListEmptyState, ListErrorState } from "./list-state";
+import { ListEmptyState, ListErrorState } from "@/components/list/list-state";
+import { SortableTh, TH_CLASS } from "@/components/list/sortable-header";
+import {
+	type ListData,
+	SkeletonRows,
+	TableMessageRow,
+} from "@/components/list/table-state-rows";
 import { Pager } from "@/components/shared/pager";
 
-export type TableData =
-	| { status: "loading" }
-	| { status: "error" }
-	| { status: "success"; items: ApplicantListItem[]; total: number };
+export type TableData = ListData<ApplicantListItem>;
 
 type Props = {
 	data: TableData;
@@ -39,16 +37,9 @@ type Props = {
 	onReload: () => void;
 };
 
-const SKELETON_ROWS = 6;
-
-function nextOrder(
-	column: SortKey,
-	sort: SortKey,
-	order: SortOrder,
-): SortOrder {
-	if (column !== sort) return column === "createdAt" ? "desc" : "asc";
-	return order === "asc" ? "desc" : "asc";
-}
+/** Új oszlopra váltáskor: dátum szerint a legújabb elöl, a többi A→Z. */
+const initialOrder = (column: SortKey): SortOrder =>
+	column === "createdAt" ? "desc" : "asc";
 
 export function ApplicantsTable({
 	data,
@@ -102,122 +93,68 @@ export function ApplicantsTable({
 							{columns.map((id) => {
 								const column = COLUMNS[id];
 								const sortKey = column.sortKey;
-								const active =
-									sortKey !== undefined && sortKey === sort;
+								if (sortKey === undefined) {
+									return (
+										<th
+											key={id}
+											scope="col"
+											className={cn(
+												TH_CLASS,
+												column.widthClass,
+											)}
+										>
+											{column.label}
+										</th>
+									);
+								}
 								return (
-									<th
+									<SortableTh
 										key={id}
-										scope="col"
-										className={cn(
-											"px-3 py-2.5 font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase",
-											column.widthClass,
-										)}
-										aria-sort={
-											sortKey === undefined
-												? undefined
-												: active
-													? order === "asc"
-														? "ascending"
-														: "descending"
-													: "none"
+										column={sortKey}
+										label={column.label}
+										ariaLabel={
+											column.subLabel
+												? `${column.label} / ${column.subLabel.toLowerCase()}`
+												: undefined
 										}
+										sort={sort}
+										order={order}
+										initialOrder={initialOrder}
+										onSort={onSort}
+										className={column.widthClass}
+										contentClassName={column.headerClass}
 									>
-										{sortKey ? (
-											<div
-												className={cn(
-													"flex flex-col items-start",
-													column.headerClass,
-												)}
+										{column.subLabel && (
+											<span
+												aria-hidden="true"
+												className="font-normal"
 											>
-												<button
-													type="button"
-													aria-label={
-														column.subLabel
-															? `${column.label} / ${column.subLabel.toLowerCase()}`
-															: undefined
-													}
-													className="inline-flex items-center gap-1 uppercase hover:text-text-primary"
-													onClick={() =>
-														onSort(
-															sortKey,
-															nextOrder(
-																sortKey,
-																sort,
-																order,
-															),
-														)
-													}
-												>
-													{column.label}
-													{active ? (
-														order === "asc" ? (
-															<ArrowUp
-																aria-hidden="true"
-																className="size-3.5"
-															/>
-														) : (
-															<ArrowDown
-																aria-hidden="true"
-																className="size-3.5"
-															/>
-														)
-													) : (
-														<ArrowUpDown
-															aria-hidden="true"
-															className="size-3.5 opacity-50"
-														/>
-													)}
-												</button>
-												{column.subLabel && (
-													<span
-														aria-hidden="true"
-														className="font-normal"
-													>
-														{column.subLabel}
-													</span>
-												)}
-											</div>
-										) : (
-											column.label
+												{column.subLabel}
+											</span>
 										)}
-									</th>
+									</SortableTh>
 								);
 							})}
 						</tr>
 					</thead>
 					<tbody aria-busy={data.status === "loading" || undefined}>
-						{data.status === "loading" &&
-							Array.from({ length: SKELETON_ROWS }, (_, i) => (
-								<tr
-									key={i}
-									className="border-b border-border-default last:border-0"
-									data-testid="skeleton-row"
-								>
-									{columns.map((id) => (
-										<td key={id} className="px-3 py-3">
-											<Skeleton className="h-3.5 w-3/4" />
-										</td>
-									))}
-								</tr>
-							))}
+						{data.status === "loading" && (
+							<SkeletonRows columns={colSpan} />
+						)}
 
 						{data.status === "error" && (
-							<tr>
-								<td colSpan={colSpan} className="px-6 py-12">
-									<ListErrorState onReload={onReload} />
-								</td>
-							</tr>
+							<TableMessageRow colSpan={colSpan}>
+								<ListErrorState onReload={onReload} />
+							</TableMessageRow>
 						)}
 
 						{data.status === "success" && items.length === 0 && (
-							<tr>
-								<td colSpan={colSpan} className="px-6 py-12">
-									<ListEmptyState
-										filtersActive={filtersActive}
-										onClearFilters={onClearFilters}
-									/>
-								</td>
-							</tr>
+							<TableMessageRow colSpan={colSpan}>
+								<ListEmptyState
+									filtersActive={filtersActive}
+									onClearFilters={onClearFilters}
+								/>
+							</TableMessageRow>
 						)}
 
 						{items.map((item) => {

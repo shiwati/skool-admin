@@ -2,7 +2,7 @@
 
 import { Copy } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
 	AlertDialog,
@@ -14,7 +14,8 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { ApiError, apiFetch, isAbortError, jsonInit } from "@/lib/api/client";
+import { usePagedQuery } from "@/hooks/use-paged-query";
+import { ApiError, apiFetch, jsonInit } from "@/lib/api/client";
 import { formatCount, STATUS_LABELS } from "@/lib/applicants/format";
 import type { ApplicationStatus } from "@/lib/applicants/types";
 import {
@@ -59,19 +60,6 @@ function sortDescription({ sort, order }: ApplicationsView) {
 	return `${SORT_LABELS[sort]}, ${direction}`;
 }
 
-type Settled = { key: string; data: ApplicationsData };
-
-function settledFrom(attempt: number, initial: InitialApplications): Settled {
-	return {
-		key: `${attempt}:${initial.apiQuery}`,
-		data: {
-			status: "success",
-			items: initial.data.items,
-			total: initial.data.total,
-		},
-	};
-}
-
 export function ApplicationsSection({
 	eventId,
 	capacity,
@@ -98,18 +86,6 @@ export function ApplicationsSection({
 		() => parseApplicationsParams(new URLSearchParams(searchKey)),
 		[searchKey],
 	);
-	const [attempt, setAttempt] = useState(0);
-	const [settled, setSettled] = useState<Settled | undefined>(() =>
-		initial ? settledFrom(0, initial) : undefined,
-	);
-	// Fresh server data after `router.refresh()`: adopt it during render. If
-	// the server could not load it, fall back to a client request.
-	const [seenInitial, setSeenInitial] = useState(initial);
-	if (initial !== seenInitial) {
-		setSeenInitial(initial);
-		if (initial) setSettled(settledFrom(attempt, initial));
-		else setAttempt((n) => n + 1);
-	}
 	// Selection is tagged with the result it was made on, so any filter, sort
 	// or page change drops it without an effect.
 	const [selection, setSelection] = useState<{
@@ -123,40 +99,21 @@ export function ApplicationsSection({
 		accepted: number;
 	} | null>(null);
 
-	const queryString = toApplicationsApiQuery(view).toString();
-	const requestKey = `${attempt}:${queryString}`;
-
-	useEffect(() => {
-		// Already answered (e.g. by the server-rendered first page).
-		if (settled?.key === requestKey) return;
-		const controller = new AbortController();
-		apiFetch<EventApplicationsPage>(
-			`/api/events/${eventId}/applicants?${queryString}`,
-			{ signal: controller.signal },
-		)
-			.then((page) => {
-				if (controller.signal.aborted) return;
-				setSettled({
-					key: requestKey,
-					data: {
-						status: "success",
-						items: page.items,
-						total: page.total,
-					},
-				});
-			})
-			.catch((error: unknown) => {
-				if (controller.signal.aborted || isAbortError(error)) return;
-				if (error instanceof ApiError && error.status === 401) return;
-				setSettled({ key: requestKey, data: { status: "error" } });
-			});
-		return () => controller.abort();
-		// `settled` is only read to skip a request that is already answered.
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [eventId, queryString, requestKey]);
-
+	const base = `/api/events/${eventId}/applicants?`;
+	// Fresh server data after `router.refresh()` replaces the list; if the
+	// server could not load it, the hook falls back to a client request.
+	const { result, requestKey, reload } = usePagedQuery<EventApplicationsPage>(
+		base + toApplicationsApiQuery(view).toString(),
+		initial && { url: base + initial.apiQuery, data: initial.data },
+	);
 	const data: ApplicationsData =
-		settled?.key === requestKey ? settled.data : { status: "loading" };
+		result.status === "success"
+			? {
+					status: "success",
+					items: result.data.items,
+					total: result.data.total,
+				}
+			: result;
 	const items = data.status === "success" ? data.items : [];
 	const selected =
 		selection.key === requestKey ? selection.ids : new Set<string>();
@@ -321,7 +278,7 @@ export function ApplicationsSection({
 					select(next);
 				}}
 				onClearFilters={() => change({ status: null })}
-				onReload={() => setAttempt((n) => n + 1)}
+				onReload={reload}
 			/>
 			<BulkStatusBar
 				count={selected.size}

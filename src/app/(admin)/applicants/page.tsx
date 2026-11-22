@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PageShell } from "@/components/admin-shell/page-shell";
 import { searchParamsToObject } from "@/lib/api/query";
+import { toURLSearchParams } from "@/lib/list-state";
 import { countDuplicatePairs } from "@/lib/applicants/duplicates";
 import { applicantsQuerySchema, listApplicants } from "@/lib/applicants/list";
 import { parseListState, toApiQuery } from "@/lib/applicants/list-params";
@@ -29,11 +30,9 @@ type Props = {
 async function loadInitial(
 	searchParams: Awaited<Props["searchParams"]>,
 ): Promise<InitialApplicants | undefined> {
-	const params = new URLSearchParams();
-	for (const [key, value] of Object.entries(searchParams)) {
-		for (const v of [value ?? []].flat()) params.append(key, v);
-	}
-	const apiQuery = toApiQuery(parseListState(params));
+	const apiQuery = toApiQuery(
+		parseListState(toURLSearchParams(searchParams)),
+	);
 	const parsed = applicantsQuerySchema.safeParse(
 		searchParamsToObject(apiQuery),
 	);
