@@ -22,6 +22,7 @@ npm run test:e2e:ui                        # interaktív futtató
 ## E2E tesztek (Playwright)
 
 - **Mire valók:** a valódi alkalmazást hajtják Chromiumban. Azt ellenőrzik, amit a jsdom nem tud: layout, töréspontok, görgetés a táblakereten belül, valódi navigáció és URL-állapot. Jelenleg a három lista (Jelentkezők, Programok, a program Jelentkezők füle) viselkedését rögzítik asztali, tablet (820 px) és telefon (390 px) szélességen, regressziós hálóként a táblákat érintő változtatásokhoz.
+- **Hozzáférés (`e2e/access.spec.ts`):** a route-okat a fájlrendszerből gyűjti (`e2e/support/routes.ts`): minden `src/app/api/**/route.ts` minden exportált metódusa session nélkül `401 {"error":"Unauthorized"}`-t ad, átirányítás nélkül (kivétel: `/api/auth/*`, `/api/health`), és minden `(admin)` oldal a `/login?callbackUrl=…` címre visz. Új route vagy oldal így automatikusan bekerül; ha egy új dinamikus szegmens kell, a `PAGE_IDS`-be vedd fel. Az API-hívások nem létező id-t kapnak, hogy egy védelem nélküli route se írjon valós adatba.
 - **Hol:** `e2e/*.spec.ts`; a setup `e2e/auth.setup.ts`, a segédek `e2e/support/`. A Vitest ezeket nem futtatja (csak a `src/**/*.test.{ts,tsx}` glob az övé).
 - **Első alkalommal:** `npx playwright install chromium`, és fusson a lokális Postgres (`npm run services:up`).
 - **Futás:** a `playwright.config.ts` buildeli az appot, és a 3100-as porton indítja (`next start`), így nem ütközik a 3000-es dev szerverrel. Ha a 3100-on már fut egy szerver, újrahasználja.
