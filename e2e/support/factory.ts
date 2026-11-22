@@ -78,6 +78,24 @@ export function createFactory(db: PrismaClient, token: string) {
 		});
 	}
 
+	/**
+	 * Sok jelentkező egyszerre (pl. több oldalas exporthoz), duplikátum-kulcs
+	 * nélkül; mind egyedi nevű.
+	 */
+	async function applicants(count: number): Promise<string[]> {
+		const data = Array.from({ length: count }, () => {
+			const tag = next();
+			return {
+				id: `f-applicant-${tag}`,
+				lastName: `Gyar${tag}`,
+				firstName: "Tomeges",
+				email: `${tag}@example.com`.toLowerCase(),
+			};
+		});
+		await db.applicant.createMany({ data });
+		return data.map((a) => a.id);
+	}
+
 	async function application({
 		applicant,
 		event,
@@ -143,5 +161,13 @@ export function createFactory(db: PrismaClient, token: string) {
 		});
 	}
 
-	return { token, event, applicant, application, duplicatePair, history };
+	return {
+		token,
+		event,
+		applicant,
+		applicants,
+		application,
+		duplicatePair,
+		history,
+	};
 }
