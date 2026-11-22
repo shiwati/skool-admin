@@ -55,6 +55,15 @@ describe("GET /api/events", () => {
 		expect(groupBy).not.toHaveBeenCalled();
 	});
 
+	it("sorts by partner company with programs without one last", async () => {
+		findMany.mockResolvedValue([]);
+		count.mockResolvedValue(0);
+		await call("?sort=companyName&order=desc");
+		expect(findMany.mock.calls[0][0].orderBy[0]).toEqual({
+			companyName: { sort: "desc", nulls: "last" },
+		});
+	});
+
 	it("filters by tags (any match), repeated params only, deduplicated", async () => {
 		findMany.mockResolvedValue([]);
 		count.mockResolvedValue(0);
@@ -78,9 +87,10 @@ describe("GET /api/events", () => {
 		expect(phase).toEqual({ to: { gte: expect.any(Date) } });
 	});
 
-	it("rejects an unknown phase", async () => {
+	it("rejects an unknown phase, including the former `active`", async () => {
 		const res = await call("?phase=draft");
 		expect(res.status).toBe(400);
+		expect((await call("?phase=active")).status).toBe(400);
 		expect(findMany).not.toHaveBeenCalled();
 	});
 
