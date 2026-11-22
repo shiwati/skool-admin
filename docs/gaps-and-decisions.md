@@ -7,7 +7,7 @@
 3. ~~Védelem-minta eltérés (`handleQuery` közvetlenül `getServerSession`-t hívott)~~ **Megoldva (2026-11-21):** a `handleQuery` is `getAdminSession()`-t használ, és nem logolja a kérés query stringjét (keresett név/e-mail).
 4. **README** szándékosan csak a telepítést és az env-et dokumentálja; a végpontok a [api.md](api.md)-ben vannak.
 5. ~~OpenSpec: csak az `admin-auth` spec van meg~~ **Megoldva (2026-11-21):** a 2026-11-21-i audit után minden megvalósított funkciónak van specje (`openspec list --specs`).
-6. ~~Lemaradt specek a listáknál~~ **Megoldva (2026-11-22):** az `applicant-list`, az `event-list` és az `event-overview` (Jelentkezők fül) spec a kódhoz igazítva. Eltérések voltak: a Jelentkezők listáról kivett sorkijelölés és tömeges sáv (`17c6e45`), az új szűrők („Program éve”, „Előzmény” tól–ig), a két fázis („Jövőbeli” / „Múltbeli”, alap fül „Összes”), a „Cég” oszlop és szűrő, a „Betelt” felirat, a sor menüjének szerkesztés és törlés pontja, valamint a soronkénti státuszváltás.
+6. ~~Lemaradt specek a listáknál~~ **Megoldva (2026-11-22):** az `applicant-list`, az `event-list` és az `event-overview` (Jelentkezők fül) spec a kódhoz igazítva. Eltérések voltak: a Jelentkezők listáról kivett sorkijelölés és tömeges sáv (`17c6e45`), az új szűrők („Program éve”, „Előzmény” tól–ig), a két fázis („Jövőbeli” / „Múltbeli”, alap fül „Összes”), a „Cég” oszlop és szűrő, a „Betelt” felirat, a sor menüjének szerkesztés és törlés pontja, valamint a soronkénti státuszváltás. Az `applicant-anonymization` spec belépési pontja is igazítva (2026-11-22): törölni csak az adatlap „Profil törlése” gombjával lehet.
 
 ## Nyitott kérdések (az igények ismeretében eldöntendők)
 

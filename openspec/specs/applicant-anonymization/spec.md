@@ -8,33 +8,22 @@ Deletes applicants in a GDPR-compliant way: their personal data is irreversibly 
 
 ### Requirement: Deletion entry points
 
-Admins SHALL be able to delete applicants in three ways:
-
-- the "Törlés" bulk action for the selected rows of the applicants list
-- a "Törlés" item in a list row's "Műveletek" menu, for that applicant
-- a "Törlés" item in the "További műveletek" menu of the applicant's detail page, for that applicant
-
-All entry points SHALL use the same confirmation and the same deletion.
-
-#### Scenario: Deleting one applicant from the row menu
-
-- **WHEN** the user opens a row's "Műveletek" menu and chooses "Törlés"
-- **THEN** the deletion confirmation opens for that single applicant
+Admins SHALL be able to delete an applicant from the applicant's detail page with the "Profil törlése" button. After a successful deletion the user SHALL land on `/applicants` with the message "1 jelentkező törölve". The deletion endpoint SHALL also accept several applicants in one request, with the same confirmation rules for any UI that offers it.
 
 #### Scenario: Deleting from the detail page
 
-- **WHEN** the user opens "További műveletek" on an applicant's detail page and chooses "Törlés"
+- **WHEN** the user activates "Profil törlése" on an applicant's detail page
 - **THEN** the deletion confirmation opens for that applicant
 
 ### Requirement: Deletion requires explicit confirmation
 
 Before deleting, the system SHALL show a confirmation dialog announced as an alert dialog. It SHALL name the applicant (or give the count when there are several) and state that personal data is removed permanently and cannot be restored. The delete button SHALL stay disabled until the user ticks "Értem, a törlés nem vonható vissza". "Mégse" SHALL close the dialog without changes.
 
-#### Scenario: Confirming a bulk deletion
+#### Scenario: Confirming a deletion
 
-- **WHEN** 4 applicants are selected, the user activates "Törlés", ticks the acknowledgement and confirms
-- **THEN** the 4 applicants are anonymized
-- **AND** a confirmation message says 4 applicants were deleted, the list refreshes and the selection is cleared
+- **WHEN** the user ticks the acknowledgement and activates "Törlés" in the confirmation for one applicant
+- **THEN** the applicant is anonymized
+- **AND** the user lands on `/applicants` with the message "1 jelentkező törölve"
 
 #### Scenario: Cancelling
 
