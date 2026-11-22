@@ -42,6 +42,20 @@ export default defineConfig({
 				storageState: AUTH_FILE,
 			},
 			dependencies: ["setup"],
+			testIgnore: /writes\//,
+		},
+		{
+			// Tests that write data (with the factory, e2e/support/test.ts).
+			// They run after the read-only tests, whose counts rely on the
+			// shared fixtures staying untouched.
+			name: "writes",
+			testMatch: /writes\/.*\.spec\.ts/,
+			use: {
+				...devices["Desktop Chrome"],
+				viewport: { width: 1280, height: 800 },
+				storageState: AUTH_FILE,
+			},
+			dependencies: ["chromium"],
 		},
 	],
 	webServer: {
