@@ -1,16 +1,47 @@
 import pino from "pino";
 
+/** Egy stack-sor: `    at fn (fájl:sor:oszlop)` vagy `    at fájl:sor:oszlop`. */
+const STACK_FRAME = /^\s+at .*:\d+:\d+\)?$/;
+
+/** A stack hívási sorai, a hibaüzenet nélkül. */
+function stackFrames(error: Error): string | undefined {
+	return error.stack
+		?.split("\n")
+		.filter((line) => STACK_FRAME.test(line))
+		.join("\n");
+}
+
 /**
- * Az `err` mező szerializálója. A Prisma-hibák üzenete (és így a stack első
- * sora) a lekérdezés argumentumait is idézheti – neveket, e-mail-címeket –,
- * ezért ezekből csak a típus, a kód és a meta kerül a logba.
+ * Az `err` mező szerializálója. A Prisma-hibák üzenete (többsoros, és így a
+ * stack eleje is) a lekérdezés argumentumait idézheti – neveket,
+ * e-mail-címeket –, ezért ezekből a típus, a kód, a meta és a stack hívási
+ * sorai kerülnek a logba. Kivétel a kapcsolódási hiba
+ * (`PrismaClientInitializationError`): annak üzenete nem tartalmaz
+ * rekordadatot, ezért megmarad. Fejlesztői módban (csak lokális mintaadat)
+ * minden hiba teljes egészében a logba kerül.
  */
-export function serializeError(error: unknown) {
-	if (error instanceof Error && error.name.startsWith("PrismaClient")) {
-		const { code, meta } = error as { code?: unknown; meta?: unknown };
-		return { type: error.name, code, meta };
+export function serializeError(
+	error: unknown,
+	nodeEnv: string | undefined = process.env.NODE_ENV,
+) {
+	if (!(error instanceof Error)) return error;
+	if (nodeEnv === "development" || !error.name.startsWith("PrismaClient")) {
+		return pino.stdSerializers.err(error);
 	}
-	return error instanceof Error ? pino.stdSerializers.err(error) : error;
+	const { code, meta, errorCode } = error as {
+		code?: unknown;
+		meta?: unknown;
+		errorCode?: unknown;
+	};
+	const isInitialization = error.name === "PrismaClientInitializationError";
+	return {
+		type: error.name,
+		...(code !== undefined && { code }),
+		...(errorCode !== undefined && { errorCode }),
+		...(meta !== undefined && { meta }),
+		...(isInitialization && { message: error.message }),
+		stack: stackFrames(error),
+	};
 }
 
 export const logger = pino({

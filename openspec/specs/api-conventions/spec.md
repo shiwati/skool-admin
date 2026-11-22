@@ -81,8 +81,13 @@ Log events written by API routes for successful operations SHALL contain only an
 #### Scenario: Database error does not leak query arguments
 
 - **WHEN** an applicant update fails with a Prisma error whose message quotes the submitted e-mail address
-- **THEN** the logged error contains only the error type, code and metadata
-- **AND** not the message, the stack or the e-mail address
+- **THEN** the logged error contains the error type, code, metadata and the stack's call sites
+- **AND** not the message or the e-mail address
+
+#### Scenario: Database connection error keeps its message
+
+- **WHEN** the database cannot be reached
+- **THEN** the logged error contains the connection error's message and code
 
 #### Scenario: Token field is redacted
 

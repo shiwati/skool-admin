@@ -77,7 +77,7 @@ Egyéb: `GET /api/health` (nyilvános readiness, 200/503), `/api/auth/*` (NextAu
 1. Zod séma a query-re (vagy body-ra), szerveroldali validáció mindig.
 2. Védelem: a layout nem védi a Route Handlert; lásd [auth-and-access.md](auth-and-access.md).
 3. Teszt a végpont mellé (`route.test.ts`, Prisma mockolva); lásd [testing.md](testing.md).
-4. Ne logolj kérés-törzset, felhasználói rekordot, e-mailt. A logger `err` szerializálója a Prisma-hibákból csak a típust, a kódot és a `meta`-t írja ki (az üzenetük a lekérdezés argumentumait idézheti); más hibák üzenete és stackje megmarad.
+4. Ne logolj kérés-törzset, felhasználói rekordot, e-mailt. A logger `err` szerializálója (`serializeError`, `src/lib/logger.ts`) a Prisma-hibákból a típust, a kódot (`code` / `errorCode`), a `meta`-t és a stack hívási sorait írja ki, az üzenetet nem (az a lekérdezés argumentumait idézheti). Kivétel a kapcsolódási hiba (`PrismaClientInitializationError`), annak üzenete megmarad. Fejlesztői módban (`NODE_ENV=development`) minden hiba teljes egészében a logba kerül. Más hibák üzenete és stackje mindig megmarad. Debugolás élesben: az `event` + `path` (rekord id) + `code`/`meta` + hívási hely mutatja, mi romlott el; a teljes üzenet lokálisan reprodukálva látszik.
 5. Írási végpont: `handleBody` / `handleAdmin`, ne kézzel írt session- és törzsellenőrzés.
 
 ## `POST /api/events/[id]/sync` — Google Form sheet import
