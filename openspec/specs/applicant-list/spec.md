@@ -8,7 +8,7 @@ Lets admins browse, search and filter applicants at `/applicants`, choose which 
 
 ### Requirement: Applicants page
 
-The system SHALL serve the applicants screen at `/applicants` to signed-in admins. The page SHALL show the overline and heading "Jelentkezők" and a subtitle with the number of applicants matching the current filters, formatted with Hungarian thousands grouping (for example "Google Formból érkező jelentkezések · 1 248 fő").
+The system SHALL serve the applicants screen at `/applicants` to signed-in admins. The page SHALL show the overline and heading "Jelentkezők" and a subtitle with the number of applicants, formatted with Hungarian thousands grouping: "Összes jelentkező: 1 248 fő" without search or filters, and "Találatok száma: 37 fő" while any is active.
 
 #### Scenario: Signed-in admin opens the page
 
@@ -31,7 +31,7 @@ The list SHALL be populated from `GET /api/applicants` using only that endpoint'
 
 ### Requirement: Default table columns
 
-By default the table SHALL show, in this order: a selection checkbox, "Név / e-mail", "Életkor", "Program", "Státusz", "Település / iskola", "Hírlevél", "Előzmény", "Jelentkezett", and a row actions button labelled "Műveletek" for assistive technology.
+By default the table SHALL show, in this order: "Név / e-mail", "Életkor", "Program", "Státusz", "Település / iskola", "Hírlevél" and "Előzmény". The rows SHALL have no selection checkboxes and no row actions column.
 
 #### Scenario: First visit with no saved column settings
 
@@ -82,7 +82,14 @@ A search field labelled "Keresés a listában" SHALL filter applicants by name a
 
 ### Requirement: Filters
 
-The page SHALL offer filter chips "Program" (multiple programs; `eventIds`), "Életkor" (minimum and/or maximum age; `ageFrom`/`ageTo`), "Település" (text; `hometown`), "Hírlevél" (subscribed / not subscribed; `newsletter`) and "Részt vett" (has / has not attended a program; `attended`). A chip with an active filter SHALL show its value. Each active filter SHALL be removable on its own, and the "Szűrők törlése" action SHALL remove all of them.
+The page SHALL offer these filter chips:
+
+- "Program": one or more programs (`eventIds`)
+- "Program éve": a year or "Bármikor"; an application to a program starting in that year, Budapest time (`programYear`)
+- "Életkor": minimum and/or maximum age (`ageFrom`/`ageTo`)
+- "Település": text (`hometown`)
+- "Hírlevél": subscribed / not subscribed (`newsletter`)
+- "Előzmény": minimum and/or maximum number of attended programs (`historyFrom`/`historyTo`)
 
 #### Scenario: Filtering by program
 
@@ -95,9 +102,19 @@ The page SHALL offer filter chips "Program" (multiple programs; `eventIds`), "É
 - **WHEN** the user enters a minimum age greater than the maximum age
 - **THEN** the filter is not applied and the chip explains that the minimum cannot exceed the maximum
 
+### Requirement: Active filters
+
+A chip with an active filter SHALL show its value. Each active filter SHALL be removable on its own, and the "Szűrők törlése" action SHALL remove all of them.
+
+#### Scenario: Clearing all filters
+
+- **GIVEN** the "Program" and "Hírlevél" filters are active
+- **WHEN** the user activates "Szűrők törlése"
+- **THEN** both filters are removed and all applicants are listed
+
 ### Requirement: Sorting
 
-The columns "Név / e-mail", "Életkor", "Település / iskola" and "Jelentkezett" SHALL be sortable in both directions, server-side. The current sort column and direction SHALL be shown and exposed to assistive technology. The default sort SHALL be "Jelentkezett", newest first. Sorting by "Életkor" SHALL order by age, not by birth year.
+The columns "Név / e-mail", "Életkor", "Település / iskola", "Előzmény" and "Jelentkezett" SHALL be sortable in both directions, server-side. The current sort column and direction SHALL be shown and exposed to assistive technology. The default sort SHALL be "Jelentkezett", newest first. Sorting by "Életkor" SHALL order by age, not by birth year.
 
 #### Scenario: Sorting by age ascending
 
@@ -154,7 +171,7 @@ An "Oszlopok" button SHALL open the "Oszlopok a listában" panel. In it the user
 - reorder them by dragging, or with keyboard-operable move up/down controls
 - restore the default columns and order with "Alapértelmezés visszaállítása"
 
-"Név / e-mail" SHALL always remain visible. Besides the default columns, "Szülő neve és e-mail" and "Telefonszám" SHALL be available, hidden by default.
+"Név / e-mail" SHALL always remain visible. Besides the default columns, "Jelentkezés dátuma" ("Jelentkezett"), "Szülő neve és e-mail" and "Telefonszám" SHALL be available, hidden by default.
 
 #### Scenario: Showing the phone number
 
@@ -186,34 +203,6 @@ Column visibility and order SHALL be saved in the user's browser and restored on
 - **WHEN** the user hid "Hírlevél", left, and opens `/applicants` again in the same browser
 - **THEN** "Hírlevél" is still hidden
 
-### Requirement: Row selection
-
-Each row SHALL have a checkbox. The header checkbox, labelled "Összes kijelölése", SHALL select or clear all rows on the current page and SHALL appear indeterminate when only some are selected. Selected rows SHALL be highlighted. The selection SHALL be cleared whenever the page, sort, search or filters change.
-
-#### Scenario: Selecting all on the page
-
-- **WHEN** the user ticks the header checkbox on a page of 25 rows
-- **THEN** all 25 rows are selected and the bulk-action bar shows "25 kijelölve"
-
-### Requirement: Bulk-action bar
-
-While at least one row is selected, a floating toolbar labelled "Tömeges műveletek" SHALL show the count ("N kijelölve") and the actions "E-mail címek másolása" and "Törlés", plus a "Kijelölés megszüntetése" button that clears the selection.
-
-#### Scenario: Clearing the selection
-
-- **WHEN** the user activates "Kijelölés megszüntetése"
-- **THEN** no rows are selected and the toolbar disappears
-
-### Requirement: Copy selected e-mail addresses
-
-"E-mail címek másolása" SHALL copy the selected applicants' e-mail addresses to the clipboard as one comma-and-space separated line, without duplicates (compared case-insensitively) and skipping applicants without an e-mail address. A confirmation SHALL state how many addresses were copied.
-
-#### Scenario: Copying with a missing address
-
-- **WHEN** three applicants are selected and one has no e-mail address
-- **THEN** two addresses are copied as "a@x.hu, b@y.hu"
-- **AND** the confirmation says 2 addresses were copied
-
 ### Requirement: E-mail list of the current filter
 
 The "E-mail lista" header button SHALL open a dialog containing the e-mail addresses of all applicants matching the current search and filters, across all pages. The addresses SHALL be comma-and-space separated, without duplicates, in a selectable read-only text box with a "Másolás" button and the number of addresses.
@@ -230,17 +219,12 @@ The "E-mail lista" header button SHALL open a dialog containing the e-mail addre
 
 ### Requirement: Rows open the applicant detail page
 
-Clicking anywhere on an applicant row SHALL open that applicant's detail page at `/applicants/{id}`, except on the row checkbox and the row's "Műveletek" menu, which keep their own behaviour. The applicant's name in the row SHALL be a link to the same page, so the detail page can be reached with the keyboard and opened in a new tab. Rows SHALL show a pointer cursor and a hover highlight. Loading, empty and error rows SHALL NOT navigate.
+Clicking anywhere on an applicant row SHALL open that applicant's detail page at `/applicants/{id}`; Ctrl/⌘-click SHALL open it in a new tab. The applicant's name in the row SHALL be a link to the same page, so the detail page can be reached with the keyboard and opened in a new tab. Rows SHALL show a pointer cursor and a hover highlight. Loading, empty and error rows SHALL NOT navigate.
 
 #### Scenario: Clicking a row
 
 - **WHEN** the user clicks the location cell of Nagy Luca's row
 - **THEN** the browser navigates to `/applicants/{id of Nagy Luca}`
-
-#### Scenario: Ticking the checkbox does not navigate
-
-- **WHEN** the user ticks the checkbox of a row
-- **THEN** the row is selected and the page stays on the list
 
 #### Scenario: Keyboard navigation
 
@@ -253,7 +237,6 @@ From 768 px to 1279 px, the applicants page SHALL keep the table layout:
 
 - **Header and toolbar:** the header actions and the toolbar (search and filter chips) SHALL wrap onto new lines instead of overflowing. The search field SHALL take the full width of its line.
 - **Table:** the table SHALL keep the user's column settings and scroll horizontally inside its frame when the columns do not fit.
-- **Selection:** row selection and the bulk-action bar SHALL keep working.
 
 #### Scenario: Toolbar at tablet width
 
@@ -268,20 +251,15 @@ Below 768 px, the applicants SHALL be shown as cards instead of the table, in th
 - the name, with a "16+" badge from 16 years
 - the e-mail address, truncated to one line
 
-Cards SHALL NOT have selection checkboxes, and there SHALL be no bulk-action bar. Loading, empty and error states SHALL look as on desktop, inside the list.
+Loading, empty and error states SHALL look as on desktop, inside the list.
 
 #### Scenario: Card content
 
 - **GIVEN** Nagy Luca, 16 years old, from Budapest, subscribed to the newsletter, whose latest application to "Python alapok – ősz" is accepted, with 1 attended program
 - **WHEN** the applicants page is shown at 390 px with the default column settings
 - **THEN** her card shows "Nagy Luca" with "16+" and her e-mail
-- **AND** below that the lines "Életkor 16 év", "Program Python alapok – ősz", "Státusz Elfogadva", "Település / iskola Budapest", "Hírlevél Feliratkozott", "Előzmény 1 program" and "Jelentkezett" with the date, in this order
+- **AND** below that the lines "Életkor 16 év", "Program Python alapok – ősz", "Státusz Elfogadva", "Település / iskola Budapest", "Hírlevél Feliratkozott" and "Előzmény 1 program", in this order
 - **AND** tapping the card opens her detail page
-
-#### Scenario: No selection on mobile
-
-- **WHEN** the applicants page is shown at 390 px
-- **THEN** no selection checkboxes and no bulk-action bar are shown
 
 ### Requirement: Mobile applicant card lines
 

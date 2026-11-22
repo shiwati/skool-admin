@@ -31,7 +31,7 @@ const HEADERS = [
 	"Státusz",
 ];
 
-/** A Programok tábla oszlopai, ugyanabban a sorrendben (a táblának nincs oszlopbeállítása). */
+/** A Programok tábla összes oszlopa, alapértelmezett sorrendben (az oszlopbeállítástól függetlenül). */
 export function buildEventsCsv(
 	items: ExportableEvent[],
 	now: Date = new Date(),

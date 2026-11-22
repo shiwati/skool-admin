@@ -359,6 +359,58 @@ describe("ApplicationsSection", () => {
 		);
 	});
 
+	it("changes one row's status from its menu (spec scenario)", async () => {
+		const user = userEvent.setup();
+		renderSection(20, 5);
+		await screen.findByText("Kiss Anna");
+		await user.click(
+			screen.getByRole("button", {
+				name: "Kiss Anna státusza: Új jelentkező. Módosítás",
+			}),
+		);
+		await user.click(screen.getByRole("menuitem", { name: "Várólista" }));
+		await waitFor(() => expect(refresh).toHaveBeenCalled());
+		const post = fetchMock.mock.calls.find(
+			([, init]) => init?.method === "POST",
+		)!;
+		expect(JSON.parse(post[1].body)).toEqual({
+			ids: ["a1"],
+			status: "WAITLISTED",
+		});
+		expect(push).not.toHaveBeenCalled();
+	});
+
+	it("turns the active status chip off (spec scenario)", async () => {
+		const user = userEvent.setup();
+		nav.set("status=WAITLISTED");
+		renderSection();
+		await screen.findByText("Nagy Anna");
+		await user.click(screen.getByRole("button", { name: /^Várólista/ }));
+		expect(lastUrl()).toBe("/events/e1/applicants");
+	});
+
+	it("shows the filtered empty state with Szűrő törlése (spec scenario)", async () => {
+		const user = userEvent.setup();
+		respond([]);
+		nav.set("status=REJECTED");
+		renderSection();
+		expect(
+			await screen.findByText(
+				/Nincs a szűrésnek megfelelő jelentkezés\./,
+			),
+		).toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Szűrő törlése" }));
+		expect(lastUrl()).toBe("/events/e1/applicants");
+	});
+
+	it("shows the empty state of a program without applications", async () => {
+		respond([]);
+		renderSection();
+		expect(
+			await screen.findByText("Még nincs jelentkező ehhez a programhoz."),
+		).toBeInTheDocument();
+	});
+
 	it("shows an error toast when the status change fails", async () => {
 		const user = userEvent.setup();
 		const list = fetchMock.getMockImplementation()!;

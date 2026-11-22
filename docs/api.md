@@ -13,7 +13,7 @@ A jelentkező adatlapjának és szerkesztő űrlapjának (`/applicants/[id]`, `/
 
 ### `GET /api/applicants`
 
-Paraméterek: `page`, `pageSize` (alap 20, max 100), `eventIds` (CSV vagy ismételt), `ageFrom`, `ageTo` (`ageFrom ≤ ageTo`), `hometown`, `newsletter`, `historyFrom`, `historyTo` (elvégzett — „Részt vett” — programok száma, tól–ig), `q` (szavanként AND; keresés: keresztnév, vezetéknév, e-mail), `sort` (`lastName`|`birthYear`|`hometown`|`history`|`createdAt`, alap `lastName`), `order` (alap `asc`).
+Paraméterek: `page`, `pageSize` (alap 20, max 100), `eventIds` (CSV vagy ismételt), `programYear` (2000–2100: van jelentkezése az abban az évben — budapesti idő szerint — kezdődő programra), `ageFrom`, `ageTo` (`ageFrom ≤ ageTo`), `hometown`, `newsletter`, `historyFrom`, `historyTo` (elvégzett — „Részt vett” — programok száma, tól–ig), `q` (szavanként AND; keresés: keresztnév, vezetéknév, e-mail), `sort` (`lastName`|`birthYear`|`hometown`|`history`|`createdAt`, alap `lastName`), `order` (alap `asc`).
 Válasz: jelentkezők + `applications` (id, status, receivedAt, event{id,name,from}), `receivedAt desc`. A törölt (anonimizált, `deletedAt` nem null) jelentkezők soha nem szerepelnek benne.
 
 ### `POST /api/applicants/delete`
@@ -28,7 +28,7 @@ Egy tranzakcióban: csak a ténylegesen változott mezőket írja, mindegyikhez 
 
 ### `GET /api/events`
 
-Paraméterek: `page`, `pageSize`, `year`, `companyName`, `place` (helyszín vagy partnercég, részszöveg), `instructor`, `q` (név), `phase` (`active`: még nem ért véget és van jelentkezési sheet / `planned`: még nem ért véget, sheet nélkül / `closed`: véget ért; hiányzik = mind), `tags` ([címkék](domain.md#címkék-eventtags), csak ismételt paraméterként, pl. `?tags=robotika&tags=kezdő`, vesszőnél nem vág; normalizálódik; bármelyik címke egyezése elég; olyan érvényes címke, amit egy program sem használ → üres találat; hibás formájú címke (üres, 30 karakternél hosszabb, vesszőt tartalmaz) → `400`), `sort` (`from`|`name`|`companyName`|`capacity`, alap `from`), `order` (alap: `from` esetén desc, különben asc).
+Paraméterek: `page`, `pageSize`, `year`, `companyName`, `place` (helyszín vagy partnercég, részszöveg), `instructor`, `q` (név), `phase` (`planned`: még nem ért véget, a futók is, sheettől függetlenül / `closed`: véget ért; hiányzik = mind; más érték, pl. `active` → `400`), `tags` ([címkék](domain.md#címkék-eventtags), csak ismételt paraméterként, pl. `?tags=robotika&tags=kezdő`, vesszőnél nem vág; normalizálódik; bármelyik címke egyezése elég; olyan érvényes címke, amit egy program sem használ → üres találat; hibás formájú címke (üres, 30 karakternél hosszabb, vesszőt tartalmaz) → `400`), `sort` (`from`|`name`|`companyName`|`capacity`, alap `from`; `companyName`-nél a partner nélküliek mindkét irányban a végén), `order` (alap: `from` esetén desc, különben asc).
 Válasz: események + `applicationCounts` (státuszonként + `total`).
 
 ### `GET /api/events/tags`

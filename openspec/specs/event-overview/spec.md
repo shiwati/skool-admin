@@ -132,6 +132,15 @@ Admins SHALL be able to set one status for selected applications on the program'
 - **WHEN** the request includes an application id of another program
 - **THEN** the response is `404` and no status changes
 
+### Requirement: Per-row status change on the Jelentkezők tab
+
+Each row's status SHALL be a menu button labelled "<name> státusza: <status>. Módosítás" for assistive technology. Choosing another status SHALL change only that application, through the same endpoint, with the same feedback and capacity warning as a bulk change. Clicking the status menu SHALL NOT open the applicant.
+
+#### Scenario: Waitlisting one applicant
+
+- **WHEN** the admin opens "Kiss Anna státusza: Új jelentkező. Módosítás" and chooses "Várólista"
+- **THEN** only Kiss Anna's application is sent with the status "Várólista"
+
 ### Requirement: Bulk status change history
 
 Every application whose status a bulk change sets SHALL get one `History` row (`application` / `status`) with the old and new status and the admin as author, written in the same transaction as the change.
@@ -184,6 +193,31 @@ The Jelentkezők tab SHALL reflect its status filter, sort, order, page and page
 - **GIVEN** the tab shows page 3
 - **WHEN** the admin selects the "Elfogadva" chip
 - **THEN** the URL contains `status=ACCEPTED` and no `page`, and page 1 is shown
+
+### Requirement: Jelentkezők tab status chips
+
+The tab SHALL show the chips "Mind" and one per status, each with its count. Selecting a status chip SHALL list only that status; selecting the active chip again, or "Mind", SHALL list every status.
+
+#### Scenario: Turning a status chip off
+
+- **GIVEN** the "Várólista" chip is selected
+- **WHEN** the admin selects "Várólista" again
+- **THEN** every status is listed and the URL has no `status`
+
+### Requirement: Jelentkezők tab sorting and empty states
+
+The "Név", "Kor" and "Státusz" headers SHALL sort the table, ascending on first activation, reversing on the next. A line SHALL describe the sort ("Rendezés: …"), with an "Alapsorrend" action when it is not the default. Without applications the table SHALL say "Még nincs jelentkező ehhez a programhoz."; when a status filter matches nothing, "Nincs a szűrésnek megfelelő jelentkezés." with a "Szűrő törlése" action.
+
+#### Scenario: Sorting by name
+
+- **WHEN** the admin activates the "Név" header
+- **THEN** applications are listed A to Z by last name and the URL contains `sort=name`
+
+#### Scenario: Status filter without match
+
+- **GIVEN** the "Elutasítva" chip is selected and no application is rejected
+- **WHEN** the table loads
+- **THEN** "Nincs a szűrésnek megfelelő jelentkezés." is shown, and "Szűrő törlése" lists every status
 
 ### Requirement: Jelentkezők tab sorts by age
 

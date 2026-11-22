@@ -7,10 +7,15 @@ import { EventsView } from "./events-view";
 const nav = vi.hoisted(() => ({
 	replace: vi.fn(),
 	push: vi.fn(),
+	refresh: vi.fn(),
 	search: "",
 }));
 vi.mock("next/navigation", () => ({
-	useRouter: () => ({ replace: nav.replace, push: nav.push }),
+	useRouter: () => ({
+		replace: nav.replace,
+		push: nav.push,
+		refresh: nav.refresh,
+	}),
 	usePathname: () => "/events",
 	useSearchParams: () => new URLSearchParams(nav.search),
 }));
@@ -47,6 +52,7 @@ describe("EventsView", () => {
 		nav.search = "";
 		nav.replace.mockReset();
 		nav.push.mockReset();
+		nav.refresh.mockReset();
 	});
 
 	it("renders the header, tabs and a row", () => {
@@ -280,6 +286,52 @@ describe("EventsView on mobile (05.1 M)", () => {
 		expect(
 			screen.getByRole("menuitem", { name: "Jelentkezők megtekintése" }),
 		).toHaveAttribute("href", "/applicants?eventIds=e1");
+	});
+
+	it("offers edit and delete in the row actions (spec scenarios)", async () => {
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValue(Response.json({ ok: true }));
+		vi.stubGlobal("fetch", fetchMock);
+		render(
+			<EventsView
+				items={[event()]}
+				total={1}
+				counts={counts}
+				now={now}
+			/>,
+		);
+		const table = screen.getByRole("table", { name: "Programok" });
+		const openMenu = () =>
+			userEvent.click(
+				within(table).getByRole("button", {
+					name: "Műveletek: Python alapok – ősz",
+				}),
+			);
+
+		await openMenu();
+		expect(
+			screen.getByRole("menuitem", { name: "Program szerkesztése" }),
+		).toHaveAttribute("href", "/events/e1/edit");
+
+		await userEvent.click(
+			screen.getByRole("menuitem", { name: "Program törlése" }),
+		);
+		const dialog = await screen.findByRole("alertdialog");
+		await userEvent.click(
+			within(dialog).getByRole("checkbox", {
+				name: "Értem, a törlés nem vonható vissza",
+			}),
+		);
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Törlés" }),
+		);
+		await waitFor(() => expect(nav.refresh).toHaveBeenCalledOnce());
+		expect(fetchMock).toHaveBeenCalledWith(
+			"/api/events/e1",
+			expect.objectContaining({ method: "DELETE" }),
+		);
+		vi.unstubAllGlobals();
 	});
 
 	it("offers a floating Új program button and scrollable tabs and chips", () => {
