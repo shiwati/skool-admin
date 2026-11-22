@@ -4,7 +4,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import {
 	ageRangeToBirthYear,
-	containsInsensitive,
+	foldedContains,
+	foldSearch,
 	csvList,
 	optionalText,
 	orderSchema,
@@ -55,14 +56,9 @@ export async function listEventApplications(
 	const applicant: Prisma.ApplicantWhereInput[] = [];
 	const birthYear = ageRangeToBirthYear(query.ageFrom, query.ageTo);
 	if (birthYear) applicant.push({ birthYear });
-	for (const token of searchTokens(query.q)) {
-		applicant.push({
-			OR: [
-				{ firstName: containsInsensitive(token) },
-				{ lastName: containsInsensitive(token) },
-				{ email: containsInsensitive(token) },
-			],
-		});
+	// Every word in the name or e-mail, ignoring case and accents.
+	for (const word of await foldSearch(db, searchTokens(query.q))) {
+		applicant.push({ searchText: foldedContains(word) });
 	}
 
 	const where: Prisma.ApplicationWhereInput = {

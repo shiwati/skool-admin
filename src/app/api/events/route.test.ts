@@ -1,18 +1,22 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { findMany, count, groupBy, create, getAdminSession } = vi.hoisted(
-	() => ({
+const { findMany, count, groupBy, create, getAdminSession, queryRaw } =
+	vi.hoisted(() => ({
 		create: vi.fn(),
 		getAdminSession: vi.fn(),
 		findMany: vi.fn(),
 		count: vi.fn(),
 		groupBy: vi.fn(),
-	}),
-);
+		queryRaw: vi.fn(),
+	}));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
 vi.mock("@/lib/db", () => ({
-	db: { event: { findMany, count, create }, application: { groupBy } },
+	db: {
+		event: { findMany, count, create },
+		application: { groupBy },
+		$queryRaw: queryRaw,
+	},
 }));
 vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn(), info: vi.fn() } }));
 vi.mock("@/lib/session", () => ({ getAdminSession }));
@@ -25,6 +29,15 @@ describe("GET /api/events", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 		getAdminSession.mockResolvedValue({ user: {} });
+		// Stands in for lower(unaccent(…)) in the database.
+		queryRaw.mockImplementation(async (_sql: unknown, texts: string[]) =>
+			texts.map((text) => ({
+				folded: text
+					.normalize("NFD")
+					.replace(/\p{Diacritic}/gu, "")
+					.toLowerCase(),
+			})),
+		);
 	});
 
 	it("rejects unauthenticated requests", async () => {
@@ -35,12 +48,42 @@ describe("GET /api/events", () => {
 		expect(findMany).not.toHaveBeenCalled();
 	});
 
+	it("folds every text filter in one query, in a fixed order", async () => {
+		findMany.mockResolvedValue([]);
+		count.mockResolvedValue(0);
+		await call(
+			"?q=Győr%20tábor&instructor=Péter&place=Pécs&companyName=Példa",
+		);
+		expect(queryRaw).toHaveBeenCalledOnce();
+		expect(queryRaw.mock.calls[0][1]).toEqual([
+			"Példa",
+			"Pécs",
+			"Péter",
+			"Győr",
+			"tábor",
+		]);
+	});
+
+	it("runs no fold query without text filters", async () => {
+		findMany.mockResolvedValue([]);
+		count.mockResolvedValue(0);
+		await call("?year=2026");
+		expect(queryRaw).not.toHaveBeenCalled();
+	});
+
 	it("filters by year and defaults to newest first", async () => {
 		findMany.mockResolvedValue([]);
 		count.mockResolvedValue(0);
 		await call("?year=2026&companyName=acme&instructor=béla&q=python");
 		const args = findMany.mock.calls[0][0];
 		expect(args.orderBy[0]).toEqual({ from: "desc" });
+		// The folded search columns stay out of the response.
+		expect(args.omit).toEqual({
+			nameSearch: true,
+			locationSearch: true,
+			companySearch: true,
+			instructorSearch: true,
+		});
 		expect(args.where.AND).toEqual([
 			{
 				from: {
@@ -48,9 +91,9 @@ describe("GET /api/events", () => {
 					lt: new Date("2026-12-31T23:00:00Z"),
 				},
 			},
-			{ companyName: { contains: "acme", mode: "insensitive" } },
-			{ instructor: { contains: "béla", mode: "insensitive" } },
-			{ name: { contains: "python", mode: "insensitive" } },
+			{ companySearch: { contains: "acme" } },
+			{ instructorSearch: { contains: "bela" } },
+			{ nameSearch: { contains: "python" } },
 		]);
 		expect(groupBy).not.toHaveBeenCalled();
 	});
@@ -80,8 +123,8 @@ describe("GET /api/events", () => {
 		const [place, phase] = findMany.mock.calls[0][0].where.AND;
 		expect(place).toEqual({
 			OR: [
-				{ location: { contains: "pécs", mode: "insensitive" } },
-				{ companyName: { contains: "pécs", mode: "insensitive" } },
+				{ locationSearch: { contains: "pecs" } },
+				{ companySearch: { contains: "pecs" } },
 			],
 		});
 		expect(phase).toEqual({ to: { gte: expect.any(Date) } });

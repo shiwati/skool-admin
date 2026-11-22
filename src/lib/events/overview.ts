@@ -1,9 +1,10 @@
 import "server-only";
-import type { Event } from "@prisma/client";
+import type { EventRecord } from "@/lib/search-columns";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { EVENT_TABLE } from "@/lib/history/write";
 import { emptyCounts, type StatusCounts } from "./list";
+import { EVENT_SEARCH_OMIT } from "@/lib/search-columns";
 
 /** Ennyi változás jelenik meg az áttekintésen. */
 export const OVERVIEW_HISTORY_LIMIT = 5;
@@ -19,7 +20,7 @@ export type EventHistoryEntry = {
 };
 
 export type EventOverview = {
-	event: Event;
+	event: EventRecord;
 	counts: StatusCounts;
 	/** Legfrissebb elöl, legfeljebb `OVERVIEW_HISTORY_LIMIT`. */
 	history: EventHistoryEntry[];
@@ -32,7 +33,10 @@ export type EventOverview = {
  */
 export const getEventOverview = cache(
 	async (id: string): Promise<EventOverview | null> => {
-		const event = await db.event.findUnique({ where: { id } });
+		const event = await db.event.findUnique({
+			where: { id },
+			omit: EVENT_SEARCH_OMIT,
+		});
 		if (!event) return null;
 
 		const [grouped, rows] = await Promise.all([

@@ -1,4 +1,4 @@
-import type { Event } from "@prisma/client";
+import type { EventRecord } from "@/lib/search-columns";
 import {
 	DetailCard,
 	KeyValueList,
@@ -9,7 +9,7 @@ import { formatAgeRange } from "@/lib/events/format";
 import { formatDateTime } from "@/lib/format";
 
 type DetailsEvent = Pick<
-	Event,
+	EventRecord,
 	| "from"
 	| "to"
 	| "companyName"

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { feedback, applicationCount } = vi.hoisted(() => ({
+const { feedback, applicationCount, queryRaw } = vi.hoisted(() => ({
 	feedback: {
 		count: vi.fn(),
 		findMany: vi.fn(),
@@ -9,9 +9,14 @@ const { feedback, applicationCount } = vi.hoisted(() => ({
 		groupBy: vi.fn(),
 	},
 	applicationCount: vi.fn(),
+	queryRaw: vi.fn(),
 }));
 vi.mock("@/lib/db", () => ({
-	db: { feedback, application: { count: applicationCount } },
+	db: {
+		feedback,
+		application: { count: applicationCount },
+		$queryRaw: queryRaw,
+	},
 }));
 
 import { listFeedback, parseFeedbackQuery } from "./list";
@@ -109,6 +114,9 @@ describe("parseFeedbackQuery", () => {
 describe("feedback stats", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
+		queryRaw.mockImplementation(async (_sql: unknown, texts: string[]) =>
+			texts.map((text) => ({ folded: text.toLowerCase() })),
+		);
 		feedback.count.mockResolvedValue(3);
 		feedback.findMany.mockResolvedValue([]);
 		feedback.aggregate.mockResolvedValue({
@@ -160,5 +168,39 @@ describe("feedback stats", () => {
 	it("has no recommend rate without recommend answers", async () => {
 		const page = await listFeedback(parseFeedbackQuery({}));
 		expect(page.stats.recommendRate).toBeNull();
+	});
+});
+
+describe("feedback text search", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		feedback.count.mockResolvedValue(0);
+		feedback.findMany.mockResolvedValue([]);
+		feedback.aggregate.mockResolvedValue({
+			_count: { _all: 0 },
+			_avg: { overallScore: null },
+		});
+		feedback.groupBy.mockResolvedValue([]);
+	});
+
+	it("matches the folded phrase, ignoring case and accents", async () => {
+		// Stands in for lower(unaccent(…)) in the database.
+		queryRaw.mockResolvedValue([{ folded: "elveztem a tabort" }]);
+		await listFeedback(parseFeedbackQuery({ q: "Élveztem a tábort" }));
+
+		expect(queryRaw).toHaveBeenCalledOnce();
+		expect(queryRaw.mock.calls[0][1]).toEqual(["Élveztem a tábort"]);
+		expect(feedback.findMany.mock.calls[0][0].where).toEqual({
+			searchText: { contains: "elveztem a tabort" },
+		});
+		// The statistics use the same filter.
+		expect(feedback.aggregate.mock.calls[0][0].where).toEqual({
+			searchText: { contains: "elveztem a tabort" },
+		});
+	});
+
+	it("runs no fold query without a search", async () => {
+		await listFeedback(parseFeedbackQuery({}));
+		expect(queryRaw).not.toHaveBeenCalled();
 	});
 });

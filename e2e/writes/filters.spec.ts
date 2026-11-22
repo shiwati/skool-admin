@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { exportCsv } from "../support/csv";
 import { rowNames } from "../support/table";
 import { expect, test } from "../support/test";
 
@@ -254,5 +255,144 @@ test.describe("programs", () => {
 				).allTextContents()
 			).sort(),
 		).toEqual(sorted(python));
+	});
+});
+
+test.describe("accents are ignored", () => {
+	test("kovacs finds Kovács but not Kocsis; accents typed find plain text", async ({
+		page,
+		factory,
+	}) => {
+		const t = factory.token;
+		const kovacs = await factory.applicant({
+			lastName: "Kovács",
+			firstName: "Anna",
+			email: `${t}a@example.com`,
+		});
+		await factory.applicant({
+			lastName: "Kocsis",
+			firstName: "Anna",
+			email: `${t}b@example.com`,
+		});
+		const plain = await factory.applicant({
+			lastName: "Kovacs",
+			firstName: "Bela",
+			email: `${t}c@example.com`,
+		});
+		const q = (words: string) => `q=${encodeURIComponent(`${t} ${words}`)}`;
+
+		expect(await applicantsFor(page, q("kovacs anna"))).toEqual(
+			names(kovacs),
+		);
+		expect(await applicantsFor(page, q("Kovács Béla"))).toEqual(
+			names(plain),
+		);
+	});
+
+	test("the Település filter ignores accents", async ({ page, factory }) => {
+		const pecs = await factory.applicant({ hometown: "Pécs" });
+		await factory.applicant({ hometown: "Pest" });
+
+		expect(
+			await applicantsFor(page, `q=${factory.token}&hometown=pecs`),
+		).toEqual(names(pecs));
+	});
+
+	test("the program chips ignore accents", async ({ page, factory }) => {
+		const gyor = await factory.event({
+			location: "Győr, Fő tér 1.",
+			instructor: "Kiss Péter",
+			companyName: "Példa Kft.",
+		});
+		await factory.event({ location: "Budapest" });
+		const q = `q=${factory.token}`;
+
+		for (const filter of [
+			"place=gyor",
+			"instructor=peter",
+			"companyName=pelda",
+		]) {
+			expect(await eventsFor(page, `${q}&${filter}`), filter).toEqual([
+				gyor.name,
+			]);
+		}
+	});
+
+	test("the feedback search ignores accents", async ({ page, factory }) => {
+		const event = await factory.event();
+		await factory.feedback({ event, text: "Nagyon élveztem a tábort" });
+		await factory.feedback({ event, text: "Nem tetszett" });
+
+		await page.goto(
+			`/feedback?eventId=${event.id}&q=${encodeURIComponent("elveztem a tabort")}`,
+		);
+		const rows = page
+			.getByRole("table", { name: "Visszajelzések" })
+			.locator("tbody > tr");
+		await expect(rows).toHaveCount(1);
+	});
+
+	test("the CSV export follows the accent-insensitive search", async ({
+		page,
+		factory,
+	}) => {
+		const kovacs = await factory.applicant({
+			lastName: "Kovács",
+			firstName: "Anna",
+			email: `${factory.token}@example.com`,
+		});
+
+		await page.goto(
+			`/applicants?q=${encodeURIComponent(`${factory.token} kovacs`)}`,
+		);
+		const csv = await exportCsv(page);
+		expect(csv.rows.map((row) => row[0])).toEqual([kovacs.lastName]);
+	});
+
+	test("a changed name is searchable at once, the old one is not", async ({
+		page,
+		factory,
+		db,
+	}) => {
+		const t = factory.token;
+		const applicant = await factory.applicant({
+			lastName: "Kis",
+			firstName: "Ádám",
+			email: `${t}@example.com`,
+		});
+		await db.applicant.update({
+			where: { id: applicant.id },
+			data: { lastName: "Nagy" },
+		});
+
+		const q = (words: string) => `q=${encodeURIComponent(`${t} ${words}`)}`;
+		expect(await applicantsFor(page, q("nagy adam"))).toEqual([
+			"Nagy Ádám",
+		]);
+		expect(await applicantsFor(page, q("kis adam"))).toEqual([]);
+	});
+
+	test("an anonymized applicant is no longer found", async ({
+		factory,
+		request,
+	}) => {
+		const applicant = await factory.applicant({
+			lastName: "Kovácsné",
+			firstName: factory.token,
+		});
+		const found = async () => {
+			const res = await request.get(
+				"/api/applicants?q=kovacsne&pageSize=100",
+			);
+			const { items } = (await res.json()) as { items: { id: string }[] };
+			return items.map((item) => item.id);
+		};
+		expect(await found()).toContain(applicant.id);
+
+		const deleted = await request.post("/api/applicants/delete", {
+			data: { ids: [applicant.id] },
+		});
+		expect(deleted.status()).toBe(200);
+		expect(await found()).not.toContain(applicant.id);
 	});
 });

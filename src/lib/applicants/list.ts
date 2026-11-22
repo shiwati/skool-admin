@@ -6,7 +6,8 @@ import {
 	ageRangeToBirthYear,
 	booleanParam,
 	budapestYearRange,
-	containsInsensitive,
+	foldedContains,
+	foldSearch,
 	csvList,
 	optionalText,
 	orderSchema,
@@ -14,6 +15,7 @@ import {
 	paginationSchema,
 	searchTokens,
 } from "@/lib/api/query";
+import { APPLICANT_SEARCH_OMIT } from "@/lib/search-columns";
 
 /** A `GET /api/applicants` query sémája (az oldal első rendereléséhez is). */
 export const applicantsQuerySchema = z
@@ -119,6 +121,7 @@ async function listByHistory(
 	const pageIds = rows.slice(start, start + query.pageSize).map((r) => r.id);
 	const found = await db.applicant.findMany({
 		where: { id: { in: pageIds } },
+		omit: APPLICANT_SEARCH_OMIT,
 		include: listInclude,
 	});
 	const byId = new Map(found.map((a) => [a.id, a]));
@@ -145,8 +148,14 @@ export async function listApplicants(query: ApplicantsQuery) {
 	}
 	const birthYear = ageRangeToBirthYear(query.ageFrom, query.ageTo);
 	if (birthYear) and.push({ birthYear });
+	// Text filters ignore case and accents: folded like the search columns.
+	const words = searchTokens(query.q);
+	const folded = await foldSearch(
+		db,
+		query.hometown ? [query.hometown, ...words] : words,
+	);
 	if (query.hometown)
-		and.push({ hometown: containsInsensitive(query.hometown) });
+		and.push({ hometownSearch: foldedContains(folded.shift()!) });
 	if (query.newsletter !== undefined)
 		and.push({ newsletter: query.newsletter });
 	const hasHistoryFilter =
@@ -158,14 +167,9 @@ export async function listApplicants(query: ApplicantsQuery) {
 	if (attended && hasHistoryFilter) {
 		and.push(historyFilter(attended, query.historyFrom, query.historyTo));
 	}
-	for (const token of searchTokens(query.q)) {
-		and.push({
-			OR: [
-				{ firstName: containsInsensitive(token) },
-				{ lastName: containsInsensitive(token) },
-				{ email: containsInsensitive(token) },
-			],
-		});
+	// Every word must appear in the name or the e-mail (`search_text`).
+	for (const word of folded) {
+		and.push({ searchText: foldedContains(word) });
 	}
 
 	const where: Prisma.ApplicantWhereInput = { AND: and };
@@ -188,6 +192,7 @@ export async function listApplicants(query: ApplicantsQuery) {
 			orderBy,
 			skip: (query.page - 1) * query.pageSize,
 			take: query.pageSize,
+			omit: APPLICANT_SEARCH_OMIT,
 			include: listInclude,
 		}),
 		db.applicant.count({ where }),

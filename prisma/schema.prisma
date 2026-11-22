@@ -93,6 +93,10 @@ model Applicant {
   duplicateKey      String?              @map("duplicate_key")
   /// Igaz, ha van másik jelentkező ugyanazzal a kulccsal; az admin merge-öli.
   duplicateFlag     Boolean              @default(false) @map("duplicate_flag")
+  /// Keresés: kisbetűs, ékezet nélküli név + e-mail (trigger tölti, lásd docs/data-and-db.md).
+  searchText        String?              @map("search_text")
+  /// Keresés: kisbetűs, ékezet nélküli település (trigger tölti).
+  hometownSearch    String?              @map("hometown_search")
   applications      Application[]
   dismissalsAsA     DuplicateDismissal[] @relation("DismissalApplicantA")
   dismissalsAsB     DuplicateDismissal[] @relation("DismissalApplicantB")
@@ -190,6 +194,11 @@ model Event {
   mentorFeedbackSheetMapping      Json?                 @map("mentor_feedback_sheet_mapping")
   ageRange                        String?               @map("age_range")
   instructor                      String?
+  /// Keresés: kisbetűs, ékezet nélküli mezők (trigger tölti, lásd docs/data-and-db.md).
+  nameSearch                      String?               @map("name_search")
+  locationSearch                  String?               @map("location_search")
+  companySearch                   String?               @map("company_search")
+  instructorSearch                String?               @map("instructor_search")
   mentors                         String[]
   tags                            String[]              @default([])
   capacity                        Int                   @default(0)
@@ -239,7 +248,7 @@ model Feedback {
   overallScore Float?       @map("overall_score")
   /// Ajánlaná: "yes" | "maybe" | "no"; null, ha az űrlapban nincs ilyen kérdés.
   recommend    String?
-  /// Kisbetűs, összefűzött szöveges válaszok a kereséshez.
+  /// Kisbetűs, ékezet nélküli, összefűzött szöveges válaszok a kereséshez (a triggere hajtogatja).
   searchText   String       @default("") @map("search_text")
   /// Forrás-sor azonosítója: újraszinkronnál nem jön létre kétszer.
   sourceKey    String       @map("source_key")

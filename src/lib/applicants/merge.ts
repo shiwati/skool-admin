@@ -2,6 +2,7 @@ import "server-only";
 import type { PrismaClient } from "@prisma/client";
 import { recomputeDuplicateFlags } from "./duplicate-flags";
 import { APPLICANT_TABLE, historyRows } from "@/lib/history/write";
+import { APPLICANT_SEARCH_OMIT } from "@/lib/search-columns";
 
 type Db = Pick<PrismaClient, "$transaction">;
 
@@ -75,6 +76,7 @@ export async function mergeApplicants(
 
 		const applicant = await tx.applicant.findUniqueOrThrow({
 			where: { id: primaryId },
+			omit: APPLICANT_SEARCH_OMIT,
 			include: { applications: true },
 		});
 		return { applicant, movedApplications: moved.count };

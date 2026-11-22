@@ -11,6 +11,8 @@ A jelentkező adatlapjának és szerkesztő űrlapjának (`/applicants/[id]`, `/
 
 ## Végpontok
 
+**Szöveges szűrők:** a `q`, `hometown`, `place`, `companyName` és `instructor` paraméter (és a visszajelzések keresése) részszövegre illeszt, a kis- és nagybetűt és az ékezetet nem nézve: a „kovacs” megtalálja a „Kovács”-ot, és fordítva. A hajtogatott keresőoszlopokról lásd [data-and-db.md](data-and-db.md#keresés-kis--és-nagybetű-ékezet-nélkül).
+
 ### `GET /api/applicants`
 
 Paraméterek: `page`, `pageSize` (alap 20, max 100), `eventIds` (CSV vagy ismételt), `programYear` (2000–2100: van jelentkezése az abban az évben — budapesti idő szerint — kezdődő programra), `ageFrom`, `ageTo` (`ageFrom ≤ ageTo`), `hometown`, `newsletter`, `historyFrom`, `historyTo` (elvégzett — „Részt vett” — programok száma, tól–ig), `q` (szavanként AND; keresés: keresztnév, vezetéknév, e-mail), `sort` (`lastName`|`birthYear`|`hometown`|`history`|`createdAt`, alap `lastName`), `order` (alap `asc`).
@@ -116,7 +118,7 @@ Törzs: `{ url }`. A sheet első sorát (fejléceit) adja vissza `{ headers: str
 - `422 SHEET_HEADERS_MISSING`: `{ role, missing[] }` – kötelező oszlop hiányzik (időbélyeg; résztvevőnél a mentor- és az oktatóértékelés, mentornál az összértékelés).
 - `422 SHEET_NOT_ACCESSIBLE`, `403 REAUTH_REQUIRED`: mint a jelentkezői syncnél.
 
-A lista nem API-n megy: a `/feedback` oldal és a program „Visszajelzések” füle (`/events/[id]/feedback`) szerveren olvas (`src/lib/feedback/list.ts`), a szűrők (`q`, `role`, `eventId`, `page`, `open`) az URL-ben vannak.
+A lista nem API-n megy: a `/feedback` oldal és a program „Visszajelzések” füle (`/events/[id]/feedback`) szerveren olvas (`src/lib/feedback/list.ts`), a szűrők (`q`, `role`, `eventId`, `page`, `open`) az URL-ben vannak. A `q` a teljes kifejezésre illeszt a szöveges válaszokban, kis- és nagybetűt, ékezetet nem nézve.
 
 ## Záró riport (`/api/events/[id]/report…`)
 
