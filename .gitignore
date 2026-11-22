@@ -14,3 +14,8 @@ docker/mnt
 
 # local seed data (may contain real personal data)
 prisma/seed-data/local.json
+
+# Playwright (E2E)
+/test-results/
+/playwright-report/
+/e2e/.auth/
