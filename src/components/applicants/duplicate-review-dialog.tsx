@@ -13,7 +13,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiFetch, isAbortError } from "@/lib/api/client";
+import { apiFetch, isAbortError, jsonInit } from "@/lib/api/client";
 import { comparisonRows } from "@/lib/applicants/duplicate-comparison";
 import {
 	formatCount,
@@ -35,11 +35,7 @@ type LoadState =
 	| { status: "success"; data: DuplicatesResponse };
 
 const post = (url: string, body: unknown) =>
-	apiFetch(url, {
-		method: "POST",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify(body),
-	});
+	apiFetch(url, jsonInit("POST", body));
 
 function ColumnHeader({
 	side,

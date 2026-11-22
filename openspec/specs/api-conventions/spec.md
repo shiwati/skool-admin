@@ -78,6 +78,12 @@ Log events written by API routes for successful operations SHALL contain only an
 - **THEN** one info event `{ event: "applicants.anonymized", userId, count: 2 }` is logged
 - **AND** it contains no applicant name or e-mail
 
+#### Scenario: Database error does not leak query arguments
+
+- **WHEN** an applicant update fails with a Prisma error whose message quotes the submitted e-mail address
+- **THEN** the logged error contains only the error type, code and metadata
+- **AND** not the message, the stack or the e-mail address
+
 #### Scenario: Token field is redacted
 
 - **WHEN** a log entry includes a top-level `token` or `access_token` field

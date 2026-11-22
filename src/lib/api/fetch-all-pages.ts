@@ -1,7 +1,8 @@
 import { apiFetch } from "./client";
+import { MAX_PAGE_SIZE } from "./query";
 
 /** Az API legnagyobb lapmérete. */
-export const FETCH_PAGE_SIZE = 100;
+export const FETCH_PAGE_SIZE = MAX_PAGE_SIZE;
 
 /**
  * Egy lapozott lista összes elemét összegyűjti: az `urlForPage` adja az adott

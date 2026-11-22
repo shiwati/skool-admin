@@ -20,7 +20,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useZodForm } from "@/hooks/use-zod-form";
-import { ApiError, apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch, jsonInit } from "@/lib/api/client";
 import {
 	eventFormSchema,
 	toCreateEventInput,
@@ -217,15 +217,12 @@ export function EventForm(props: EventFormProps) {
 				props.mode === "edit"
 					? `/api/events/${props.event.id}`
 					: "/api/events",
-				{
-					method: props.mode === "edit" ? "PATCH" : "POST",
-					headers: { "content-type": "application/json" },
-					body: JSON.stringify(
-						props.mode === "edit"
-							? toUpdateEventInput(values)
-							: toCreateEventInput(values),
-					),
-				},
+				jsonInit(
+					props.mode === "edit" ? "PATCH" : "POST",
+					props.mode === "edit"
+						? toUpdateEventInput(values)
+						: toCreateEventInput(values),
+				),
 			);
 			setSaved(true);
 			toast.success("A program mentve.");

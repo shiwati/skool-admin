@@ -25,7 +25,7 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useZodForm } from "@/hooks/use-zod-form";
-import { ApiError, apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch, jsonInit } from "@/lib/api/client";
 import {
 	APPLICANT_FIELD_LABELS,
 	applicantEditSchema,
@@ -125,14 +125,10 @@ export function ApplicantEditForm({
 		try {
 			await apiFetch<{ updatedAt: string }>(
 				`/api/applicants/${encodeURIComponent(id)}/edit`,
-				{
-					method: "POST",
-					headers: { "content-type": "application/json" },
-					body: JSON.stringify({
-						...values,
-						expectedUpdatedAt: updatedAt,
-					}),
-				},
+				jsonInit("POST", {
+					...values,
+					expectedUpdatedAt: updatedAt,
+				}),
 			);
 			// Clean form: no "unsaved changes" prompt while navigating away.
 			reset(values);

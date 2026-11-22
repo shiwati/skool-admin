@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ApiError, apiFetch } from "@/lib/api/client";
+import { ApiError, apiErrorMessage, apiFetch } from "@/lib/api/client";
 import { formatCount } from "@/lib/applicants/format";
 
 type SyncResult = {
@@ -34,14 +34,6 @@ function syncMessage(result: SyncResult): string {
 }
 
 /** A szerver magyar hibaüzenetét mutatjuk; ismeretlen válasznál általános szöveget. */
-function errorMessage(error: unknown): string {
-	if (error instanceof ApiError) {
-		const message = (error.body as { error?: unknown } | undefined)?.error;
-		if (typeof message === "string" && error.status !== 500) return message;
-	}
-	return SYNC_FAILED;
-}
-
 /**
  * A program jelentkezői sheetjének szinkronizálása (`POST /api/events/[id]/sync`).
  * Siker után frissíti a szerveroldali adatokat, és meghívja az `onSynced`-et.
@@ -71,7 +63,7 @@ export function SheetSyncButton({
 			router.refresh();
 		} catch (error) {
 			if (error instanceof ApiError && error.status === 401) return;
-			toast.error(errorMessage(error));
+			toast.error(apiErrorMessage(error, SYNC_FAILED));
 		} finally {
 			setPending(false);
 		}

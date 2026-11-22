@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ApiError, apiFetch } from "@/lib/api/client";
+import { ApiError, apiErrorMessage, apiFetch } from "@/lib/api/client";
 import { formatCount } from "@/lib/applicants/format";
 import { ROLE_LABELS, type FeedbackRoleKey } from "@/lib/feedback/questions";
 
@@ -28,14 +28,6 @@ export function syncMessage(result: SyncResult): string {
 		.join("; ");
 }
 
-function errorMessage(error: unknown): string {
-	if (error instanceof ApiError) {
-		const message = (error.body as { error?: unknown } | undefined)?.error;
-		if (typeof message === "string" && error.status !== 500) return message;
-	}
-	return SYNC_FAILED;
-}
-
 /** A program visszajelző sheetjeinek beolvasása (csak az új válaszok). */
 export function FeedbackSyncButton({ eventId }: { eventId: string }) {
 	const router = useRouter();
@@ -53,7 +45,7 @@ export function FeedbackSyncButton({ eventId }: { eventId: string }) {
 			router.refresh();
 		} catch (error) {
 			if (error instanceof ApiError && error.status === 401) return;
-			toast.error(errorMessage(error));
+			toast.error(apiErrorMessage(error, SYNC_FAILED));
 		} finally {
 			setPending(false);
 		}

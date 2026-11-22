@@ -24,7 +24,7 @@
 - **Biztonsági fejlécek:** a `next.config.ts` minden válaszra HSTS-t, `X-Frame-Options: DENY`-t, `nosniff`-et, `Referrer-Policy`-t és `Permissions-Policy`-t tesz. Az oldalakra a `src/proxy.ts` kérésenként új nonce-szal Content-Security-Policy-t állít (`buildCsp`, `src/lib/csp.ts`): script csak a saját originről és nonce-szal (`strict-dynamic`), `unsafe-inline` nélkül fut; kép a Google profilképekhez, űrlap-átirányítás az `accounts.google.com`-ra és a Vercel preview toolbar (`vercel.live`) engedélyezett. Új külső forrást (script, kép, analitika) a `csp.ts`-be kell felvenni, különben a böngésző blokkolja. A proxy a prefetch-kéréseket kihagyja.
 - **`session.user.id`:** a `session` callback a belső `User.id`-t a sessionbe teszi, hogy az írási végpontok rögzíthessék, ki végezte a műveletet (pl. `deletedById`). Típus: `src/types/next-auth.d.ts`.
 
-Az olvasó API végpontok a `handleQuery`-n keresztül védettek (lásd [api.md](api.md)); a `POST /api/applicants/delete` maga hívja a `getAdminSession()`-t.
+Az olvasó API végpontok a `handleQuery`-n, az írók a `handleBody` / `handleAdmin`-on keresztül védettek (lásd [api.md](api.md)); mindhárom a `getAdminSession()`-t hívja.
 
 ## Naplózás
 

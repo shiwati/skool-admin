@@ -5,7 +5,12 @@ import { useId, useState } from "react";
 import { fieldControlClass } from "@/components/form/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ApiError, apiFetch } from "@/lib/api/client";
+import {
+	ApiError,
+	apiErrorMessage,
+	apiFetch,
+	jsonInit,
+} from "@/lib/api/client";
 import { defaultFeedbackMapping } from "@/lib/feedback/parse";
 import {
 	CUSTOM_KIND_LABELS,
@@ -142,21 +147,13 @@ export function SheetMappingEditor({
 		try {
 			const result = await apiFetch<{ headers: string[] }>(
 				"/api/sheets/headers",
-				{
-					method: "POST",
-					headers: { "content-type": "application/json" },
-					body: JSON.stringify({ url }),
-				},
+				jsonInit("POST", { url }),
 			);
 			setLoaded({ url, headers: result.headers });
 		} catch (e) {
 			if (e instanceof ApiError && e.status === 401) return;
-			const message = (e instanceof ApiError &&
-				(e.body as { error?: unknown } | undefined)?.error) as unknown;
 			setLoadError(
-				typeof message === "string" && e instanceof ApiError
-					? message
-					: "A fejlécek betöltése nem sikerült.",
+				apiErrorMessage(e, "A fejlécek betöltése nem sikerült."),
 			);
 		} finally {
 			setLoading(false);

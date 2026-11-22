@@ -17,7 +17,12 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ApiError, apiFetch } from "@/lib/api/client";
+import {
+	ApiError,
+	apiErrorMessage,
+	apiFetch,
+	jsonInit,
+} from "@/lib/api/client";
 import { formatDateTime } from "@/lib/applicants/format";
 import {
 	MAX_HIGHLIGHTED,
@@ -57,14 +62,6 @@ const ROLE_LABELS: Record<FeedbackRoleKey, string> = {
 	PARTICIPANT: "Résztvevő",
 	MENTOR: "Mentor",
 };
-
-function errorMessage(error: unknown, fallback: string): string {
-	if (error instanceof ApiError) {
-		const message = (error.body as { error?: unknown } | undefined)?.error;
-		if (typeof message === "string" && error.status !== 500) return message;
-	}
-	return fallback;
-}
 
 export function ReportEditor({
 	eventId,
@@ -130,16 +127,12 @@ export function ReportEditor({
 		if (pending) return;
 		setPending("save");
 		try {
-			await apiFetch(base, {
-				method: "PUT",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ content }),
-			});
+			await apiFetch(base, jsonInit("PUT", { content }));
 			toast.success("A riport adatai elmentve.");
 			router.refresh();
 		} catch (error) {
 			if (error instanceof ApiError && error.status === 401) return;
-			toast.error(errorMessage(error, "A mentés nem sikerült."));
+			toast.error(apiErrorMessage(error, "A mentés nem sikerült."));
 		} finally {
 			setPending(null);
 		}
@@ -152,11 +145,7 @@ export function ReportEditor({
 		try {
 			const doc = await apiFetch<Omit<EditorDocument, "createdBy">>(
 				`${base}/documents`,
-				{
-					method: "POST",
-					headers: { "content-type": "application/json" },
-					body: JSON.stringify({ content }),
-				},
+				jsonInit("POST", { content }),
 			);
 			setCreated({ ...doc, createdBy: null });
 			toast.success("A Google Doc elkészült.");
@@ -164,7 +153,7 @@ export function ReportEditor({
 		} catch (error) {
 			if (error instanceof ApiError && error.status === 401) return;
 			toast.error(
-				errorMessage(
+				apiErrorMessage(
 					error,
 					"A Google Doc nem készült el. Próbáld újra.",
 				),

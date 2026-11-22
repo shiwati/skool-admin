@@ -84,3 +84,7 @@ export function parseStoredContent(
 	const parsed = reportContentSchema.safeParse(stored);
 	return parsed.success ? parsed.data : fallback;
 }
+
+/** A riport-végpontok törzse `{ content }`; a séma a `content`-et kapja. */
+export const selectContent = (body: unknown) =>
+	(body as { content?: unknown } | null)?.content;
