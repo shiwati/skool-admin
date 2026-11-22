@@ -37,7 +37,8 @@
 		"services:up": "docker compose up -d --wait",
 		"services:down": "docker compose down",
 		"prepare": "husky",
-		"postinstall": "prisma generate"
+		"postinstall": "prisma generate",
+		"ci:local": "bash scripts/ci-local.sh"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "6.0.2",
