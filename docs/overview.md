@@ -25,7 +25,7 @@ src/
   components/
     ui/             shadcn primitívek
     charts/         ChartContainer (Recharts, akadálymentes)
-    data-table.tsx  TanStack tábla, kliensoldali rendezés/lapozás
+    list/           szerveroldali lapozású listák közös elemei (SortableTh, EmptyState…)
   hooks/            useZodForm
   lib/
     api/            handler.ts (handleQuery, handleBody, handleAdmin), google-errors.ts, client.ts (apiFetch, jsonInit, apiErrorMessage), query.ts (paraméter-segédek)

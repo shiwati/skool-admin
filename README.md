@@ -72,7 +72,7 @@ src/
   components/
     charts/chart-container.tsx
     ui/button.tsx
-    data-table.tsx
+    list/                  shared pieces for server-paginated tables
   hooks/use-zod-form.ts
   lib/
     auth.ts
@@ -183,7 +183,7 @@ NextAuth.js v4 is intentionally used instead of the v5 beta. Plan and test a del
 - Tailwind CSS v4 uses CSS-first configuration and semantic theme tokens in `src/app/globals.css`.
 - `components.json` configures shadcn/ui aliases and the neutral theme. `src/components/ui` contains locally owned primitives. Add components using `npx shadcn@latest add <component>`.
 - Lucide supplies icons. Client Components are limited to interactive boundaries.
-- `DataTable` supplies typed TanStack columns, client-side sorting, accessible markup, empty state, and pagination. It is intended for bounded datasets; introduce server-side pagination when actual requirements warrant it.
+- Lists are paginated on the server. `src/lib/list-state.ts` holds the shared URL state helpers, `src/components/list/` the sortable headers, state rows and empty states, and `usePagedQuery` the client-side page fetch.
 - `ChartContainer` provides a labelled responsive Recharts boundary. Supply accessible chart content and textual/tabular alternatives when adding real charts.
 - `useZodForm` connects React Hook Form to Zod, including input/output transforms. `formatValidationErrors` produces reusable field/form errors for server validation. Validate submitted data on the server as well as in the browser.
 
