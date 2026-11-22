@@ -39,6 +39,10 @@ Tudatosan nem javított viselkedések (2026-11-21-i audit). Ha ezekkel kapcsolat
 
 - A státuszchipek darabszámai (és a „Mind”) az áttekintés számlálóiból jönnek, amelyek az anonimizált jelentkezőket is számolják (statisztika). A tábla viszont kihagyja őket (`deletedAt: null`), így egy chip száma nagyobb lehet a sorok számánál.
 
+**Jelentkezők szűrése**
+
+- Az életkor-szűrő (`ageFrom`/`ageTo`, `ageRangeToBirthYear` a `src/lib/api/query.ts`-ben) a szerver saját órájának évéből számol (`getFullYear()`; Vercelen UTC), nem budapesti időből. Január 1-jén 0:00 és 1:00 (budapesti idő) között ezért egy órán át még az előző évvel szűr. A megjelenített életkor a böngésző idejéből jön, így ebben az órában a kettő eltérhet.
+
 **Egyéb**
 
 - Az anonimizálás megtartja a születési évet és a lakóhelyet (szándékos döntés), így ezek a dashboard demográfiájában továbbra is szerepelnek.
