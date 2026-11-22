@@ -17,6 +17,7 @@ npm run lint && npm run typecheck && npm run format:check
 npm run test:e2e                           # Playwright E2E (lásd lent)
 npx playwright test e2e/events-list.spec.ts  # egy E2E fájl
 npm run test:e2e:ui                        # interaktív futtató
+npm run ci:local                           # PR előtt: minden, amit a GitHub CI futtat (--no-e2e, --install)
 ```
 
 ## E2E tesztek (Playwright)

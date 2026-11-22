@@ -17,6 +17,7 @@ npm test                   # vitest run (all)
 npx vitest run src/lib/utils.test.ts      # single file
 npx vitest run -t "returns readiness"     # single test by name
 npm run test:e2e           # Playwright E2E: builds, serves on :3100, own *_e2e DB (needs services:up; once: npx playwright install chromium)
+npm run ci:local           # before a PR: everything GitHub CI runs (ci, migrations, e2e); --no-e2e, --install
 npm run format:check
 npm run build              # prisma generate + next build (needs valid env vars)
 npm run db:migrate -- --name describe_change   # author a migration; commit it
