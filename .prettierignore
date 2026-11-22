@@ -10,3 +10,5 @@ prisma/migrations
 .claude/skills
 .agents/skills
 skills-lock.json
+/test-results
+/playwright-report

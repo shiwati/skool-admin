@@ -93,6 +93,8 @@ docker/pgadmin/servers.json
 tests/
   setup.ts
   server-only.ts
+e2e/                  # Playwright end-to-end tests (own database, see below)
+playwright.config.ts
 ```
 
 Unit tests are colocated with the code they exercise. Add only necessary application folders as features emerge.
@@ -204,9 +206,16 @@ npm test
 npm run test:coverage
 npm run format:check
 npm run build
+npm run test:e2e        # Playwright, needs services:up (see below)
 ```
 
 Vitest uses Testing Library for interactive components and mocks external boundaries. Unit tests cover configuration validation, the table, form resolver integration, validation formatting, and health responses.
+
+### End-to-end tests
+
+Playwright drives the real app in Chromium. One-time setup: `npx playwright install chromium`. With the local Postgres running (`npm run services:up`), `npm run test:e2e` builds the app, starts it on port 3100 (so it does not clash with `npm run dev` on 3000) and runs `e2e/*.spec.ts`; `npm run test:e2e:ui` opens the interactive runner.
+
+The tests use their own database, `<DATABASE_URL database>_e2e` on the same server (override with `E2E_DATABASE_URL`). Before every run the setup project creates it if needed, applies the migrations, **empties it** and loads the fixtures from `e2e/support/fixtures.ts`. It refuses any database that is not local or whose name does not end in `_e2e`, so the development data is never touched. Sign-in needs no Google account: the setup writes a NextAuth `Session` row and hands its cookie to the browser. CI runs them in `.github/workflows/e2e.yml` with a throwaway Postgres service.
 
 Husky runs lint-staged on pre-commit. It formats and lints only staged files; the full checks remain required before release.
 

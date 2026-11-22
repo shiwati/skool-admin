@@ -4,29 +4,18 @@ schema: spec-driven
 # Add only constraints that should guide OpenSpec artifacts and workflows.
 # Include constraints an agent cannot infer by reading the code.
 # Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+# Per-artifact rules
+rules:
+    tasks:
+        - If the change touches the admin UI, pages or API routes, end with a final "Verification" group that runs `npm run test:e2e` once after all other tasks (unit tests, lint, typecheck go there too). Skip the E2E task for spec/docs-only or pure lib changes.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+# Per-operation guidance (advisory)
+operations:
+    apply:
+        guidance:
+            - Do not run Playwright (`npm run test:e2e`) after individual tasks; run Vitest for the touched files instead. Run the E2E suite only for the final Verification task, after every other task is done.
+            - If local Postgres is not running, do not start it; mark the E2E task blocked and tell the user instead of checking it off.
+    archive:
+        guidance:
+            - Before archiving, confirm the E2E Verification task (if any) is checked; otherwise warn the user.
