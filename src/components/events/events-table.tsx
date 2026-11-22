@@ -1,18 +1,12 @@
 "use client";
 
-import {
-	ArrowDown,
-	ArrowUp,
-	ArrowUpDown,
-	CalendarX,
-	MoreHorizontal,
-	Pencil,
-	Trash2,
-	Users,
-} from "lucide-react";
+import { CalendarX, MoreHorizontal, Pencil, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { CSSProperties, MouseEvent } from "react";
+import type { MouseEvent } from "react";
+import { EmptyState } from "@/components/list/empty-state";
+import { SortableTh, TH_CLASS } from "@/components/list/sortable-header";
+import { TableMessageRow } from "@/components/list/table-state-rows";
 import { Pager } from "@/components/shared/pager";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,7 +16,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { PageSize } from "@/lib/applicants/list-params";
 import { programColorClass } from "@/lib/applicants/format";
 import { defaultColumnSettings, visibleColumns } from "@/lib/column-settings";
 import {
@@ -34,8 +27,8 @@ import {
 	defaultOrder,
 	type EventSortKey,
 	type EventTab,
-	type SortOrder,
 } from "@/lib/events/list-params";
+import type { PageSize, SortOrder } from "@/lib/list-state";
 import { PHASE_LABELS } from "@/lib/events/phase";
 import { openRowHref } from "@/lib/row-nav";
 import { cn } from "@/lib/utils";
@@ -63,9 +56,6 @@ export type EventListItem = {
 	capacity: number;
 	applicationCounts: { total: number };
 };
-
-const headClass =
-	"px-3 py-2.5 font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase";
 
 const DEFAULT_COLUMNS = visibleColumns(
 	defaultColumnSettings(EVENT_COLUMN_CONFIG),
@@ -179,9 +169,10 @@ export function EventsTable({
 									? { width: `${column.width}px` }
 									: undefined;
 								return column.sortKey ? (
-									<SortHeader
+									<SortableTh
 										key={id}
 										{...sortProps}
+										initialOrder={defaultOrder}
 										column={column.sortKey}
 										label={column.label}
 										style={style}
@@ -190,7 +181,7 @@ export function EventsTable({
 									<th
 										key={id}
 										scope="col"
-										className={headClass}
+										className={TH_CLASS}
 										style={style}
 									>
 										{column.label}
@@ -204,17 +195,12 @@ export function EventsTable({
 					</thead>
 					<tbody>
 						{items.length === 0 && (
-							<tr>
-								<td
-									colSpan={columns.length + 1}
-									className="px-6 py-12"
-								>
-									<EventsEmptyState
-										filtersActive={filtersActive}
-										onClearFilters={onClearFilters}
-									/>
-								</td>
-							</tr>
+							<TableMessageRow colSpan={columns.length + 1}>
+								<EventsEmptyState
+									filtersActive={filtersActive}
+									onClearFilters={onClearFilters}
+								/>
+							</TableMessageRow>
 						)}
 						{items.map((item) => (
 							<tr
@@ -390,74 +376,28 @@ function EventsEmptyState({
 	onClearFilters: () => void;
 }) {
 	return (
-		<div className="mx-auto flex max-w-sm flex-col items-center gap-2 text-center">
-			<span className="flex size-10 items-center justify-center rounded-full bg-sky-50">
-				<CalendarX aria-hidden="true" className="size-5" />
-			</span>
-			<h2 className="text-[15px] leading-[22px] font-semibold">
-				{filtersActive
+		<EmptyState
+			icon={CalendarX}
+			title={
+				filtersActive
 					? "Nincs a szűrésnek megfelelő program"
-					: "Ebben a szakaszban nincs program"}
-			</h2>
-			{filtersActive ? (
-				<Button variant="surface" size="sm" onClick={onClearFilters}>
-					Szűrők törlése
-				</Button>
-			) : (
-				<p className="text-xs text-text-secondary">
-					Nézd meg a többi fület, vagy hozz létre új programot.
-				</p>
-			)}
-		</div>
-	);
-}
-
-function SortHeader({
-	sort,
-	order,
-	onSort,
-	column,
-	label,
-	style,
-}: {
-	column: EventSortKey;
-	label: string;
-	style?: CSSProperties;
-	sort: EventSortKey;
-	order: SortOrder;
-	onSort: (sort: EventSortKey, order: SortOrder) => void;
-}) {
-	const active = column === sort;
-	const Icon = !active ? ArrowUpDown : order === "asc" ? ArrowUp : ArrowDown;
-	return (
-		<th
-			scope="col"
-			className={headClass}
-			style={style}
-			aria-sort={
-				active ? (order === "asc" ? "ascending" : "descending") : "none"
+					: "Ebben a szakaszban nincs program"
 			}
-		>
-			<button
-				type="button"
-				className="inline-flex items-center gap-1 uppercase hover:text-text-primary"
-				onClick={() =>
-					onSort(
-						column,
-						active
-							? order === "asc"
-								? "desc"
-								: "asc"
-							: defaultOrder(column),
-					)
-				}
-			>
-				{label}
-				<Icon
-					aria-hidden="true"
-					className={cn("size-3.5", !active && "opacity-50")}
-				/>
-			</button>
-		</th>
+			description={
+				!filtersActive &&
+				"Nézd meg a többi fület, vagy hozz létre új programot."
+			}
+			action={
+				filtersActive && (
+					<Button
+						variant="surface"
+						size="sm"
+						onClick={onClearFilters}
+					>
+						Szűrők törlése
+					</Button>
+				)
+			}
+		/>
 	);
 }

@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { applicantHref, cardValue, COLUMNS } from "./columns";
 import { LOCKED_COLUMN, type ColumnId } from "@/lib/applicants/column-settings";
 import type { TableData } from "./applicants-table";
-import { ListEmptyState, ListErrorState } from "./list-state";
+import { ListEmptyState, ListErrorState } from "@/components/list/list-state";
 
 const SKELETON_CARDS = 5;
 

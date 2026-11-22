@@ -3,7 +3,7 @@ import {
 	DEFAULT_EVENT_LIST_STATE,
 	parseEventListState,
 	toEventSearchParams,
-	toEventsQueryInput,
+	toEventsApiQuery,
 	updateEventListState,
 } from "./list-params";
 
@@ -47,7 +47,9 @@ describe("event list URL state", () => {
 	});
 
 	it("maps the tab to the API phase", () => {
-		expect(toEventsQueryInput(parse("")).phase).toBeUndefined();
-		expect(toEventsQueryInput(parse("tab=planned")).phase).toBe("planned");
+		expect(toEventsApiQuery(parse("")).has("phase")).toBe(false);
+		expect(toEventsApiQuery(parse("tab=planned")).get("phase")).toBe(
+			"planned",
+		);
 	});
 });

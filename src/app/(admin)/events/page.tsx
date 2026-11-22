@@ -12,8 +12,10 @@ import {
 } from "@/lib/events/list";
 import {
 	parseEventListState,
-	toEventsQueryInput,
+	toEventsApiQuery,
 } from "@/lib/events/list-params";
+import { searchParamsToObject } from "@/lib/api/query";
+import { toURLSearchParams } from "@/lib/list-state";
 
 export const metadata: Metadata = { title: "Programok" };
 
@@ -24,13 +26,12 @@ type Props = {
 // Access is enforced by the (admin) layout. Data is read on the server for
 // the URL state; the client view only rewrites the URL.
 export default async function EventsPage({ searchParams }: Props) {
-	const params = new URLSearchParams();
-	for (const [key, value] of Object.entries(await searchParams)) {
-		for (const v of [value ?? []].flat()) params.append(key, v);
-	}
-	const state = parseEventListState(params);
-	// The URL state is already sanitised, so this parse only applies defaults.
-	const query = eventsQuerySchema.parse(toEventsQueryInput(state));
+	const state = parseEventListState(toURLSearchParams(await searchParams));
+	// Same query the client would send; the URL state is already sanitised,
+	// so this parse only applies defaults.
+	const query = eventsQuerySchema.parse(
+		searchParamsToObject(toEventsApiQuery(state)),
+	);
 	const now = new Date();
 
 	const [page, counts, bounds] = await Promise.all([

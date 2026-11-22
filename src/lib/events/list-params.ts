@@ -1,4 +1,13 @@
-import { PAGE_SIZES, type PageSize } from "@/lib/applicants/list-params";
+import {
+	oneOf,
+	parseOrder,
+	parsePage,
+	parsePageSize,
+	positiveInt,
+	withPageReset,
+	type PageSize,
+	type SortOrder,
+} from "@/lib/list-state";
 import { EVENT_PHASES, type EventPhase } from "./phase";
 import { tagSchema } from "./tags";
 
@@ -14,7 +23,6 @@ export const EVENT_SORT_KEYS = [
 	"capacity",
 ] as const;
 export type EventSortKey = (typeof EVENT_SORT_KEYS)[number];
-export type SortOrder = "asc" | "desc";
 
 export type EventTab = EventPhase | "all";
 export const EVENT_TABS: EventTab[] = ["all", ...EVENT_PHASES];
@@ -58,13 +66,6 @@ function text(value: string | null) {
 	return trimmed ? trimmed : undefined;
 }
 
-function oneOf<T extends string>(
-	values: readonly T[],
-	value: string | null,
-): T | undefined {
-	return values.find((v) => v === value);
-}
-
 /** Érvényes címkék normalizálva, ismétlődés nélkül; a hibásak csendben kimaradnak. */
 function parseTags(values: string[]): string[] {
 	const tags = values.flatMap((value) => {
@@ -74,16 +75,9 @@ function parseTags(values: string[]): string[] {
 	return [...new Set(tags)];
 }
 
-function positiveInt(value: string | null) {
-	if (value === null || !/^\d+$/.test(value)) return undefined;
-	const n = Number(value);
-	return n >= 1 ? n : undefined;
-}
-
 export function parseEventListState(params: URLSearchParams): EventListState {
 	const sort = oneOf(EVENT_SORT_KEYS, params.get("sort")) ?? "from";
 	const year = positiveInt(params.get("year"));
-	const size = positiveInt(params.get("pageSize"));
 	return {
 		tab: oneOf(EVENT_TABS, params.get("tab")) ?? DEFAULT_TAB,
 		q: text(params.get("q")),
@@ -93,11 +87,9 @@ export function parseEventListState(params: URLSearchParams): EventListState {
 		instructor: text(params.get("instructor")),
 		year: year && year >= 2000 && year <= 2100 ? year : undefined,
 		sort,
-		order:
-			oneOf(["asc", "desc"] as const, params.get("order")) ??
-			defaultOrder(sort),
-		page: positiveInt(params.get("page")) ?? 1,
-		pageSize: PAGE_SIZES.find((n) => n === size) ?? DEFAULT_PAGE_SIZE,
+		order: parseOrder(params.get("order"), defaultOrder(sort)),
+		page: parsePage(params.get("page")),
+		pageSize: parsePageSize(params.get("pageSize"), DEFAULT_PAGE_SIZE),
 	};
 }
 
@@ -125,8 +117,7 @@ export function updateEventListState(
 	state: EventListState,
 	patch: Partial<EventListState>,
 ): EventListState {
-	const resetsPage = Object.keys(patch).some((key) => key !== "page");
-	return { ...state, ...(resetsPage && { page: 1 }), ...patch };
+	return withPageReset(state, patch);
 }
 
 export function hasActiveEventFilters(filters: EventListFilters): boolean {
@@ -171,21 +162,4 @@ export function toEventsApiQuery(
 	params.set("sort", state.sort);
 	params.set("order", state.order);
 	return params;
-}
-
-/** Állapot → `eventsQuerySchema` bemenete (a szerver oldali lekéréshez). */
-export function toEventsQueryInput(state: EventListState) {
-	return {
-		page: state.page,
-		pageSize: state.pageSize,
-		q: state.q,
-		tags: state.tags.length ? state.tags : undefined,
-		place: state.place,
-		companyName: state.companyName,
-		instructor: state.instructor,
-		year: state.year,
-		phase: state.tab === "all" ? undefined : state.tab,
-		sort: state.sort,
-		order: state.order,
-	};
 }

@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatCount } from "@/lib/applicants/format";
-import { PAGE_SIZES, type PageSize } from "@/lib/applicants/list-params";
+import { PAGE_SIZES, type PageSize } from "@/lib/list-state";
 import { pageNumbers } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 

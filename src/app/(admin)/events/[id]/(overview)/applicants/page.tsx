@@ -12,6 +12,7 @@ import { applicantsHref, eventApplicantsHref } from "@/lib/events/links";
 import { getEventOverview } from "@/lib/events/overview";
 import { logger } from "@/lib/logger";
 import { requireAdmin } from "@/lib/session";
+import { toURLSearchParams } from "@/lib/list-state";
 
 type Props = PageProps<"/events/[id]/applicants">;
 
@@ -40,24 +41,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 	};
 }
 
-/** A Next `searchParams`-a → `URLSearchParams` (ismételt kulcsból az első). */
-function toSearchParams(
-	searchParams: Record<string, string | string[] | undefined>,
-) {
-	const params = new URLSearchParams();
-	for (const [key, value] of Object.entries(searchParams)) {
-		const first = [value ?? []].flat()[0];
-		if (first !== undefined) params.set(key, first);
-	}
-	return params;
-}
-
 export default async function EventApplicantsPage({
 	params,
 	searchParams,
 }: Props) {
 	const { id } = await params;
-	const view = parseApplicationsParams(toSearchParams(await searchParams));
+	const view = parseApplicationsParams(toURLSearchParams(await searchParams));
 	const [overview, initial] = await Promise.all([
 		load(id),
 		loadInitial(id, view),

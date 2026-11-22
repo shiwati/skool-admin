@@ -1,13 +1,18 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ArrowUpDown, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
-import { ListErrorState } from "@/components/applicants/list-state";
+import { ListErrorState } from "@/components/list/list-state";
+import { SortableTh, TH_CLASS } from "@/components/list/sortable-header";
+import {
+	type ListData,
+	SkeletonRows,
+	TableMessageRow,
+} from "@/components/list/table-state-rows";
 import { Pager } from "@/components/shared/pager";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
 	ageFromBirthYear,
 	EMPTY,
@@ -15,20 +20,14 @@ import {
 	isOver16,
 	TAG_BADGE_CLASSES,
 } from "@/lib/applicants/format";
-import type { PageSize } from "@/lib/applicants/list-params";
 import type { EventApplicationItem } from "@/lib/events/applications";
-import type {
-	ApplicationsSortKey as ApplicationSortKey,
-	SortOrder,
-} from "@/lib/events/applications-params";
+import type { ApplicationsSortKey as ApplicationSortKey } from "@/lib/events/applications-params";
+import type { PageSize, SortOrder } from "@/lib/list-state";
 import { openRowHref } from "@/lib/row-nav";
 import { cn } from "@/lib/utils";
 import { StatusCell } from "./status-cell";
 
-export type ApplicationsData =
-	| { status: "loading" }
-	| { status: "error" }
-	| { status: "success"; items: EventApplicationItem[]; total: number };
+export type ApplicationsData = ListData<EventApplicationItem>;
 
 type Props = {
 	data: ApplicationsData;
@@ -53,8 +52,6 @@ type Props = {
 	onReload: () => void;
 };
 
-const SKELETON_ROWS = 6;
-
 type Column = {
 	label: string;
 	sortKey?: ApplicationSortKey;
@@ -73,15 +70,6 @@ const COLUMNS: Column[] = [
 	{ label: "Hírlevél", className: "hidden w-24 md:table-cell" },
 	{ label: "Státusz", sortKey: "status", className: "w-40" },
 ];
-
-function nextOrder(
-	column: ApplicationSortKey,
-	sort: ApplicationSortKey,
-	order: SortOrder,
-): SortOrder {
-	if (column !== sort) return "asc";
-	return order === "asc" ? "desc" : "asc";
-}
 
 export function ApplicationsTable({
 	data,
@@ -142,64 +130,28 @@ export function ApplicationsTable({
 									}
 								/>
 							</th>
-							{COLUMNS.map((column) => {
-								const { sortKey } = column;
-								const active =
-									sortKey !== undefined && sortKey === sort;
-								return (
+							{COLUMNS.map((column) =>
+								column.sortKey ? (
+									<SortableTh
+										key={column.label}
+										column={column.sortKey}
+										label={column.label}
+										sort={sort}
+										order={order}
+										initialOrder={() => "asc"}
+										onSort={onSort}
+										className={column.className}
+									/>
+								) : (
 									<th
 										key={column.label}
 										scope="col"
 										className={cn(
-											"px-3 py-2.5 font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase",
+											TH_CLASS,
 											column.className,
 										)}
-										aria-sort={
-											sortKey === undefined
-												? undefined
-												: active
-													? order === "asc"
-														? "ascending"
-														: "descending"
-													: "none"
-										}
 									>
-										{sortKey ? (
-											<button
-												type="button"
-												className="inline-flex items-center gap-1 uppercase hover:text-text-primary"
-												onClick={() =>
-													onSort(
-														sortKey,
-														nextOrder(
-															sortKey,
-															sort,
-															order,
-														),
-													)
-												}
-											>
-												{column.label}
-												{active ? (
-													order === "asc" ? (
-														<ArrowUp
-															aria-hidden="true"
-															className="size-3.5"
-														/>
-													) : (
-														<ArrowDown
-															aria-hidden="true"
-															className="size-3.5"
-														/>
-													)
-												) : (
-													<ArrowUpDown
-														aria-hidden="true"
-														className="size-3.5 opacity-50"
-													/>
-												)}
-											</button>
-										) : column.subLabel ? (
+										{column.subLabel ? (
 											<div className="flex flex-col items-start">
 												<span>{column.label}</span>
 												<span className="font-normal">
@@ -210,57 +162,41 @@ export function ApplicationsTable({
 											column.label
 										)}
 									</th>
-								);
-							})}
+								),
+							)}
 						</tr>
 					</thead>
 					<tbody aria-busy={data.status === "loading" || undefined}>
-						{data.status === "loading" &&
-							Array.from({ length: SKELETON_ROWS }, (_, i) => (
-								<tr
-									key={i}
-									className="border-b border-border-default last:border-0"
-									data-testid="skeleton-row"
-								>
-									{Array.from({ length: colSpan }, (_, j) => (
-										<td key={j} className="px-3 py-3">
-											<Skeleton className="h-3.5 w-3/4" />
-										</td>
-									))}
-								</tr>
-							))}
+						{data.status === "loading" && (
+							<SkeletonRows columns={colSpan} />
+						)}
 
 						{data.status === "error" && (
-							<tr>
-								<td colSpan={colSpan} className="px-6 py-12">
-									<ListErrorState onReload={onReload} />
-								</td>
-							</tr>
+							<TableMessageRow colSpan={colSpan}>
+								<ListErrorState onReload={onReload} />
+							</TableMessageRow>
 						)}
 
 						{data.status === "success" && items.length === 0 && (
-							<tr>
-								<td
-									colSpan={colSpan}
-									className="px-6 py-12 text-center text-sm text-text-secondary"
-								>
-									{filtersActive ? (
-										<>
-											Nincs a szűrésnek megfelelő
-											jelentkezés.{" "}
-											<button
-												type="button"
-												className="text-info-fg underline underline-offset-2 hover:text-ink"
-												onClick={onClearFilters}
-											>
-												Szűrő törlése
-											</button>
-										</>
-									) : (
-										"Még nincs jelentkező ehhez a programhoz."
-									)}
-								</td>
-							</tr>
+							<TableMessageRow
+								colSpan={colSpan}
+								className="text-center text-sm text-text-secondary"
+							>
+								{filtersActive ? (
+									<>
+										Nincs a szűrésnek megfelelő jelentkezés.{" "}
+										<button
+											type="button"
+											className="text-info-fg underline underline-offset-2 hover:text-ink"
+											onClick={onClearFilters}
+										>
+											Szűrő törlése
+										</button>
+									</>
+								) : (
+									"Még nincs jelentkező ehhez a programhoz."
+								)}
+							</TableMessageRow>
 						)}
 
 						{items.map((item) => {

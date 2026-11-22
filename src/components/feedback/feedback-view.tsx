@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight, MessageSquare, Star } from "lucide-react";
+import { EmptyState } from "@/components/list/empty-state";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { KpiCard } from "@/components/events/overview/kpi-card";
@@ -244,21 +245,19 @@ function FeedbackCard({
 	);
 }
 
-function EmptyState({ filtered }: { filtered: boolean }) {
+function FeedbackEmptyState({ filtered }: { filtered: boolean }) {
 	return (
-		<div className="mx-auto flex max-w-sm flex-col items-center gap-2 px-6 py-12 text-center">
-			<span className="flex size-10 items-center justify-center rounded-full bg-surface-subtle text-text-secondary">
-				<MessageSquare aria-hidden="true" className="size-5" />
-			</span>
-			<h2 className="text-[15px] leading-[22px] font-semibold">
-				{filtered ? "Nincs találat" : "Még nincs visszajelzés"}
-			</h2>
-			<p className="text-sm text-text-secondary">
-				{filtered
+		<EmptyState
+			className="px-6 py-12"
+			icon={MessageSquare}
+			tone="neutral"
+			title={filtered ? "Nincs találat" : "Még nincs visszajelzés"}
+			description={
+				filtered
 					? "Módosíts a keresésen vagy a szűrőkön."
-					: "A program szerkesztésénél add meg a visszajelző sheeteket, majd szinkronizálj."}
-			</p>
-		</div>
+					: "A program szerkesztésénél add meg a visszajelző sheeteket, majd szinkronizálj."
+			}
+		/>
 	);
 }
 
@@ -333,7 +332,7 @@ export function FeedbackView({
 
 			<Card className="overflow-hidden">
 				{items.length === 0 ? (
-					<EmptyState filtered={filtered} />
+					<FeedbackEmptyState filtered={filtered} />
 				) : (
 					<>
 						{/* Mobile (< md): cards instead of the table (board 07.1 M). */}
