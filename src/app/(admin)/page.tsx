@@ -46,7 +46,12 @@ import {
 } from "@/lib/dashboard/insights-load";
 import { ALL_YEARS_LABEL } from "@/lib/dashboard/period";
 import { feedbackSearch } from "@/lib/feedback/format";
-import { loadDashboard, type PeriodComparison } from "@/lib/dashboard/load";
+import {
+	loadComparison,
+	resolveDashboard,
+	type DashboardData,
+	type PeriodComparison,
+} from "@/lib/dashboard/load";
 import { requireAdmin } from "@/lib/session";
 import { formatCount, formatRatio } from "@/lib/format";
 
@@ -401,28 +406,30 @@ function CompanySection({ detail }: { detail: CompanyDetail }) {
 }
 
 // Access is enforced by the (admin) layout; the session is read for the greeting.
+// Two database rounds: the filters (with the session), then every figure at once.
 export default async function DashboardPage({ searchParams }: Props) {
-	const session = await requireAdmin("/");
-	const name = session.user?.name ?? session.user?.email ?? "admin";
 	const params = await searchParams;
 	const now = new Date();
-	const data = await loadDashboard(
-		{
-			period: single(params.period),
-			program: single(params.program),
-			company: single(params.company),
-		},
-		now,
-	);
-	const programDetail = data.program
-		? await loadProgramDetail(data.program.id, now)
-		: null;
-	const companyDetail = data.company
-		? await loadCompanyDetail(data.company)
-		: null;
-	const overview =
-		data.mode === "year" ? await loadOverview(data.range) : null;
-	const { comparison } = data;
+	const [session, { base, period }] = await Promise.all([
+		requireAdmin("/"),
+		resolveDashboard(
+			{
+				period: single(params.period),
+				program: single(params.program),
+				company: single(params.company),
+			},
+			now,
+		),
+	]);
+	const name = session.user?.name ?? session.user?.email ?? "admin";
+	const [comparison, overview, programDetail, companyDetail] =
+		await Promise.all([
+			period ? loadComparison(period, now) : null,
+			base.mode === "year" ? loadOverview(base.range) : null,
+			base.program ? loadProgramDetail(base.program.id, now) : null,
+			base.company ? loadCompanyDetail(base.company) : null,
+		]);
+	const data: DashboardData = { ...base, comparison };
 	const periodLabel =
 		data.year === null ? ALL_YEARS_LABEL : String(data.year);
 

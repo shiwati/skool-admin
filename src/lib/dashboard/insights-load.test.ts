@@ -30,48 +30,44 @@ vi.mock("@/lib/db", () => ({
 	},
 }));
 
-import { loadOverview, loadProgramDetail } from "./insights-load";
+import {
+	loadCompanyDetail,
+	loadOverview,
+	loadProgramDetail,
+} from "./insights-load";
 
 describe("loadOverview", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 		applicantFindMany.mockResolvedValue([
+			{ id: "s1", birthYear: 2012, hometown: "Ózd", newsletter: true },
 			{
-				birthYear: 2012,
-				hometown: "Ózd",
-				newsletter: true,
-				applications: [
-					{
-						eventId: "a",
-						heardFromWhere: "iskola",
-						event: { from: new Date("2025-10-01T08:00:00Z") },
-					},
-					{
-						eventId: "b",
-						heardFromWhere: "iskola",
-						event: { from: new Date("2026-03-01T08:00:00Z") },
-					},
-				],
-			},
-			{
+				id: "s2",
 				birthYear: 2013,
 				hometown: "Miskolc",
 				newsletter: false,
-				applications: [
-					{
-						eventId: "a",
-						heardFromWhere: null,
-						event: { from: new Date("2025-10-01T08:00:00Z") },
-					},
-				],
 			},
+		]);
+		applicationFindMany.mockResolvedValue([
+			{ applicantId: "s1", eventId: "a", heardFromWhere: "iskola" },
+			{ applicantId: "s1", eventId: "b", heardFromWhere: "iskola" },
+			{ applicantId: "s2", eventId: "a", heardFromWhere: null },
 		]);
 		feedbackFindMany.mockResolvedValue([
 			{ role: "PARTICIPANT", overallScore: 5, recommend: "yes" },
 			{ role: "PARTICIPANT", overallScore: 4, recommend: "maybe" },
 			{ role: "MENTOR", overallScore: 3, recommend: null },
 		]);
-		eventFindMany.mockResolvedValue([
+		// The start of every program (no `where`), and the programs in scope.
+		const starts = [
+			{ id: "a", from: new Date("2025-10-01T08:00:00Z") },
+			{ id: "b", from: new Date("2026-03-01T08:00:00Z") },
+			{ id: "c", from: new Date("2026-05-01T08:00:00Z") },
+		];
+		eventFindMany.mockImplementation(async (args: { where?: unknown }) =>
+			args.where === undefined ? starts : programs,
+		);
+		const programs = [
 			{
 				id: "a",
 				mentors: ["Anna", " "],
@@ -90,12 +86,13 @@ describe("loadOverview", () => {
 				companyName: null,
 				_count: { applications: 5 },
 			},
-		]);
+		];
 	});
 
 	it("counts anonymized applicants and their applications too", async () => {
 		await loadOverview();
 		expect(applicantFindMany.mock.calls[0][0].where).toEqual({});
+		expect(applicationFindMany.mock.calls[0][0].where).toEqual({});
 		expect(eventFindMany.mock.calls[0][0].select._count).toEqual({
 			select: { applications: true },
 		});
@@ -107,8 +104,11 @@ describe("loadOverview", () => {
 			lt: new Date("2026-12-31T23:00:00Z"),
 		};
 		await loadOverview(range);
-		expect(applicantFindMany.mock.calls[0][0].where).toEqual({
-			applications: { some: { event: { from: range } } },
+		const scope = { applications: { some: { event: { from: range } } } };
+		expect(applicantFindMany.mock.calls[0][0].where).toEqual(scope);
+		// Every application of those applicants: earlier years make them returning.
+		expect(applicationFindMany.mock.calls[0][0].where).toEqual({
+			applicant: scope,
 		});
 		expect(eventFindMany.mock.calls[0][0].where).toEqual({ from: range });
 		expect(feedbackFindMany.mock.calls[0][0].where).toEqual({
@@ -177,6 +177,62 @@ describe("loadOverview", () => {
 			{ name: "Minta Kft.", applications: 3, programs: 2 },
 		]);
 		expect(overview.channels[0]).toEqual({ label: "iskola", count: 2 });
+	});
+
+	it("counts applicants with an earlier-year application as returning in a year", async () => {
+		const range = {
+			gte: new Date("2025-12-31T23:00:00Z"),
+			lt: new Date("2026-12-31T23:00:00Z"),
+		};
+		applicantFindMany.mockResolvedValue([
+			{ id: "s1", birthYear: 2012, hometown: "Ózd", newsletter: true },
+		]);
+		const overview = await loadOverview(range);
+		expect(overview.students).toBe(1);
+		expect(overview.returning).toEqual({ returning: 1, total: 1 });
+	});
+});
+
+describe("loadCompanyDetail", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		eventFindMany.mockResolvedValue([
+			{
+				id: "a",
+				name: "Python ősz",
+				from: new Date("2026-10-01T08:00:00Z"),
+				to: new Date("2026-10-05T16:00:00Z"),
+				capacity: 10,
+				mentors: ["Anna"],
+				_count: { applications: 3 },
+			},
+		]);
+		applicationFindMany.mockResolvedValue([
+			{ applicantId: "p1" },
+			{ applicantId: "p2" },
+		]);
+		feedbackFindMany.mockResolvedValue([
+			{
+				eventId: "a",
+				role: "PARTICIPANT",
+				overallScore: 4,
+				recommend: "yes",
+			},
+		]);
+	});
+
+	it("filters every query by the company's programs", async () => {
+		const detail = await loadCompanyDetail("Minta Kft.");
+		const byCompany = { event: { companyName: "Minta Kft." } };
+		expect(eventFindMany.mock.calls[0][0].where).toEqual({
+			companyName: "Minta Kft.",
+		});
+		expect(applicationFindMany.mock.calls[0][0]).toMatchObject({
+			where: byCompany,
+			distinct: ["applicantId"],
+		});
+		expect(feedbackFindMany.mock.calls[0][0].where).toEqual(byCompany);
+		expect(detail).toMatchObject({ programs: 1, students: 2 });
 	});
 });
 
