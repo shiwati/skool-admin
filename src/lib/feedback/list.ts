@@ -2,7 +2,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { cache } from "react";
 import { z } from "zod";
-import { budapestYearRange } from "@/lib/api/query";
+import { budapestYearRange, foldedContains, foldSearch } from "@/lib/api/query";
 import { db } from "@/lib/db";
 import type { Answers } from "./parse";
 import type { Recommend } from "./questions";
@@ -75,16 +75,20 @@ export type FeedbackListPage = {
 	stats: FeedbackStats;
 };
 
-function where(query: FeedbackQuery): Prisma.FeedbackWhereInput {
+/**
+ * A szűrők. A szöveges keresés a teljes kifejezésre illeszt, kis- és
+ * nagybetűt, ékezetet nem nézve: a `search_text`-et a triggere hajtogatja,
+ * a begépelt szöveget ugyanazzal a függvénnyel hajtogatjuk.
+ */
+async function where(query: FeedbackQuery): Promise<Prisma.FeedbackWhereInput> {
+	const [folded] = await foldSearch(db, query.q ? [query.q] : []);
 	return {
 		...(query.eventId && { eventId: query.eventId }),
 		...(query.role && { role: query.role }),
 		...(query.period && {
 			event: { from: budapestYearRange(Number(query.period)) },
 		}),
-		...(query.q && {
-			searchText: { contains: query.q.toLowerCase() },
-		}),
+		...(folded && { searchText: foldedContains(folded) }),
 	};
 }
 
@@ -121,8 +125,10 @@ const itemSelect = {
 	answers: true,
 } as const;
 
-async function stats(query: FeedbackQuery): Promise<FeedbackStats> {
-	const filter = where(query);
+async function stats(
+	query: FeedbackQuery,
+	filter: Prisma.FeedbackWhereInput,
+): Promise<FeedbackStats> {
 	const [aggregate, recommendGroups, participantEvents] = await Promise.all([
 		db.feedback.aggregate({
 			where: filter,
@@ -175,7 +181,7 @@ async function stats(query: FeedbackQuery): Promise<FeedbackStats> {
 export async function listFeedback(
 	query: FeedbackQuery,
 ): Promise<FeedbackListPage> {
-	const filter = where(query);
+	const filter = await where(query);
 	const total = await db.feedback.count({ where: filter });
 	const pageCount = Math.max(1, Math.ceil(total / FEEDBACK_PAGE_SIZE));
 	const page = Math.min(query.page, pageCount);
@@ -190,7 +196,7 @@ export async function listFeedback(
 			skip: (page - 1) * FEEDBACK_PAGE_SIZE,
 			take: FEEDBACK_PAGE_SIZE,
 		}),
-		stats(query),
+		stats(query, filter),
 	]);
 	return {
 		items: rows.map(toItem),

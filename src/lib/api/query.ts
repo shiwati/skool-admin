@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 
 export const MAX_PAGE_SIZE = 100;
@@ -77,6 +78,35 @@ export function searchTokens(q: string | undefined) {
 
 export function containsInsensitive(value: string) {
 	return { contains: value, mode: "insensitive" as const };
+}
+
+/** Amit a `foldSearch` a Prisma kliensből használ (tesztben mockolható). */
+export type FoldDb = Pick<PrismaClient, "$queryRaw">;
+
+/**
+ * A begépelt szűrőszövegek hajtogatása a keresőoszlopokéval azonos módon,
+ * az adatbázisban: `lower(unaccent(…))` (lásd docs/data-and-db.md,
+ * „Keresés”). Egy kérésben egyszer, a bemenet sorrendjében; üres listánál
+ * nincs lekérdezés.
+ */
+export async function foldSearch(
+	db: FoldDb,
+	texts: readonly string[],
+): Promise<string[]> {
+	if (texts.length === 0) return [];
+	const rows = await db.$queryRaw<{ folded: string }[]>`
+		SELECT lower(public.unaccent(t)) AS folded
+		FROM unnest(${[...texts]}::text[]) WITH ORDINALITY AS u(t, n)
+		ORDER BY n`;
+	return rows.map((row) => row.folded);
+}
+
+/**
+ * Részszöveg-egyezés egy hajtogatott keresőoszlopon. Nem kell `mode`: mindkét
+ * oldal már kisbetűs; a `%` és `_` jelet a Prisma escapeli.
+ */
+export function foldedContains(folded: string) {
+	return { contains: folded };
 }
 
 /**

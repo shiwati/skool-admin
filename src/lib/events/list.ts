@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import type { EventOption } from "@/lib/applicants/types";
 import {
 	budapestYearRange,
-	containsInsensitive,
+	foldedContains,
+	foldSearch,
 	optionalText,
 	orderSchema,
 	pageResult,
@@ -15,6 +16,7 @@ import {
 } from "@/lib/api/query";
 import { EVENT_PHASES, type EventPhase } from "./phase";
 import { tagSchema } from "./tags";
+import { EVENT_SEARCH_OMIT } from "@/lib/search-columns";
 
 /** A `GET /api/events` query sémája (a `/events` oldal is ezt használja). */
 export const eventsQuerySchema = z.object({
@@ -60,35 +62,52 @@ export function phaseWhere(
 	}
 }
 
-/** A szakasz nélküli szűrőfeltételek (a fülek darabszámaihoz is). */
-function filterConditions(query: EventsQuery): Prisma.EventWhereInput[] {
+/**
+ * A szakasz nélküli szűrőfeltételek (a fülek darabszámaihoz is). A szöveges
+ * szűrők kis- és nagybetűt, ékezetet nem néznek: a hajtogatott oszlopokon
+ * keresnek, a begépelt szöveget egy lekérdezéssel hajtogatva.
+ */
+async function filterConditions(
+	query: EventsQuery,
+): Promise<Prisma.EventWhereInput[]> {
+	const words = searchTokens(query.q);
+	const texts = [query.companyName, query.place, query.instructor];
+	const folded = await foldSearch(db, [
+		...texts.filter((text): text is string => Boolean(text)),
+		...words,
+	]);
+	let next = 0;
+	const [companyName, place, instructor] = texts.map((text) =>
+		text ? folded[next++] : undefined,
+	);
+
 	const and: Prisma.EventWhereInput[] = [];
 	if (query.year !== undefined)
 		and.push({ from: budapestYearRange(query.year) });
-	if (query.companyName) {
-		and.push({ companyName: containsInsensitive(query.companyName) });
+	if (companyName) {
+		and.push({ companySearch: foldedContains(companyName) });
 	}
-	if (query.place) {
+	if (place) {
 		and.push({
 			OR: [
-				{ location: containsInsensitive(query.place) },
-				{ companyName: containsInsensitive(query.place) },
+				{ locationSearch: foldedContains(place) },
+				{ companySearch: foldedContains(place) },
 			],
 		});
 	}
-	if (query.instructor) {
-		and.push({ instructor: containsInsensitive(query.instructor) });
+	if (instructor) {
+		and.push({ instructorSearch: foldedContains(instructor) });
 	}
 	if (query.tags) and.push({ tags: { hasSome: query.tags } });
-	for (const token of searchTokens(query.q)) {
-		and.push({ name: containsInsensitive(token) });
+	for (const word of folded.slice(next)) {
+		and.push({ nameSearch: foldedContains(word) });
 	}
 	return and;
 }
 
 /** Egy oldalnyi esemény, jelentkezésszámokkal státuszonként. */
 export async function listEvents(query: EventsQuery, now = new Date()) {
-	const and = filterConditions(query);
+	const and = await filterConditions(query);
 	if (query.phase) and.push(phaseWhere(query.phase, now));
 
 	const where: Prisma.EventWhereInput = { AND: and };
@@ -106,6 +125,7 @@ export async function listEvents(query: EventsQuery, now = new Date()) {
 			orderBy,
 			skip: (query.page - 1) * query.pageSize,
 			take: query.pageSize,
+			omit: EVENT_SEARCH_OMIT,
 		}),
 		db.event.count({ where }),
 	]);
@@ -141,7 +161,7 @@ export async function countEventsByPhase(
 	query: EventsQuery,
 	now = new Date(),
 ): Promise<PhaseCounts> {
-	const base = filterConditions(query);
+	const base = await filterConditions(query);
 	const [planned, closed] = await Promise.all(
 		EVENT_PHASES.map((phase) =>
 			db.event.count({

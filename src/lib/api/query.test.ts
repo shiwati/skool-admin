@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import {
+	foldedContains,
+	foldSearch,
 	ageRangeToBirthYear,
 	budapestYearRange,
 	csvList,
@@ -52,5 +54,43 @@ it("budapestYearRange uses CET boundaries", () => {
 	expect(budapestYearRange(2026)).toEqual({
 		gte: new Date("2025-12-31T23:00:00Z"),
 		lt: new Date("2026-12-31T23:00:00Z"),
+	});
+});
+
+describe("foldSearch", () => {
+	const fakeDb = (folded: string[]) => {
+		const $queryRaw = vi
+			.fn()
+			.mockResolvedValue(folded.map((value) => ({ folded: value })));
+		return { $queryRaw } as unknown as Parameters<typeof foldSearch>[0] & {
+			$queryRaw: typeof $queryRaw;
+		};
+	};
+
+	it("folds every text in one query, keeping the input order", async () => {
+		const db = fakeDb(["kovacs", "pecs"]);
+		expect(await foldSearch(db, ["Kovács", "Pécs"])).toEqual([
+			"kovacs",
+			"pecs",
+		]);
+		expect(db.$queryRaw).toHaveBeenCalledOnce();
+		const [sql, texts] = db.$queryRaw.mock.calls[0];
+		expect(sql.join("?")).toMatch(
+			/lower\(public\.unaccent\(t\)\)[\s\S]*WITH ORDINALITY[\s\S]*ORDER BY n/,
+		);
+		expect(texts).toEqual(["Kovács", "Pécs"]);
+	});
+
+	it("runs no query without text", async () => {
+		const db = fakeDb([]);
+		expect(await foldSearch(db, [])).toEqual([]);
+		expect(db.$queryRaw).not.toHaveBeenCalled();
+	});
+
+	it("passes LIKE wildcards on as plain text", async () => {
+		const db = fakeDb(["50%_off"]);
+		const [folded] = await foldSearch(db, ["50%_off"]);
+		// Prisma's `contains` escapes % and _ itself.
+		expect(foldedContains(folded)).toEqual({ contains: "50%_off" });
 	});
 });

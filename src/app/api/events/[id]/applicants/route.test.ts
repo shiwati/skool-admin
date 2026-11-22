@@ -1,16 +1,23 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { findUnique, findMany, count, getSession } = vi.hoisted(() => ({
-	findUnique: vi.fn(),
-	findMany: vi.fn(),
-	count: vi.fn(),
-	getSession: vi.fn(),
-}));
+const { findUnique, findMany, count, getSession, queryRaw } = vi.hoisted(
+	() => ({
+		findUnique: vi.fn(),
+		findMany: vi.fn(),
+		count: vi.fn(),
+		getSession: vi.fn(),
+		queryRaw: vi.fn(),
+	}),
+);
 vi.mock("next-auth", () => ({ getServerSession: getSession }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
 vi.mock("@/lib/db", () => ({
-	db: { event: { findUnique }, application: { findMany, count } },
+	db: {
+		event: { findUnique },
+		application: { findMany, count },
+		$queryRaw: queryRaw,
+	},
 }));
 vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
@@ -36,6 +43,20 @@ describe("GET /api/events/[id]/applicants", () => {
 		expect(res.status).toBe(401);
 		expect(await res.json()).toEqual({ error: "Unauthorized" });
 		expect(findUnique).not.toHaveBeenCalled();
+	});
+
+	it("searches the folded name and e-mail, ignoring accents", async () => {
+		// Stands in for lower(unaccent(…)) in the database.
+		queryRaw.mockResolvedValue([{ folded: "kovacs" }, { folded: "anna" }]);
+		await call("?q=Kovács%20Anna");
+		expect(queryRaw.mock.calls[0][1]).toEqual(["Kovács", "Anna"]);
+		expect(findMany.mock.calls[0][0].where.applicant).toEqual({
+			deletedAt: null,
+			AND: [
+				{ searchText: { contains: "kovacs" } },
+				{ searchText: { contains: "anna" } },
+			],
+		});
 	});
 
 	it("returns 404 for unknown events", async () => {

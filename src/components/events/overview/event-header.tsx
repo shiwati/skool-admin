@@ -1,4 +1,4 @@
-import type { Event } from "@prisma/client";
+import type { EventRecord } from "@/lib/search-columns";
 import { CalendarDays, MapPin, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { Breadcrumb } from "@/components/admin-shell/breadcrumb";
@@ -13,7 +13,7 @@ import {
 import { formatShortDateRange } from "@/lib/format";
 
 type HeaderEvent = Pick<
-	Event,
+	EventRecord,
 	| "name"
 	| "from"
 	| "to"

@@ -3,6 +3,7 @@ import type {
 	Application,
 	ApplicationStatus,
 	Event,
+	Feedback,
 	History,
 	Prisma,
 	PrismaClient,
@@ -145,6 +146,31 @@ export function createFactory(db: PrismaClient, token: string) {
 		];
 	}
 
+	/**
+	 * Egy résztvevői visszajelzés egy szöveges válasszal. A `search_text`
+	 * kisbetűs, mint az importnál; az ékezeteket a trigger hajtogatja.
+	 */
+	async function feedback({
+		event,
+		text,
+	}: {
+		event: Pick<Event, "id">;
+		text: string;
+	}): Promise<Feedback> {
+		const tag = next();
+		return db.feedback.create({
+			data: {
+				id: `f-feedback-${tag}`,
+				eventId: event.id,
+				role: "PARTICIPANT",
+				submittedAt: day("2030-01-12"),
+				answers: { feeling: text },
+				searchText: text.toLowerCase(),
+				sourceKey: tag,
+			},
+		});
+	}
+
 	/** Egy korábbi változásnapló-bejegyzés (pl. egy e-mail-cím módosítása). */
 	async function history(
 		data: Pick<
@@ -168,6 +194,7 @@ export function createFactory(db: PrismaClient, token: string) {
 		applicants,
 		application,
 		duplicatePair,
+		feedback,
 		history,
 	};
 }

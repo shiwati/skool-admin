@@ -18,6 +18,7 @@
 - `20261119172536_applicants_soft_delete`: `applicant.deleted_at` / `deleted_by` (GDPR-törlés, lásd lent).
 - `20261119184343_applicant_duplicates_and_source_key`: `applicant.duplicate_key` / `duplicate_flag` (sync-duplikátumok), `application.source_key`; az `application` egyedi kulcsa `(event_id, applicant_id)` helyett `(event_id, source_key)`.
 - `20261119205135_duplicate_dismissals`: `duplicate_dismissal` tábla („nem duplikáció” döntések jelentkezőpáronként, rendezett `applicant_a_id < applicant_b_id`, kaszkád törléssel).
+- `20261122134323_accent_insensitive_search`: `unaccent` bővítmény, ékezet nélküli keresőoszlopok (`applicant.search_text`, `hometown_search`; `event.name_search`, `location_search`, `company_search`, `instructor_search`) és a triggereik; a `feedback.search_text`-et a saját triggere hajtogatja. Lásd „Keresés”.
 - A Prisma 7 a `migrate dev` után **nem** generál klienst automatikusan: futtasd az `npx prisma generate`-et (vagy az `npm run typecheck`-et).
 
 ## Lokális mintaadat (seed)
@@ -39,6 +40,15 @@ Az éles adatot az app tölti majd be Google Sheetből, bejelentkezett adminkén
 ## Lokális környezet
 
 `npm run services:up` indítja a Postgrest (:5432) és a pgAdmint (:5050) Docker Compose-szal; a pgAdmin szerverlistája: `docker/pgadmin/servers.json`.
+
+## Keresés (kis- és nagybetű, ékezet nélkül)
+
+- A lista-szűrők szövegét (jelentkező: keresés, „Település”; program: keresés, „Helyszín / partner”, „Cég”, „Oktató”; visszajelzés: keresés) **hajtogatott oszlopokon** keressük: `lower(unaccent(…))`. A Prisma a `where`-ben nem tud SQL-függvényt hívni, ezért ezek valódi oszlopok.
+- Az oszlopokat **`BEFORE INSERT OR UPDATE` triggerek** töltik (`applicant_search_columns`, `event_search_columns`, `feedback_search_text`), így minden írás után azonnal kereshető a rekord (import, szerkesztés, összevonás, anonimizálás, seed, kézi SQL). Az app soha nem írja őket. A jelentkező `search_text`-je a keresztnév, a vezetéknév és az e-mail újsorral összefűzve, hogy egy szó ne illeszkedjen két mező határán.
+- A begépelt szöveget ugyanazzal a függvénnyel hajtogatjuk, az adatbázisban: `foldSearch` (`src/lib/api/query.ts`), egy kérésben egyszer. Szándékosan nem JS-ben: a `normalize("NFD")` például a `ł`, `ø`, `ß` betűt nem bontja, az `unaccent` igen.
+- **A triggerek és függvények nincsenek a `schema.prisma`-ban**, a `migrate diff` nem látja őket. Ha egy migráció újraépíti ezeket a táblákat, a triggereket is újra létre kell hozni. Az E2E szűrőtesztek (`e2e/writes/filters.spec.ts`) azonnal elbuknak, ha hiányoznak.
+- A teljes sort visszaadó lekérdezések az `omit: APPLICANT_SEARCH_OMIT` / `EVENT_SEARCH_OMIT` (`src/lib/search-columns.ts`) beállítással kihagyják a keresőoszlopokat, így azok nem kerülnek API-válaszba és propba. Új lista- vagy részlet-lekérdezésnél is így tegyél.
+- Az éles adatbázis **Neon**; az `unaccent` a támogatott bővítményei között van, a migráció (`CREATE EXTENSION IF NOT EXISTS unaccent`) az adatbázis tulajdonosi szerepkörével létrehozhatja. Más szolgáltatóra költözéskor ezt ellenőrizni kell.
 
 ## Jelentkező törlése (GDPR, anonimizálás)
 

@@ -1,8 +1,10 @@
-import type { Event } from "@prisma/client";
+import type { EventRecord } from "@/lib/search-columns";
 import type { StatusCounts } from "@/lib/events/list";
 import type { EventOverview } from "@/lib/events/overview";
 
-export function overviewEvent(overrides: Partial<Event> = {}): Event {
+export function overviewEvent(
+	overrides: Partial<EventRecord> = {},
+): EventRecord {
 	return {
 		id: "e1",
 		createdAt: new Date("2026-10-01T09:00:00Z"),

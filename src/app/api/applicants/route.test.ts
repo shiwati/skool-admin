@@ -1,16 +1,21 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { findMany, count, groupBy, getSession } = vi.hoisted(() => ({
+const { findMany, count, groupBy, getSession, queryRaw } = vi.hoisted(() => ({
 	findMany: vi.fn(),
 	count: vi.fn(),
 	groupBy: vi.fn(),
 	getSession: vi.fn(),
+	queryRaw: vi.fn(),
 }));
 vi.mock("next-auth", () => ({ getServerSession: getSession }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
 vi.mock("@/lib/db", () => ({
-	db: { applicant: { findMany, count }, application: { groupBy } },
+	db: {
+		applicant: { findMany, count },
+		application: { groupBy },
+		$queryRaw: queryRaw,
+	},
 }));
 vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
@@ -24,6 +29,15 @@ describe("GET /api/applicants", () => {
 		getSession.mockResolvedValue({ user: {} });
 		findMany.mockResolvedValue([]);
 		count.mockResolvedValue(0);
+		// Stands in for lower(unaccent(…)) in the database.
+		queryRaw.mockImplementation(async (_sql: unknown, texts: string[]) =>
+			texts.map((text) => ({
+				folded: text
+					.normalize("NFD")
+					.replace(/\p{Diacritic}/gu, "")
+					.toLowerCase(),
+			})),
+		);
 		groupBy.mockResolvedValue([
 			{ applicantId: "a1", _count: { _all: 1 } },
 			{ applicantId: "a2", _count: { _all: 3 } },
@@ -135,12 +149,31 @@ describe("GET /api/applicants", () => {
 					},
 				},
 			},
-			{ hometown: { contains: "Pécs", mode: "insensitive" } },
+			{ hometownSearch: { contains: "pecs" } },
 			{ newsletter: true },
 			{ id: { notIn: ["a3"] } },
-			expect.objectContaining({ OR: expect.any(Array) }),
-			expect.objectContaining({ OR: expect.any(Array) }),
+			{ searchText: { contains: "kiss" } },
+			{ searchText: { contains: "p" } },
 		]);
 		expect(count).toHaveBeenCalledWith({ where: args.where });
+		// The folded search columns stay out of the response.
+		expect(args.omit).toEqual({ searchText: true, hometownSearch: true });
+		// Hometown and search words are folded in one round trip.
+		expect(queryRaw).toHaveBeenCalledOnce();
+		expect(queryRaw.mock.calls[0][1]).toEqual(["Pécs", "kiss", "p"]);
+	});
+
+	it("searches the folded columns, ignoring accents", async () => {
+		await call("?q=KOVÁCS%20anna");
+		expect(findMany.mock.calls[0][0].where.AND).toEqual([
+			{ deletedAt: null },
+			{ searchText: { contains: "kovacs" } },
+			{ searchText: { contains: "anna" } },
+		]);
+	});
+
+	it("runs no fold query without text filters", async () => {
+		await call("?newsletter=true");
+		expect(queryRaw).not.toHaveBeenCalled();
 	});
 });
