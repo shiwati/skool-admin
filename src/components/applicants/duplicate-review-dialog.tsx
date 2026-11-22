@@ -16,7 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch, isAbortError, jsonInit } from "@/lib/api/client";
 import { comparisonRows } from "@/lib/applicants/duplicate-comparison";
 import {
-	formatCount,
 	fullName,
 	STATUS_BADGE_CLASSES,
 	STATUS_LABELS,
@@ -26,6 +25,7 @@ import type {
 	DuplicatesResponse,
 } from "@/lib/applicants/types";
 import { cn } from "@/lib/utils";
+import { formatCount } from "@/lib/format";
 
 type Side = "a" | "b";
 type Decision = "merge" | "keep";

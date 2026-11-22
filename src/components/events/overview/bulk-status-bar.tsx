@@ -1,15 +1,12 @@
 "use client";
 
 import { X } from "lucide-react";
-import {
-	formatCount,
-	STATUS_BADGE_CLASSES,
-	STATUS_LABELS,
-} from "@/lib/applicants/format";
+import { STATUS_BADGE_CLASSES, STATUS_LABELS } from "@/lib/applicants/format";
 import type { ApplicationStatus } from "@/lib/applicants/types";
 import { cn } from "@/lib/utils";
 
 import { STATUS_OPTIONS as STATUSES } from "./status-cell";
+import { formatCount } from "@/lib/format";
 
 /** Lebegő sáv: a kijelölt jelentkezések státuszának egyszerre állítása. */
 export function BulkStatusBar({

@@ -2,7 +2,8 @@ import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ListFilters } from "@/lib/applicants/list-params";
-import { ApplicantsToolbar, SEARCH_DEBOUNCE_MS } from "./applicants-toolbar";
+import { SEARCH_DEBOUNCE_MS } from "@/components/list/search-field";
+import { ApplicantsToolbar } from "./applicants-toolbar";
 
 const events = [
 	{ id: "e1", name: "Python alapok – ősz" },

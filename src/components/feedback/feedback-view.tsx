@@ -5,12 +5,7 @@ import type { ReactNode } from "react";
 import { KpiCard } from "@/components/events/overview/kpi-card";
 import { LinkRow } from "@/components/link-row";
 import { Card } from "@/components/ui/card";
-import {
-	EMPTY,
-	formatCount,
-	formatDate,
-	programColorClass,
-} from "@/lib/applicants/format";
+import { programColorClass } from "@/lib/applicants/format";
 import {
 	feedbackNote,
 	feedbackSearch,
@@ -27,6 +22,7 @@ import { FeedbackDrawer } from "./feedback-drawer";
 
 import { FeedbackToolbar } from "./feedback-toolbar";
 import { RecommendBadge } from "./recommend-badge";
+import { EMPTY, formatCount, formatDate } from "@/lib/format";
 
 const pageLink =
 	"flex h-8 min-w-8 items-center justify-center rounded-full px-2 font-mono text-xs";

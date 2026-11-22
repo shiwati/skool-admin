@@ -2,7 +2,7 @@ import "server-only";
 import type { Event } from "@prisma/client";
 import { cache } from "react";
 import { db } from "@/lib/db";
-import { EVENT_TABLE } from "./changes";
+import { EVENT_TABLE } from "@/lib/history/write";
 import { emptyCounts, type StatusCounts } from "./list";
 
 /** Ennyi változás jelenik meg az áttekintésen. */

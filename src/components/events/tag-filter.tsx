@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react";
 import { useCallback, useId, useMemo, useRef, useState } from "react";
-import { FilterChip } from "@/components/applicants/filter-chip";
+import { FilterChip } from "@/components/list/filter-chip";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, apiFetch } from "@/lib/api/client";

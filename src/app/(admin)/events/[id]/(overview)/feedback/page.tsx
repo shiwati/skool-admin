@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FeedbackSyncButton } from "@/components/feedback/feedback-sync-button";
 import { FeedbackView } from "@/components/feedback/feedback-view";
-import { formatDateTime } from "@/lib/applicants/format";
 import { eventEditHref } from "@/lib/events/links";
 import { getEventOverview } from "@/lib/events/overview";
 import { eventFeedbackHref } from "@/lib/feedback/format";
@@ -14,6 +13,7 @@ import {
 	listFeedback,
 } from "@/lib/feedback/list";
 import { requireAdmin } from "@/lib/session";
+import { formatDateTime } from "@/lib/format";
 
 type Props = PageProps<"/events/[id]/feedback">;
 

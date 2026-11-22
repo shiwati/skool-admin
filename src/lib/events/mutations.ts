@@ -2,8 +2,9 @@ import "server-only";
 import type { PrismaClient } from "@prisma/client";
 import type { z } from "zod";
 import type { updateEventSchema } from "./api-schema";
-import { diffEvent, EVENT_TABLE } from "./changes";
+import { diffEvent } from "./changes";
 import { withJsonNulls } from "./prisma-data";
+import { EVENT_TABLE, historyRow, historyRows } from "@/lib/history/write";
 
 type Db = Pick<PrismaClient, "$transaction">;
 
@@ -25,14 +26,12 @@ export async function deleteEvent(db: Db, id: string, actorUserId: string) {
 
 		await tx.event.delete({ where: { id } });
 		await tx.history.create({
-			data: {
-				tableName: EVENT_TABLE,
+			data: historyRow(EVENT_TABLE, actorUserId, {
 				recordId: id,
-				createdById: actorUserId,
 				fieldName: "deleted",
 				oldValue: current.name,
 				newValue: null,
-			},
+			}),
 		});
 	});
 }
@@ -62,12 +61,11 @@ export async function updateEvent(
 
 		await tx.event.update({ where: { id }, data: withJsonNulls(patch) });
 		await tx.history.createMany({
-			data: changes.map((change) => ({
-				tableName: EVENT_TABLE,
-				recordId: id,
-				createdById: actorUserId,
-				...change,
-			})),
+			data: historyRows(
+				EVENT_TABLE,
+				actorUserId,
+				changes.map((change) => ({ recordId: id, ...change })),
+			),
 		});
 		return changes.length;
 	});

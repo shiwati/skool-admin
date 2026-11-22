@@ -1,7 +1,6 @@
 import { Star, ThumbsUp } from "lucide-react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { formatCount } from "@/lib/applicants/format";
 import {
 	formatScore,
 	share,
@@ -11,6 +10,7 @@ import {
 	type ScoreSummary,
 } from "@/lib/dashboard/compute";
 import { SectionHeader } from "./kpi-card";
+import { formatCount } from "@/lib/format";
 
 function Score({ summary, role }: { summary: ScoreSummary; role: string }) {
 	if (summary.average === null)

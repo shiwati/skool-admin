@@ -23,7 +23,6 @@ import {
 	apiFetch,
 	jsonInit,
 } from "@/lib/api/client";
-import { formatDateTime } from "@/lib/applicants/format";
 import {
 	MAX_HIGHLIGHTED,
 	MAX_PEOPLE,
@@ -33,6 +32,7 @@ import {
 } from "@/lib/reports/content";
 import type { FeedbackRoleKey } from "@/lib/feedback/questions";
 import { cn } from "@/lib/utils";
+import { formatDateTime } from "@/lib/format";
 
 export type EditorCandidate = {
 	id: string;

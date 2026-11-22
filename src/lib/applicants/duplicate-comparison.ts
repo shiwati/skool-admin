@@ -1,6 +1,7 @@
 import { FIELD_LABELS } from "./field-labels";
-import { EMPTY, formatDateTime, fullName, STATUS_LABELS } from "./format";
+import { fullName, STATUS_LABELS } from "./format";
 import type { DuplicateApplicant } from "./types";
+import { EMPTY, formatDateTime } from "@/lib/format";
 
 /**
  * A duplikáció-összehasonlító sorai (terv: 03.4). Kliensről is

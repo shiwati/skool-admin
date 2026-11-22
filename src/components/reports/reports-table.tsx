@@ -2,15 +2,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LinkRow } from "@/components/link-row";
 import { Card } from "@/components/ui/card";
-import {
-	EMPTY,
-	formatDate,
-	formatDateTime,
-	programColorClass,
-} from "@/lib/applicants/format";
+import { programColorClass } from "@/lib/applicants/format";
 import { eventHref, eventReportHref } from "@/lib/events/links";
 import type { ReportListItem } from "@/lib/reports/list";
 import { cn } from "@/lib/utils";
+import { EMPTY, formatDate, formatDateTime } from "@/lib/format";
 
 const headClass =
 	"px-3 py-2.5 font-mono text-[11px] leading-4 font-semibold text-text-secondary uppercase";

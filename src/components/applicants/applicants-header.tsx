@@ -9,7 +9,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatCount } from "@/lib/applicants/format";
+import { formatCount } from "@/lib/format";
 
 export function ApplicantsHeader({
 	total,

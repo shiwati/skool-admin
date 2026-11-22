@@ -6,13 +6,10 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { EMPTY, formatCount } from "@/lib/applicants/format";
 import { AVATAR_CLASSES, tagClass } from "@/lib/events/colors";
 import type { EventColumnId } from "@/lib/events/column-settings";
 import {
 	demandRatio,
-	formatShortDateRange,
-	formatRatio,
 	ratioBadgeClass,
 	ratioBarClass,
 } from "@/lib/events/format";
@@ -26,6 +23,12 @@ import {
 import { initials } from "@/lib/initials";
 import { cn } from "@/lib/utils";
 import type { EventListItem } from "./events-table";
+import {
+	EMPTY,
+	formatCount,
+	formatRatio,
+	formatShortDateRange,
+} from "@/lib/format";
 
 /** A Programok tábla egy oszlopa; sorrend és láthatóság: `lib/events/column-settings.ts`. */
 export type EventColumnDef = {

@@ -4,9 +4,9 @@ import {
 	KeyValueList,
 	Pill,
 } from "@/components/applicants/detail/detail-card";
-import { formatDateTime } from "@/lib/applicants/format";
 import { tagClass } from "@/lib/events/colors";
 import { formatAgeRange } from "@/lib/events/format";
+import { formatDateTime } from "@/lib/format";
 
 type DetailsEvent = Pick<
 	Event,

@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { formatCount } from "@/lib/applicants/format";
 import type { CountRow } from "@/lib/dashboard/compute";
 import type { Demographics } from "@/lib/dashboard/load";
 import { SectionHeader } from "./kpi-card";
 import { Segmented } from "./segmented";
+import { formatCount } from "@/lib/format";
 
 type View = "age" | "hometown";
 

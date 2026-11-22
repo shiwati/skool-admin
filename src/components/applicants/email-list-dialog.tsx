@@ -13,10 +13,11 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { apiFetch, isAbortError } from "@/lib/api/client";
-import { buildEmailList, formatCount } from "@/lib/applicants/format";
+import { buildEmailList } from "@/lib/applicants/format";
 import { toApiQuery, type ListState } from "@/lib/applicants/list-params";
 import type { ApplicantsPage } from "@/lib/applicants/types";
 import { copyText } from "@/lib/clipboard";
+import { formatCount } from "@/lib/format";
 
 /** Az API legnagyobb lapmérete. */
 const FETCH_PAGE_SIZE = 100;

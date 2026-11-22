@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { useColumnSettings } from "@/hooks/use-column-settings";
 import { csvFilename, useCsvExport } from "@/hooks/use-csv-export";
 import { fetchAllPages } from "@/lib/api/fetch-all-pages";
-import { formatCount } from "@/lib/applicants/format";
 import { visibleColumns } from "@/lib/column-settings";
 import { EVENT_COLUMN_CONFIG } from "@/lib/events/column-settings";
 import { buildEventsCsv } from "@/lib/events/export";
@@ -32,6 +31,7 @@ import { EVENT_COLUMNS } from "./event-columns";
 import { EventsTable, type EventListItem } from "./events-table";
 import { EventsTabs } from "./events-tabs";
 import { EventsToolbar } from "./events-toolbar";
+import { formatCount } from "@/lib/format";
 
 export function EventsView({
 	items,

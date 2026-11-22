@@ -54,7 +54,7 @@ describe("getApplicantDetail", () => {
 		await getApplicantDetail("a1");
 		const args = historyFindMany.mock.calls[0][0];
 		expect(args.where.OR).toEqual([
-			{ tableName: "applicant", recordId: "a1" },
+			{ tableName: "applicant", recordId: { in: ["a1"] } },
 			{ tableName: "application", recordId: { in: ["app1", "app2"] } },
 		]);
 		expect(args.take).toBe(HISTORY_PREVIEW_LIMIT);
@@ -66,7 +66,7 @@ describe("getApplicantDetail", () => {
 		findFirst.mockResolvedValue({ ...applicant, applications: [] });
 		await getApplicantDetail("a1");
 		expect(historyFindMany.mock.calls[0][0].where.OR).toEqual([
-			{ tableName: "applicant", recordId: "a1" },
+			{ tableName: "applicant", recordId: { in: ["a1"] } },
 		]);
 	});
 

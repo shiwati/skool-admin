@@ -1,13 +1,10 @@
 "use client";
 
-import {
-	formatCount,
-	STATUS_BADGE_CLASSES,
-	STATUS_LABELS,
-} from "@/lib/applicants/format";
+import { STATUS_BADGE_CLASSES, STATUS_LABELS } from "@/lib/applicants/format";
 import type { ApplicationStatus } from "@/lib/applicants/types";
 import type { StatusCounts } from "@/lib/events/list";
 import { cn } from "@/lib/utils";
+import { formatCount } from "@/lib/format";
 
 const ORDER: ApplicationStatus[] = [
 	"APPLIED",

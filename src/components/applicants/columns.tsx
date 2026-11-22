@@ -4,8 +4,6 @@ import type { ReactNode } from "react";
 import {
 	ageFromBirthYear,
 	applicantInitials,
-	EMPTY,
-	formatDate,
 	formatPhone,
 	fullName,
 	historyLabel,
@@ -22,6 +20,7 @@ import type { ColumnId } from "@/lib/applicants/column-settings";
 import type { SortKey } from "@/lib/applicants/list-params";
 import type { ApplicantListItem } from "@/lib/applicants/types";
 import { cn } from "@/lib/utils";
+import { EMPTY, formatDate } from "@/lib/format";
 
 export type { ColumnId };
 

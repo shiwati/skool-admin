@@ -1,10 +1,10 @@
 "use client";
 
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { formatCount } from "@/lib/applicants/format";
 import { PAGE_SIZES, type PageSize } from "@/lib/list-state";
 import { pageNumbers } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
+import { formatCount } from "@/lib/format";
 
 const pageButton =
 	"flex h-8 min-w-8 items-center justify-center rounded-full px-2 font-mono text-xs disabled:pointer-events-none disabled:opacity-40";

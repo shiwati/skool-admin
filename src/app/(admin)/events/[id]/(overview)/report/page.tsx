@@ -5,12 +5,12 @@ import {
 	KeyValueList,
 } from "@/components/applicants/detail/detail-card";
 import { ReportEditor } from "@/components/reports/report-editor";
-import { formatCount } from "@/lib/applicants/format";
 import { formatAgeRange } from "@/lib/events/format";
 import { eventReportHref } from "@/lib/events/links";
 import { getEventReport } from "@/lib/reports/load";
 import { reportDateText, reportTitle } from "@/lib/reports/format";
 import { requireAdmin } from "@/lib/session";
+import { formatCount } from "@/lib/format";
 
 type Props = PageProps<"/events/[id]/report">;
 

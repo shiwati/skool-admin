@@ -6,12 +6,12 @@ import { KpiCard } from "@/components/events/overview/kpi-card";
 import { PeopleCard } from "@/components/events/overview/people-card";
 import { SheetSourceCard } from "@/components/events/overview/sheet-source-card";
 import { StatusBreakdown } from "@/components/events/overview/status-breakdown";
-import { formatCount } from "@/lib/applicants/format";
-import { demandRatio, formatRatio, ratioBadgeClass } from "@/lib/events/format";
+import { demandRatio, ratioBadgeClass } from "@/lib/events/format";
 import { eventHref } from "@/lib/events/links";
 import { getEventOverview } from "@/lib/events/overview";
 import { requireAdmin } from "@/lib/session";
 import { cn } from "@/lib/utils";
+import { formatCount, formatRatio } from "@/lib/format";
 
 type Props = PageProps<"/events/[id]">;
 

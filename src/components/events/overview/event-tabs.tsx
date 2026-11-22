@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { formatCount } from "@/lib/applicants/format";
 import {
 	eventApplicantsHref,
 	eventHref,
@@ -10,6 +9,7 @@ import {
 } from "@/lib/events/links";
 import { eventFeedbackHref } from "@/lib/feedback/format";
 import { cn } from "@/lib/utils";
+import { formatCount } from "@/lib/format";
 
 const tabClass =
 	"-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap";

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { EMPTY, formatPhone } from "@/lib/applicants/format";
+import { formatPhone } from "@/lib/applicants/format";
 import { cn } from "@/lib/utils";
+import { EMPTY } from "@/lib/format";
 
 /** Az adatlap kártyája (DS.2 card). */
 export function DetailCard({

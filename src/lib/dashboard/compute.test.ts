@@ -8,7 +8,6 @@ import {
 	ageDistribution,
 	budapestYear,
 	capacityRows,
-	formatRatio,
 	formatSignedDecimal,
 	formatSignedPercent,
 	greeting,
@@ -19,6 +18,7 @@ import {
 	percentChange,
 	type EventStat,
 } from "./compute";
+import { formatRatio } from "@/lib/format";
 
 const event = (overrides: Partial<EventStat>): EventStat => ({
 	id: "e",

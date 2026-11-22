@@ -55,7 +55,7 @@ Minden **személyeket listázó/mutató** lekérdezésnek `deletedAt: null`-ra k
 
 ## History
 
-A `History` tábla mezőszintű változásnapló (`tableName`, `fieldName`, `recordId`, régi/új érték, ki változtatta). Konvenció: a `tableName` az adatbázistábla neve (`@@map`, pl. `applicant`), a `fieldName` a Prisma-mezőnév, az érték szövegként (szám és logikai is, pl. `"2010"`, `"true"`).
+A `History` tábla mezőszintű változásnapló (`tableName`, `fieldName`, `recordId`, régi/új érték, ki változtatta). Konvenció: a `tableName` az adatbázistábla neve (`@@map`, pl. `applicant`), a `fieldName` a Prisma-mezőnév, az érték szövegként (szám és logikai is, pl. `"2010"`, `"true"`). Írás és szűrés közösen: `src/lib/history/write.ts` (`APPLICANT_TABLE`, `APPLICATION_TABLE`, `EVENT_TABLE`, `historyRow(s)`, `applicantHistoryWhere` – a jelentkező és a jelentkezései sorai, ezt használja a változásnapló és a GDPR-törlés is).
 
 Írói:
 

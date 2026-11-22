@@ -1,8 +1,8 @@
 import "server-only";
 import type { PrismaClient } from "@prisma/client";
-import { APPLICANT_TABLE } from "./anonymize";
 import { duplicateKey, recomputeDuplicateFlags } from "./duplicate-flags";
 import type { ApplicantUpdate } from "./edit-schema";
+import { APPLICANT_TABLE, historyRows } from "@/lib/history/write";
 
 export class ApplicantNotFoundError extends Error {
 	constructor() {
@@ -131,14 +131,16 @@ export async function updateApplicant(
 		if (written.count === 0) throw new ApplicantConflictError();
 
 		await tx.history.createMany({
-			data: changes.map((c) => ({
-				tableName: APPLICANT_TABLE,
-				fieldName: c.field,
-				recordId: id,
-				oldValue: c.oldValue,
-				newValue: c.newValue,
-				createdById: actorUserId,
-			})),
+			data: historyRows(
+				APPLICANT_TABLE,
+				actorUserId,
+				changes.map((c) => ({
+					recordId: id,
+					fieldName: c.field,
+					oldValue: c.oldValue,
+					newValue: c.newValue,
+				})),
+			),
 		});
 
 		if (keyChanged) {

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/admin-shell/page-header";
 import { PageShell } from "@/components/admin-shell/page-shell";
 import { FeedbackView } from "@/components/feedback/feedback-view";
-import { formatCount, formatDateTime } from "@/lib/applicants/format";
 import { firstEventYear } from "@/lib/dashboard/first-year";
 import { periodOptions } from "@/lib/dashboard/period";
 import {
@@ -12,6 +11,7 @@ import {
 	lastFeedbackImport,
 	listFeedback,
 } from "@/lib/feedback/list";
+import { formatCount, formatDateTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Visszajelzések" };
 

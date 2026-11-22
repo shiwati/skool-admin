@@ -1,4 +1,5 @@
 import type { FeedbackRoleKey } from "@/lib/feedback/questions";
+import { formatLongDate, formatTime } from "@/lib/format";
 
 /**
  * A záró riport adatai és formázói (dátum, korosztály, cím). A dokumentum a
@@ -23,25 +24,6 @@ export type ReportDocumentData = {
 	metrics: { key: string; percent: number; phrase: string }[];
 	recommendPercent: number | null;
 };
-
-const TZ = "Europe/Budapest";
-
-export function formatLongDate(date: Date): string {
-	return new Intl.DateTimeFormat("hu-HU", {
-		timeZone: TZ,
-		year: "numeric",
-		month: "long",
-		day: "numeric",
-	}).format(date);
-}
-
-function formatTime(date: Date): string {
-	return new Intl.DateTimeFormat("hu-HU", {
-		timeZone: TZ,
-		hour: "2-digit",
-		minute: "2-digit",
-	}).format(date);
-}
 
 function sameDay(a: Date, b: Date) {
 	return formatLongDate(a) === formatLongDate(b);

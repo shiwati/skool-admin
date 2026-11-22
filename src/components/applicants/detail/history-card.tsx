@@ -4,9 +4,9 @@ import {
 	HistoryChangeSummary,
 } from "@/components/history/history-change";
 import type { ApplicantHistoryEntry } from "@/lib/applicants/detail";
-import { formatDateTime } from "@/lib/applicants/format";
 import { historyHref } from "@/lib/history/href";
 import { DetailCard } from "./detail-card";
+import { formatDateTime } from "@/lib/format";
 
 /** Az utolsó néhány változás, link a teljes naplóra (`/history/[id]`). */
 export function HistoryCard({

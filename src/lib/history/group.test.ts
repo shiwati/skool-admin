@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { formatDayLabel, formatTime, groupByDay } from "./group";
+import { formatDayLabel, groupByDay } from "./group";
+import { formatTime } from "@/lib/format";
 
 const now = new Date("2026-11-19T12:00:00Z");
 

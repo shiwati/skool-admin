@@ -4,12 +4,13 @@ import type { ReactNode } from "react";
 import { Breadcrumb } from "@/components/admin-shell/breadcrumb";
 import { Pill } from "@/components/applicants/detail/detail-card";
 import { tagClass } from "@/lib/events/colors";
-import { eventPeople, formatShortDateRange } from "@/lib/events/format";
+import { eventPeople } from "@/lib/events/format";
 import {
 	EVENT_STATUS_BADGE_CLASSES,
 	EVENT_STATUS_LABELS,
 	eventStatus,
 } from "@/lib/events/phase";
+import { formatShortDateRange } from "@/lib/format";
 
 type HeaderEvent = Pick<
 	Event,

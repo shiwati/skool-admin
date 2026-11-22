@@ -1,7 +1,7 @@
 import "server-only";
 import type { PrismaClient } from "@prisma/client";
-import { APPLICANT_TABLE } from "./anonymize";
 import { DuplicateApplicantNotFoundError, NotDuplicatesError } from "./merge";
+import { APPLICANT_TABLE, historyRow } from "@/lib/history/write";
 
 type Db = Pick<
 	PrismaClient,
@@ -36,14 +36,12 @@ export async function dismissDuplicatePair(
 			skipDuplicates: true,
 		}),
 		db.history.create({
-			data: {
-				tableName: APPLICANT_TABLE,
+			data: historyRow(APPLICANT_TABLE, actorUserId, {
+				recordId: applicantAId,
 				fieldName: "duplicate_dismissed",
 				oldValue: null,
 				newValue: applicantBId,
-				recordId: applicantAId,
-				createdById: actorUserId,
-			},
+			}),
 		}),
 	]);
 }

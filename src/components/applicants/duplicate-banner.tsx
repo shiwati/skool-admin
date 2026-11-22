@@ -1,6 +1,6 @@
 import { TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatCount } from "@/lib/applicants/format";
+import { formatCount } from "@/lib/format";
 
 /**
  * Figyelmeztetés az eldöntetlen duplikátumpárokról (terv: 03.4). Nulla

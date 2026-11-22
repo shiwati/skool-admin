@@ -2,17 +2,14 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import {
-	formatCount,
-	STATUS_BADGE_CLASSES,
-	STATUS_LABELS,
-} from "@/lib/applicants/format";
+import { STATUS_BADGE_CLASSES, STATUS_LABELS } from "@/lib/applicants/format";
 import type { ApplicationStatus } from "@/lib/applicants/types";
-import { formatRatio, type CapacityRow } from "@/lib/dashboard/compute";
+import { type CapacityRow } from "@/lib/dashboard/compute";
 import { cn } from "@/lib/utils";
 import { SectionHeader } from "./kpi-card";
 import { Segmented } from "./segmented";
 import { StatBadge, ratioTone } from "./stat-badge";
+import { formatCount, formatRatio } from "@/lib/format";
 
 const STATUS_ORDER: ApplicationStatus[] = [
 	"APPLIED",
