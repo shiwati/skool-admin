@@ -1,7 +1,7 @@
 import "server-only";
 import type { PrismaClient } from "@prisma/client";
-import { duplicateKey } from "@/lib/sheet-import/mapping";
 import { APPLICANT_TABLE } from "./anonymize";
+import { duplicateKey, recomputeDuplicateFlags } from "./duplicate-flags";
 import type { ApplicantUpdate } from "./edit-schema";
 
 export class ApplicantNotFoundError extends Error {
@@ -142,23 +142,7 @@ export async function updateApplicant(
 		});
 
 		if (keyChanged) {
-			// Same rule as merge/anonymization: flagged while another one shares the key.
-			const keys = new Set(
-				[current.duplicateKey, newKey].filter(
-					(k): k is string => k !== null,
-				),
-			);
-			for (const key of keys) {
-				const count = await tx.applicant.count({
-					where: { duplicateKey: key, deletedAt: null },
-				});
-				// Only touch rows whose flag actually changes, so other
-				// applicants' `updatedAt` (and their open edit forms) stay intact.
-				await tx.applicant.updateMany({
-					where: { duplicateKey: key, duplicateFlag: count <= 1 },
-					data: { duplicateFlag: count > 1 },
-				});
-			}
+			await recomputeDuplicateFlags(tx, [current.duplicateKey, newKey]);
 		}
 
 		const saved = await tx.applicant.findUniqueOrThrow({

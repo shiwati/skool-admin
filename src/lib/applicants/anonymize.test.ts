@@ -131,10 +131,14 @@ describe("anonymizeApplicants", () => {
 		await anonymizeApplicants(db, ["a1", "a2"], "u1", now);
 		expect(tx.applicant.count).toHaveBeenCalledOnce();
 		expect(tx.applicant.count).toHaveBeenCalledWith({
-			where: { duplicateKey: "nagy|luca|l@x.hu" },
+			where: { duplicateKey: "nagy|luca|l@x.hu", deletedAt: null },
 		});
 		expect(tx.applicant.updateMany).toHaveBeenLastCalledWith({
-			where: { duplicateKey: "nagy|luca|l@x.hu" },
+			where: {
+				duplicateKey: "nagy|luca|l@x.hu",
+				deletedAt: null,
+				duplicateFlag: true,
+			},
 			data: { duplicateFlag: false },
 		});
 	});

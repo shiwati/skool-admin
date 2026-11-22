@@ -143,7 +143,7 @@ describe("POST /api/applicants/merge", () => {
 			where: { id: { in: ["m"] } },
 		});
 		expect(tx.applicant.updateMany).toHaveBeenCalledWith({
-			where: { duplicateKey: "k", deletedAt: null },
+			where: { duplicateKey: "k", deletedAt: null, duplicateFlag: true },
 			data: { duplicateFlag: false },
 		});
 	});
@@ -152,7 +152,7 @@ describe("POST /api/applicants/merge", () => {
 		tx.applicant.count.mockResolvedValue(2);
 		await call({ primaryId: "p", mergeIds: ["m"] });
 		expect(tx.applicant.updateMany).toHaveBeenCalledWith({
-			where: { duplicateKey: "k", deletedAt: null },
+			where: { duplicateKey: "k", deletedAt: null, duplicateFlag: false },
 			data: { duplicateFlag: true },
 		});
 	});

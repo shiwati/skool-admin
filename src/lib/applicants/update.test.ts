@@ -194,6 +194,7 @@ describe("updateApplicant", () => {
 			{
 				where: {
 					duplicateKey: "nagy|luca|nagy.luca@gmail.com",
+					deletedAt: null,
 					duplicateFlag: true,
 				},
 				data: { duplicateFlag: false },
@@ -201,6 +202,7 @@ describe("updateApplicant", () => {
 			{
 				where: {
 					duplicateKey: "nagy|luca|luca.nagy@gmail.com",
+					deletedAt: null,
 					duplicateFlag: false,
 				},
 				data: { duplicateFlag: true },

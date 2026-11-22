@@ -6,7 +6,10 @@ import { PrismaClient } from "@prisma/client";
 import { logger } from "../src/lib/logger";
 import { dataFileSchema } from "../src/lib/seed-data-schema";
 import { dashboardDemoData, sampleFeedback } from "../src/lib/seed-demo-data";
-import { duplicateKey } from "../src/lib/sheet-import/mapping";
+import {
+	duplicateKey,
+	recomputeDuplicateFlags,
+} from "../src/lib/applicants/duplicate-flags";
 import { assertLocalDatabase } from "../src/lib/seed-guard";
 import { formatValidationErrors } from "../src/lib/validation";
 
@@ -107,15 +110,7 @@ async function seed() {
 					update: data,
 				});
 			}
-			for (const key of keys) {
-				const count = await tx.applicant.count({
-					where: { duplicateKey: key, deletedAt: null },
-				});
-				await tx.applicant.updateMany({
-					where: { duplicateKey: key },
-					data: { duplicateFlag: count > 1 },
-				});
-			}
+			await recomputeDuplicateFlags(tx, keys);
 			for (const { id, ...data } of applications) {
 				await tx.application.upsert({
 					where: { id },

@@ -50,6 +50,8 @@ Törzs: a `POST` mezői (`src/lib/events/api-schema.ts`, `updateEventSchema`), m
 A tranzakció a ténylegesen megváltozott mezőnként egy `History` sort ír (`tableName: "event"`, `fieldName` a Prisma mezőnév, `oldValue`/`newValue` szövegként; dátum ISO, lista JSON). Ha semmi sem változik, nem ír semmit.
 Válasz: `200 { id }`; `400` `{error, details}`; `401`; `404`.
 
+A módosítás és a törlés logikája: `src/lib/events/mutations.ts` (`updateEvent`, `deleteEvent`).
+
 ### `GET /api/events/[id]/applicants`
 
 Paraméterek: `page`, `pageSize`, `status` (CSV enum), `ageFrom`, `ageTo`, `q`, `sort` (`lastName`|`birthYear`|`status`|`receivedAt`, alap `receivedAt`), `order` (alap `asc`).
@@ -86,12 +88,12 @@ Az esemény `applicationSheetUrl`-jében megadott válasz-sheetet olvassa a **be
 
 - Oszlop ↔ mező párosítás: ha az eseménynek van mentett `applicationSheetMapping`-je (mező → **pontos** fejléc, kis-/nagybetű és szóköz-eltérés nem számít), az dönt; ha `null`, a fejléc-kulcsszavak alapján: `src/lib/sheet-import/mapping.ts` (kötelező: vezetéknév, utónév, e-mail; ha a mentett fejléc hiányzik a sheetből, `SHEET_HEADERS_MISSING`). Ismeretlen oszlopok (pl. kézi „1. oszlop”) kimaradnak, a válasz `unmappedHeaders`-ben listázza őket.
 - Minden új válasz **új** `Applicant` + `Application`. Újraszinkronnál az `Application.sourceKey` (időbélyeg + e-mail, eseményen belül egyedi) miatt semmi nem jön létre kétszer, és semmi nem íródik felül.
-- Duplikátum: azonos `Applicant.duplicateKey` (normalizált név + e-mail) → minden érintett jelentkező `duplicateFlag = true`. Az eldöntésük a duplikáció-ellenőrzés képernyőn történik (merge vagy „nem duplikáció”), lásd lent.
+- Duplikátum: azonos `Applicant.duplicateKey` (normalizált név + e-mail) → minden érintett jelentkező `duplicateFlag = true`. A kulcs és a jelző szabálya egy helyen van (`src/lib/applicants/duplicate-flags.ts`): `duplicateKey()`, és `recomputeDuplicateFlags(tx, keys)`, amit a szerkesztés, az anonimizálás, az összevonás és a seed hív – egy nem törölt jelentkező addig jelölt, amíg egy másik nem törölt jelentkező is ugyanazt a kulcsot viseli, és csak a ténylegesen változó sorok íródnak. Az import (egy új jelentkező hozzáadása) ugyanezt az eredményt adja, saját lépésekkel. Az eldöntésük a duplikáció-ellenőrzés képernyőn történik (merge vagy „nem duplikáció”), lásd lent.
 - Válasz: `{ created, existing, duplicates, errors: [{ row, reason }], unmappedHeaders }`.
 
 ## `POST /api/applicants/merge` — duplikátumok összevonása
 
-Body: `{ "primaryId": "…", "mergeIds": ["…"] }` (1–50 egyedi id, a `primaryId` nem lehet köztük). Egy tranzakcióban: a `mergeIds` jelentkezők összes jelentkezése az elsődlegeshez kerül (a jelentkezési adatok változatlanok; ugyanarra az eseményre több is maradhat), a `History`-ba `merged_from` sor kerül, a merge-elt jelentkezők törlődnek. A `duplicateFlag` csak akkor marad igaz, ha még van másik jelentkező ugyanazzal a `duplicateKey`-jel. Válasz: `{ applicant (jelentkezésekkel), movedApplications }`; hibák: 400 (validáció), 401, 404 (ismeretlen id).
+Body: `{ "primaryId": "…", "mergeIds": ["…"] }` (1–50 egyedi id, a `primaryId` nem lehet köztük). Egy tranzakcióban: a `mergeIds` jelentkezők összes jelentkezése az elsődlegeshez kerül (a jelentkezési adatok változatlanok; ugyanarra az eseményre több is maradhat), a `History`-ba `merged_from` sor kerül, a merge-elt jelentkezők törlődnek. A `duplicateFlag` csak akkor marad igaz, ha még van másik jelentkező ugyanazzal a `duplicateKey`-jel. Válasz: `{ applicant (jelentkezésekkel), movedApplications }`; hibák: 400 (validáció), 401, 404 (ismeretlen vagy törölt id), 409 (eltérő vagy hiányzó `duplicateKey`). Kód: `src/lib/applicants/merge.ts`.
 
 ## `GET /api/applicants/duplicates` — következő eldöntetlen duplikátumpár
 
@@ -99,7 +101,7 @@ Query: `skip` (≥ 0, alapértelmezés 0; a „Kihagyás most” lépteti, a vé
 
 ## `POST /api/applicants/duplicates/dismiss` — „nem duplikáció”
 
-Body: `{ "applicantIds": ["…", "…"] }` (két különböző id). A pár rendezve (`applicantAId < applicantBId`) a `DuplicateDismissal` táblába kerül, a `History`-ba `duplicate_dismissed` sor. A döntés **párra** szól: ha később egy harmadik, azonos kulcsú jelentkező érkezik, az bármelyikükkel új párt alkot és megjelenik. A `duplicateFlag` nem változik. Hibák: 400, 401, 404 (ismeretlen vagy törölt), 409 (eltérő `duplicateKey`).
+Body: `{ "applicantIds": ["…", "…"] }` (két különböző id). A pár rendezve (`applicantAId < applicantBId`) a `DuplicateDismissal` táblába kerül, a `History`-ba `duplicate_dismissed` sor. A döntés **párra** szól: ha később egy harmadik, azonos kulcsú jelentkező érkezik, az bármelyikükkel új párt alkot és megjelenik. A `duplicateFlag` nem változik. Hibák: 400, 401, 404 (ismeretlen vagy törölt), 409 (eltérő `duplicateKey`). Kód: `src/lib/applicants/dismiss-duplicate.ts`.
 
 ## `POST /api/events/[id]/feedback/sync` — visszajelző sheetek importja
 

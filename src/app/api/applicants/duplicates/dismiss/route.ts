@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { handleBody, jsonResponse } from "@/lib/api/handler";
+import { dismissDuplicatePair } from "@/lib/applicants/dismiss-duplicate";
+import { duplicateErrorResponse } from "@/lib/applicants/duplicate-errors";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
@@ -14,54 +16,22 @@ const bodySchema = z
 	});
 
 /**
- * "Nem duplikáció": a pár többé nem jelenik meg a duplikáció-ellenőrzésben.
- * A döntés csak erre a párra szól; egy később érkező, azonos kulcsú
- * jelentkező bármelyikükkel új párt alkot. A `duplicateFlag` nem változik.
+ * "Nem duplikáció" (lásd `src/lib/applicants/dismiss-duplicate.ts`). Az
+ * `(admin)` layout nem védi a Route Handlereket; a session-t a `handleBody`
+ * ellenőrzi.
  */
 export async function POST(request: Request) {
 	return handleBody(
 		request,
 		bodySchema,
 		async ({ applicantIds }, { userId }) => {
-			const [applicantAId, applicantBId] = applicantIds.toSorted();
-			const applicants = await db.applicant.findMany({
-				where: {
-					id: { in: [applicantAId, applicantBId] },
-					deletedAt: null,
-				},
-				select: { duplicateKey: true },
-			});
-			if (applicants.length !== 2) {
-				return jsonResponse({ error: "Applicant not found" }, 404);
-			}
-			const [x, y] = applicants;
-			if (!x.duplicateKey || x.duplicateKey !== y.duplicateKey) {
-				return jsonResponse(
-					{ error: "Applicants are not duplicates" },
-					409,
-				);
-			}
-
-			await db.$transaction([
-				db.duplicateDismissal.createMany({
-					data: [{ applicantAId, applicantBId, createdById: userId }],
-					skipDuplicates: true,
-				}),
-				db.history.create({
-					data: {
-						tableName: "applicant",
-						fieldName: "duplicate_dismissed",
-						oldValue: null,
-						newValue: applicantBId,
-						recordId: applicantAId,
-						createdById: userId,
-					},
-				}),
-			]);
-
+			await dismissDuplicatePair(db, applicantIds, userId);
 			logger.info({ event: "applicant.duplicate_dismissed", userId });
 			return jsonResponse({ dismissed: true });
 		},
-		{ event: "applicant.duplicate_dismiss_failed" },
+		{
+			event: "applicant.duplicate_dismiss_failed",
+			mapError: duplicateErrorResponse,
+		},
 	);
 }
