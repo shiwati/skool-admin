@@ -267,6 +267,7 @@ export function FeedbackView({
 	state,
 	basePath,
 	events,
+	companies,
 	periods,
 	openItem,
 	header,
@@ -276,6 +277,8 @@ export function FeedbackView({
 	basePath: string;
 	/** Programszűrő opciói; `undefined` a program saját fülén. */
 	events?: { id: string; name: string }[];
+	/** Cégszűrő opciói; `undefined` a program saját fülén. */
+	companies?: string[];
 	/** Időszakszűrő opciói; `undefined` a program saját fülén. */
 	periods?: { key: string; label: string }[];
 	openItem: FeedbackListItem | null;
@@ -292,7 +295,7 @@ export function FeedbackView({
 	const next =
 		index >= 0 && index < items.length - 1 ? items[index + 1] : undefined;
 	const filtered = Boolean(
-		state.q || state.role || state.eventId || state.period,
+		state.q || state.role || state.eventId || state.company || state.period,
 	);
 
 	return (
@@ -324,7 +327,12 @@ export function FeedbackView({
 				/>
 			</dl>
 
-			<FeedbackToolbar state={state} events={events} periods={periods} />
+			<FeedbackToolbar
+				state={state}
+				events={events}
+				companies={companies}
+				periods={periods}
+			/>
 
 			<Card className="overflow-hidden">
 				{items.length === 0 ? (

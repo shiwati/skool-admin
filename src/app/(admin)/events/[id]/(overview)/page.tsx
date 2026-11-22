@@ -6,12 +6,12 @@ import { KpiCard } from "@/components/events/overview/kpi-card";
 import { PeopleCard } from "@/components/events/overview/people-card";
 import { SheetSourceCard } from "@/components/events/overview/sheet-source-card";
 import { StatusBreakdown } from "@/components/events/overview/status-breakdown";
-import { demandRatio, ratioBadgeClass } from "@/lib/events/format";
+import { RatioBadge } from "@/components/events/ratio-badge";
+import { demandRatio } from "@/lib/events/format";
 import { eventHref } from "@/lib/events/links";
 import { getEventOverview } from "@/lib/events/overview";
 import { requireAdmin } from "@/lib/session";
-import { cn } from "@/lib/utils";
-import { formatCount, formatRatio } from "@/lib/format";
+import { formatCount } from "@/lib/format";
 
 type Props = PageProps<"/events/[id]">;
 
@@ -48,18 +48,7 @@ export default async function EventOverviewPage({ params }: Props) {
 					label="Jelentkezett"
 					value={formatCount(counts.total)}
 					asideLabel={ratio !== null && "Kereslet"}
-					asideValue={
-						ratio !== null && (
-							<span
-								className={cn(
-									"rounded-full px-2 font-mono text-xs leading-5 font-medium",
-									ratioBadgeClass(ratio),
-								)}
-							>
-								{formatRatio(ratio)}
-							</span>
-						)
-					}
+					asideValue={ratio !== null && <RatioBadge ratio={ratio} />}
 				/>
 				<KpiCard label="Elfogadva" value={formatCount(counts.ACCEPTED)}>
 					{event.capacity > 0 && (

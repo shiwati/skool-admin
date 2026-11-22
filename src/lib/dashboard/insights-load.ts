@@ -10,11 +10,13 @@ import {
 } from "./compute";
 import {
 	ageFit,
+	companyDetail,
 	companyRanking,
 	feedbackCompletion,
 	funnel,
 	overviewStats,
 	parseAgeRange,
+	type CompanyDetail,
 	type Overview,
 	type ProgramDetail,
 } from "./insights";
@@ -122,6 +124,59 @@ export async function loadOverview(
 		channels: stats.channels,
 		satisfaction: satisfactionByRole(feedbackRows),
 	};
+}
+
+/** Egy cég (`Event.companyName`) mutatói a programjai alapján. */
+export async function loadCompanyDetail(
+	company: string,
+): Promise<CompanyDetail> {
+	const events = await db.event.findMany({
+		where: { companyName: company },
+		select: {
+			id: true,
+			name: true,
+			from: true,
+			to: true,
+			capacity: true,
+			mentors: true,
+			_count: { select: { applications: true } },
+		},
+	});
+	const eventIds = events.map((e) => e.id);
+
+	const [students, feedback] = eventIds.length
+		? await Promise.all([
+				db.application.findMany({
+					where: { eventId: { in: eventIds } },
+					select: { applicantId: true },
+					distinct: ["applicantId"],
+				}),
+				db.feedback.findMany({
+					where: { eventId: { in: eventIds } },
+					select: {
+						eventId: true,
+						role: true,
+						overallScore: true,
+						recommend: true,
+					},
+				}),
+			])
+		: [[], []];
+
+	return companyDetail(
+		company,
+		events.map((e) => ({
+			id: e.id,
+			name: e.name,
+			from: e.from,
+			to: e.to,
+			capacity: e.capacity,
+			mentors: e.mentors,
+			applications: e._count.applications,
+		})),
+		students.length,
+		feedback,
+	);
 }
 
 /** Egy program részletes mutatói; `null`, ha nincs ilyen program. */

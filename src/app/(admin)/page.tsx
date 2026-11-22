@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import { PageHeader } from "@/components/admin-shell/page-header";
 import { PageShell } from "@/components/admin-shell/page-shell";
 import { CapacityChart } from "@/components/dashboard/capacity-chart";
+import { CompanyProgramsCard } from "@/components/dashboard/company-cards";
 import { DashboardActions } from "@/components/dashboard/dashboard-actions";
 import { DemographicsCard } from "@/components/dashboard/demographics-card";
 import {
@@ -32,13 +33,19 @@ import {
 	type Satisfaction,
 } from "@/lib/dashboard/compute";
 import type {
+	CompanyDetail,
 	FeedbackCompletion,
 	Overview,
 	ProgramDetail,
 	Returning,
 } from "@/lib/dashboard/insights";
-import { loadOverview, loadProgramDetail } from "@/lib/dashboard/insights-load";
+import {
+	loadCompanyDetail,
+	loadOverview,
+	loadProgramDetail,
+} from "@/lib/dashboard/insights-load";
 import { ALL_YEARS_LABEL } from "@/lib/dashboard/period";
+import { feedbackSearch } from "@/lib/feedback/format";
 import { loadDashboard, type PeriodComparison } from "@/lib/dashboard/load";
 import { requireAdmin } from "@/lib/session";
 import { formatCount, formatRatio } from "@/lib/format";
@@ -348,6 +355,51 @@ function ProgramSection({ detail }: { detail: ProgramDetail }) {
 	);
 }
 
+function CompanySection({ detail }: { detail: CompanyDetail }) {
+	const { satisfaction } = detail;
+	return (
+		<>
+			<KpiGrid columns={5}>
+				<KpiCard
+					label="Programok"
+					value={formatCount(detail.programs)}
+					note="a cég szervezésében"
+				/>
+				<KpiCard
+					label="Diákok"
+					value={formatCount(detail.students)}
+					note="egyedi jelentkező"
+				/>
+				<KpiCard
+					label="Mentorok"
+					value={formatCount(detail.mentors)}
+					note="egyedi mentor"
+				/>
+				<RatingKpiCard
+					label="Átlagos értékelés"
+					{...ratingKpi(satisfaction)}
+					wide
+				/>
+				<KpiCard
+					label="Értékelések"
+					href={`/feedback${feedbackSearch({ company: detail.name })}`}
+					hrefLabel="a cég visszajelzéseinek megnyitása"
+					value={formatCount(
+						satisfaction.PARTICIPANT.responses +
+							satisfaction.MENTOR.responses,
+					)}
+					note={noteParts([
+						`${formatCount(satisfaction.PARTICIPANT.responses)} résztvevő`,
+						`${formatCount(satisfaction.MENTOR.responses)} mentor`,
+					])}
+				/>
+			</KpiGrid>
+
+			<CompanyProgramsCard detail={detail} />
+		</>
+	);
+}
+
 // Access is enforced by the (admin) layout; the session is read for the greeting.
 export default async function DashboardPage({ searchParams }: Props) {
 	const session = await requireAdmin("/");
@@ -355,13 +407,21 @@ export default async function DashboardPage({ searchParams }: Props) {
 	const params = await searchParams;
 	const now = new Date();
 	const data = await loadDashboard(
-		{ period: single(params.period), program: single(params.program) },
+		{
+			period: single(params.period),
+			program: single(params.program),
+			company: single(params.company),
+		},
 		now,
 	);
 	const programDetail = data.program
 		? await loadProgramDetail(data.program.id, now)
 		: null;
-	const overview = programDetail ? null : await loadOverview(data.range);
+	const companyDetail = data.company
+		? await loadCompanyDetail(data.company)
+		: null;
+	const overview =
+		data.mode === "year" ? await loadOverview(data.range) : null;
 	const { comparison } = data;
 	const periodLabel =
 		data.year === null ? ALL_YEARS_LABEL : String(data.year);
@@ -373,12 +433,12 @@ export default async function DashboardPage({ searchParams }: Props) {
 				title={`${greeting(now)}, ${name}!`}
 				description={
 					programDetail
-						? data.range
-							? `${programDetail.name} · ${periodLabel}`
-							: programDetail.name
-						: comparison
-							? `${periodLabel} · összevetés: ${comparison.previousLabel}`
-							: periodLabel
+						? programDetail.name
+						: companyDetail
+							? companyDetail.name
+							: comparison
+								? `${periodLabel} · összevetés: ${comparison.previousLabel}`
+								: periodLabel
 				}
 				actions={
 					// Mobile: one horizontally scrollable row below the title.
@@ -389,6 +449,8 @@ export default async function DashboardPage({ searchParams }: Props) {
 			/>
 
 			{programDetail && <ProgramSection detail={programDetail} />}
+
+			{companyDetail && <CompanySection detail={companyDetail} />}
 
 			{overview && (
 				<OverviewSection

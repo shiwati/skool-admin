@@ -68,10 +68,12 @@ describe("loadDashboard", () => {
 			_max: { from: null },
 		});
 		eventFindMany
-			// program list of the period
+			// every program, newest first: the program and company filter lists
 			.mockResolvedValueOnce([
-				{ id: "a", name: "Python ősz" },
-				{ id: "c", name: "Tavaszi tábor" },
+				{ id: "a", name: "Python ősz", companyName: "Zeta Kft." },
+				{ id: "c", name: "Tavaszi tábor", companyName: "Alfa Zrt." },
+				{ id: "b", name: "Robotika tél", companyName: "Zeta Kft." },
+				{ id: "d", name: "Céltalan", companyName: null },
 			])
 			.mockResolvedValueOnce(events);
 		applicationCount.mockResolvedValueOnce(120).mockResolvedValueOnce(100);
@@ -135,12 +137,12 @@ describe("loadDashboard", () => {
 
 	it("defaults to all years without a comparison or period queries", async () => {
 		const data = await loadDashboard({}, now);
+		expect(data.mode).toBe("year");
 		expect(data.year).toBeNull();
 		expect(data.range).toBeNull();
 		expect(data.comparison).toBeNull();
 		expect(data.years).toEqual([2026, 2025]);
 		expect(eventFindMany).toHaveBeenCalledTimes(1);
-		expect(eventFindMany.mock.calls[0][0].where).toEqual({});
 		expect(applicationCount).not.toHaveBeenCalled();
 		expect(feedbackFindMany).not.toHaveBeenCalled();
 	});
@@ -150,10 +152,51 @@ describe("loadDashboard", () => {
 		expect(data.comparison).toBeNull();
 	});
 
-	it("lists every program for all years, and a selected one is kept", async () => {
-		const data = await loadDashboard({ program: "c" }, now);
+	it("lists every program and the distinct company names in order", async () => {
+		const data = await loadDashboard({}, now);
+		expect(data.programs.map((p) => p.id)).toEqual(["a", "c", "b", "d"]);
+		expect(data.companies).toEqual(["Alfa Zrt.", "Zeta Kft."]);
+	});
+
+	it("switches to the program breakdown and drops the year", async () => {
+		const data = await loadDashboard({ program: "c", period: "2026" }, now);
+		expect(data.mode).toBe("program");
 		expect(data.program).toEqual({ id: "c", name: "Tavaszi tábor" });
+		expect(data.year).toBeNull();
+		expect(data.range).toBeNull();
 		expect(data.comparison).toBeNull();
+		expect(applicationCount).not.toHaveBeenCalled();
+	});
+
+	it("switches to the company breakdown and drops the year", async () => {
+		const data = await loadDashboard(
+			{ company: "Zeta Kft.", period: "2026" },
+			now,
+		);
+		expect(data.mode).toBe("company");
+		expect(data.company).toBe("Zeta Kft.");
+		expect(data.program).toBeNull();
+		expect(data.year).toBeNull();
+		expect(data.comparison).toBeNull();
+	});
+
+	it("lets the program win when a company is also given", async () => {
+		const data = await loadDashboard(
+			{ program: "a", company: "Zeta Kft." },
+			now,
+		);
+		expect(data.mode).toBe("program");
+		expect(data.company).toBeNull();
+	});
+
+	it("ignores an unknown company or program", async () => {
+		const data = await loadDashboard(
+			{ company: "Nincs Kft.", program: "x" },
+			now,
+		);
+		expect(data.mode).toBe("year");
+		expect(data.company).toBeNull();
+		expect(data.program).toBeNull();
 	});
 
 	it("counts applications (not distinct applicants), anonymized applicants included", async () => {
@@ -170,13 +213,6 @@ describe("loadDashboard", () => {
 		expect(data.comparison?.previousLabel).toBe("2025");
 		expect(data.range).toEqual(range(2026));
 		expect(data.program).toBeNull();
-	});
-
-	it("lists only the programs starting in the year", async () => {
-		await year();
-		expect(eventFindMany.mock.calls[0][0].where).toEqual({
-			from: range(2026),
-		});
 	});
 
 	it("counts applications of anonymized applicants per event and by status", async () => {
@@ -213,19 +249,6 @@ describe("loadDashboard", () => {
 			ACCEPTED: 20,
 		});
 		expect(rows?.find((r) => r.id === "c")?.byStatus).toEqual({});
-	});
-
-	it("skips the comparison when a program of the year is selected", async () => {
-		const data = await loadDashboard({ period: "2026", program: "a" }, now);
-		expect(data.program).toEqual({ id: "a", name: "Python ősz" });
-		expect(data.comparison).toBeNull();
-		expect(applicationCount).not.toHaveBeenCalled();
-	});
-
-	it("ignores a program that does not start in the year", async () => {
-		const data = await loadDashboard({ period: "2026", program: "b" }, now);
-		expect(data.program).toBeNull();
-		expect(data.comparison).not.toBeNull();
 	});
 
 	it("offers years back to the first program in the database", async () => {
