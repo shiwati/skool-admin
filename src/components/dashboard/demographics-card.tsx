@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import type { CountRow } from "@/lib/dashboard/compute";
-import type { Demographics } from "@/lib/dashboard/load";
+import { share, type CountRow } from "@/lib/dashboard/compute";
+import type { AgeFit, Demographics } from "@/lib/dashboard/insights";
+import { formatCount } from "@/lib/format";
+import { BarList } from "./bar-list";
 import { SectionHeader } from "./kpi-card";
 import { Segmented } from "./segmented";
-import { formatCount } from "@/lib/format";
 
 type View = "age" | "hometown";
 
@@ -15,7 +16,7 @@ const VIEWS = [
 	{ value: "hometown", label: "Település" },
 ] as const satisfies readonly { value: View; label: string }[];
 
-function AgeBars({ rows }: { rows: CountRow[] }) {
+function AgeBars({ rows, unit }: { rows: CountRow[]; unit: string }) {
 	const max = Math.max(1, ...rows.map((r) => r.count));
 	return (
 		<ul className="flex h-48 items-end justify-around gap-3">
@@ -39,7 +40,7 @@ function AgeBars({ rows }: { rows: CountRow[] }) {
 						{row.label}
 						<span className="sr-only">
 							{" "}
-							éves: {row.count} jelentkezés
+							éves: {row.count} {unit}
 						</span>
 					</span>
 				</li>
@@ -48,49 +49,39 @@ function AgeBars({ rows }: { rows: CountRow[] }) {
 	);
 }
 
-function HometownBars({ rows }: { rows: CountRow[] }) {
-	const max = Math.max(1, ...rows.map((r) => r.count));
-	return (
-		<ul className="flex flex-col gap-2">
-			{rows.map((row) => (
-				<li key={row.label} className="flex items-center gap-3 text-sm">
-					<span className="w-32 truncate" title={row.label}>
-						{row.label}
-					</span>
-					<span
-						aria-hidden="true"
-						className="relative h-3 flex-1 rounded-full bg-surface-subtle"
-					>
-						<span
-							className="absolute inset-y-0 left-0 rounded-full bg-sky"
-							style={{ width: `${(row.count / max) * 100}%` }}
-						/>
-					</span>
-					<span className="w-10 text-right font-mono text-xs text-text-secondary">
-						{formatCount(row.count)}
-						<span className="sr-only"> jelentkezés</span>
-					</span>
-				</li>
-			))}
-		</ul>
-	);
+/** A program meghirdetett korosztályába esők aránya az ismert életkorúak közt. */
+export function ageFitText(fit: AgeFit): string | null {
+	if (fit.known === 0) return null;
+	const { min, max } = fit.range;
+	return `A meghirdetett ${min}–${max} éves korosztályba tartozik: ${share(fit.within, fit.known)}% · fiatalabb: ${share(fit.below, fit.known)}% · idősebb: ${share(fit.above, fit.known)}%`;
 }
 
 export function DemographicsCard({
 	data,
-	periodLabel,
+	subtitle,
+	emptyText = "Még nincs adat.",
+	unit = "jelentkezés",
+	ageNote = "Életkor = a program kezdő éve − születési év.",
+	ageFit,
 }: {
 	data: Demographics;
-	/** A fejlécben kiválasztott időszak neve. */
-	periodLabel: string;
+	subtitle: string;
+	emptyText?: string;
+	/** Az életkor nézet lábjegyzete. */
+	ageNote?: string;
+	/** Mit számolnak a darabszámok: „jelentkezés” vagy „diák”. */
+	unit?: string;
+	/** Egyprogramos nézetben: a korosztály-illeszkedés az életkor nézet alatt. */
+	ageFit?: AgeFit | null;
 }) {
 	const [view, setView] = useState<View>("age");
+	const fitText = ageFit ? ageFitText(ageFit) : null;
 
 	return (
 		<Card className="flex min-w-0 flex-col gap-4 p-5">
 			<SectionHeader
 				title="Demográfia"
-				subtitle={`${periodLabel} · az időszakban induló programok jelentkezései · ${formatCount(data.total)} jelentkezés`}
+				subtitle={`${subtitle} · ${formatCount(data.total)} ${unit}`}
 				actions={
 					<Segmented
 						label="Megoszlás"
@@ -102,18 +93,21 @@ export function DemographicsCard({
 			/>
 			{data.total === 0 ? (
 				<p className="py-8 text-center text-sm text-text-secondary">
-					A kiválasztott időszakban még nincs jelentkezés.
+					{emptyText}
 				</p>
 			) : view === "age" ? (
-				<AgeBars rows={data.age} />
+				<AgeBars rows={data.age} unit={unit} />
 			) : (
-				<HometownBars rows={data.hometown} />
+				<BarList rows={data.hometown} unit={unit} />
+			)}
+			{data.total > 0 && view === "age" && fitText && (
+				<p className="rounded-lg bg-info-bg px-3 py-2.5 text-xs text-info-fg">
+					{fitText}
+				</p>
 			)}
 			{data.total > 0 && (
 				<p className="text-xs text-text-tertiary">
-					{view === "age"
-						? "Életkor = a program kezdő éve − születési év. Ha valaki több programra is jelentkezett, mindegyik jelentkezése beleszámít."
-						: "A leggyakoribb települések; ha valaki több programra is jelentkezett, mindegyik jelentkezése beleszámít."}
+					{view === "age" ? ageNote : "A leggyakoribb települések."}
 				</p>
 			)}
 		</Card>

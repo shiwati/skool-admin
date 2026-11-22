@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import { CapacityChart } from "./capacity-chart";
 import { DemographicsCard } from "./demographics-card";
 import { KpiCard, KpiGrid } from "./kpi-card";
+import { ChannelsCard, PartnersCard } from "./overview-cards";
+import { ProgramFunnelCard, completionText } from "./program-cards";
 import { SatisfactionCard } from "./satisfaction-card";
 import { trendSummary } from "./oversubscription-trend";
 
@@ -29,19 +31,40 @@ describe("CapacityChart", () => {
 		},
 	];
 
-	it("filters by upcoming / past / all", async () => {
+	it("starts with all programs, then past, then upcoming", async () => {
 		const user = userEvent.setup();
 		render(<CapacityChart rows={rows} />);
-		expect(screen.getByText("Python ősz")).toBeInTheDocument();
-		expect(screen.queryByText("Robotika tábor")).not.toBeInTheDocument();
+		expect(
+			screen.getAllByRole("button").map((button) => button.textContent),
+		).toEqual(["Mind", "Múltbeli", "Jövőbeli"]);
+		expect(screen.getByRole("button", { name: "Mind" })).toHaveAttribute(
+			"aria-pressed",
+			"true",
+		);
+		expect(screen.getAllByRole("listitem")).toHaveLength(2);
 		expect(screen.getByText("3,1×")).toBeInTheDocument();
 
 		await user.click(screen.getByRole("button", { name: "Múltbeli" }));
 		expect(screen.getByText("Robotika tábor")).toBeInTheDocument();
 		expect(screen.queryByText("Python ősz")).not.toBeInTheDocument();
 
-		await user.click(screen.getByRole("button", { name: "Mind" }));
-		expect(screen.getAllByRole("listitem")).toHaveLength(2);
+		await user.click(screen.getByRole("button", { name: "Jövőbeli" }));
+		expect(screen.getByText("Python ősz")).toBeInTheDocument();
+		expect(screen.queryByText("Robotika tábor")).not.toBeInTheDocument();
+	});
+
+	it("has no tabs when all programs are over, as they would repeat the full list", () => {
+		render(<CapacityChart rows={rows.filter((r) => r.state === "past")} />);
+		expect(screen.queryByRole("group")).not.toBeInTheDocument();
+		expect(screen.getAllByRole("listitem")).toHaveLength(1);
+	});
+
+	it("has no tabs when no program is over yet", () => {
+		render(
+			<CapacityChart rows={rows.filter((r) => r.state === "upcoming")} />,
+		);
+		expect(screen.queryByRole("group")).not.toBeInTheDocument();
+		expect(screen.getByText("Python ősz")).toBeInTheDocument();
 	});
 });
 
@@ -50,7 +73,8 @@ describe("DemographicsCard", () => {
 		const user = userEvent.setup();
 		render(
 			<DemographicsCard
-				periodLabel="2026 (idei év)"
+				subtitle="Az összes diák"
+				unit="diák"
 				data={{
 					total: 3,
 					age: [{ label: "13–15", count: 3 }],
@@ -59,9 +83,7 @@ describe("DemographicsCard", () => {
 			/>,
 		);
 		expect(screen.getByText("13–15")).toBeInTheDocument();
-		expect(
-			screen.getByText(/induló programok jelentkezései · 3 jelentkezés$/),
-		).toBeInTheDocument();
+		expect(screen.getByText("Az összes diák · 3 diák")).toBeInTheDocument();
 		expect(
 			screen.queryByRole("group", { name: "Év" }),
 		).not.toBeInTheDocument();
@@ -70,17 +92,163 @@ describe("DemographicsCard", () => {
 		expect(screen.getByText("Ózd")).toBeInTheDocument();
 	});
 
-	it("shows an empty state for a period without applications", () => {
+	it("shows the given empty state without data", () => {
 		render(
 			<DemographicsCard
-				periodLabel="2025"
+				subtitle="A program jelentkezői"
+				emptyText="Ehhez a programhoz még nincs jelentkezés."
 				data={{ total: 0, age: [], hometown: [] }}
 			/>,
 		);
 		expect(
+			screen.getByText("Ehhez a programhoz még nincs jelentkezés."),
+		).toBeInTheDocument();
+	});
+
+	it("shows the age fit under the age view only", async () => {
+		const user = userEvent.setup();
+		render(
+			<DemographicsCard
+				subtitle="A program jelentkezői"
+				data={{
+					total: 4,
+					age: [{ label: "13–15", count: 4 }],
+					hometown: [{ label: "Ózd", count: 4 }],
+				}}
+				ageFit={{
+					range: { min: 12, max: 16 },
+					known: 4,
+					within: 3,
+					below: 1,
+					above: 0,
+				}}
+			/>,
+		);
+		expect(
 			screen.getByText(
-				"A kiválasztott időszakban még nincs jelentkezés.",
+				"A meghirdetett 12–16 éves korosztályba tartozik: 75% · fiatalabb: 25% · idősebb: 0%",
 			),
+		).toBeInTheDocument();
+
+		await user.click(screen.getByRole("button", { name: "Település" }));
+		expect(
+			screen.queryByText(/korosztályba tartozik/),
+		).not.toBeInTheDocument();
+	});
+});
+
+describe("ProgramFunnelCard", () => {
+	const funnel = {
+		total: 20,
+		accepted: 10,
+		attended: 8,
+		rejected: 5,
+		waitlisted: 2,
+		pending: 3,
+	};
+
+	it("shows the steps with shares and the attendance of the accepted", () => {
+		render(<ProgramFunnelCard funnel={funnel} finished />);
+		expect(screen.getByText("Jelentkezett")).toBeInTheDocument();
+		expect(screen.getByText("20 · 100%")).toBeInTheDocument();
+		expect(screen.getByText("10 · 50%")).toBeInTheDocument();
+		expect(screen.getByText("8 · 40%")).toBeInTheDocument();
+		expect(
+			screen.getByText("Az elfogadottak 80%-a részt vett."),
+		).toBeInTheDocument();
+	});
+
+	it("hides the attendance before the program is over", () => {
+		render(<ProgramFunnelCard funnel={funnel} finished={false} />);
+		expect(screen.queryByText("Részt vett")).not.toBeInTheDocument();
+		expect(screen.queryByText(/részt vett\.$/)).not.toBeInTheDocument();
+	});
+
+	it("shows an empty state without applications", () => {
+		render(
+			<ProgramFunnelCard
+				funnel={{ ...funnel, total: 0, accepted: 0, attended: 0 }}
+				finished
+			/>,
+		);
+		expect(
+			screen.getByText("Ehhez a programhoz még nincs jelentkezés."),
+		).toBeInTheDocument();
+	});
+});
+
+describe("completionText", () => {
+	it("shows the share when the expected count is known", () => {
+		expect(
+			completionText("Kitöltés – résztvevők", {
+				responses: 6,
+				expected: 8,
+			}),
+		).toBe("Kitöltés – résztvevők: 6 / 8 (75%)");
+	});
+
+	it("shows only the count when it is not", () => {
+		expect(
+			completionText("Kitöltés – mentorok", {
+				responses: 2,
+				expected: null,
+			}),
+		).toBe("Kitöltés – mentorok: 2 kitöltés");
+	});
+});
+
+describe("ChannelsCard", () => {
+	it("shows the count and the share, leaving 'Nincs adat' out of the 100%", () => {
+		render(
+			<ChannelsCard
+				subtitle="x"
+				rows={[
+					{ label: "iskola", count: 6 },
+					{ label: "barát", count: 2 },
+					{ label: "Nincs adat", count: 12 },
+				]}
+			/>,
+		);
+		expect(screen.getByText("6 fő · 75%")).toBeInTheDocument();
+		expect(screen.getByText("2 fő · 25%")).toBeInTheDocument();
+		expect(screen.getByText("12 fő")).toBeInTheDocument();
+	});
+
+	it("shows no share when only 'Nincs adat' is left", () => {
+		render(
+			<ChannelsCard
+				subtitle="x"
+				rows={[{ label: "Nincs adat", count: 4 }]}
+			/>,
+		);
+		expect(screen.getByText("4 fő")).toBeInTheDocument();
+	});
+});
+
+describe("PartnersCard", () => {
+	it("ranks the partners by their number of programs", () => {
+		render(
+			<PartnersCard
+				rows={[
+					{ name: "Minta Kft.", applications: 120, programs: 3 },
+					{ name: "Példa Zrt.", applications: 80, programs: 2 },
+				]}
+			/>,
+		);
+		expect(
+			screen.getByRole("heading", { name: "Legaktívabb partnerek" }),
+		).toBeInTheDocument();
+		expect(screen.getByText("Minta Kft.")).toBeInTheDocument();
+		expect(
+			screen.getByText("3 program · 120 jelentkező"),
+		).toBeInTheDocument();
+		expect(screen.queryByText(/összesen/)).not.toBeInTheDocument();
+	});
+
+	it("shows an empty state without companies", () => {
+		render(<PartnersCard rows={[]} />);
+		expect(
+			screen.getByText("Még nincs céghez rendelt program."),
 		).toBeInTheDocument();
 	});
 });
@@ -106,6 +274,23 @@ describe("trendSummary", () => {
 
 	it("handles missing data", () => {
 		expect(trendSummary([point("jún", null)])).toMatch(/nem indult/);
+	});
+});
+
+describe("KpiCard", () => {
+	it("shows the icon before the value", () => {
+		render(
+			<KpiCard
+				label="Átlagos értékelés"
+				value="4,6 / 5"
+				note="x"
+				icon={<svg data-testid="star" />}
+			/>,
+		);
+		expect(screen.getByTestId("star")).toBeInTheDocument();
+		expect(screen.getByText("4,6 / 5").closest("p")).toContainElement(
+			screen.getByTestId("star"),
+		);
 	});
 });
 

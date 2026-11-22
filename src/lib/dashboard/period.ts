@@ -1,6 +1,7 @@
 /**
- * Az Áttekintés év választója: naptári év (budapesti idő) az ideitől a
- * legkorábbi programig, mindig az azt megelőző évvel összevetve.
+ * Az Áttekintés év választója: „Összes év” (alapértelmezett), vagy naptári év
+ * (budapesti idő) az ideitől a legkorábbi programig, az azt megelőző évvel
+ * összevetve.
  *
  * Kliensről is importálható (nincs benne `server-only` és Prisma).
  */
@@ -9,48 +10,40 @@ import { budapestYear } from "./compute";
 
 export type DateRange = { gte: Date; lt: Date };
 
-export type PeriodOption = { key: string; label: string };
-
-export type Period = PeriodOption & {
+export type Period = {
+	year: number;
 	range: DateRange;
 	previous: DateRange;
-	/** Az összevetett év, pl. „2025”. */
-	previousLabel: string;
 };
 
+/** Az évszűrő felirata, amikor nincs év kiválasztva. */
+export const ALL_YEARS_LABEL = "Összes év";
+
 /**
- * A választható évek az idei évtől (alapértelmezett) visszafelé a
- * legkorábbi program évéig (`firstYear`, a DB-ből). A tavalyi év mindig
- * szerepel, akkor is, ha még nincs régebbi program.
+ * A választható évek az idei évtől visszafelé a legkorábbi program évéig
+ * (`firstYear`, a DB-ből). A tavalyi év mindig szerepel, akkor is, ha még nincs
+ * régebbi program.
  */
-export function periodOptions(
-	now: Date,
-	firstYear?: number | null,
-): PeriodOption[] {
+export function periodYears(now: Date, firstYear?: number | null): number[] {
 	const year = budapestYear(now);
 	const oldest = Math.min(firstYear ?? year - 1, year - 1);
-	return Array.from({ length: year - oldest + 1 }, (_, i) => {
-		const y = year - i;
-		return {
-			key: String(y),
-			label: i === 0 ? `${y} (idei év)` : String(y),
-		};
-	});
+	return Array.from({ length: year - oldest + 1 }, (_, i) => year - i);
 }
 
-/** Ismeretlen vagy hiányzó kulcs esetén az idei év. */
+/**
+ * A választható évek közül a megadott; ismeretlen vagy hiányzó érték esetén
+ * `null`, vagyis az összes év.
+ */
 export function resolvePeriod(
-	key: string | undefined,
+	value: string | undefined,
 	now: Date,
 	firstYear?: number | null,
-): Period {
-	const options = periodOptions(now, firstYear);
-	const option = options.find((o) => o.key === key) ?? options[0];
-	const year = Number(option.key);
+): Period | null {
+	const year = periodYears(now, firstYear).find((y) => String(y) === value);
+	if (year === undefined) return null;
 	return {
-		...option,
+		year,
 		range: budapestYearRange(year),
 		previous: budapestYearRange(year - 1),
-		previousLabel: String(year - 1),
 	};
 }

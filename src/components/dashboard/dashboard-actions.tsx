@@ -11,6 +11,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { DashboardData } from "@/lib/dashboard/load";
+import { ALL_YEARS_LABEL } from "@/lib/dashboard/period";
 
 const ALL = "";
 
@@ -68,21 +69,27 @@ export function DashboardActions({ data }: { data: DashboardData }) {
 	const router = useRouter();
 
 	function navigate(period: string, program: string) {
-		const params = new URLSearchParams({ period });
+		const params = new URLSearchParams();
+		if (period) params.set("period", period);
 		if (program) params.set("program", program);
-		router.push(`/?${params}`);
+		router.push(params.size ? `/?${params}` : "/");
 	}
 
 	return (
 		<>
 			<FilterMenu
 				label="Időszak"
-				current={data.period.label}
-				value={data.period.key}
-				options={data.periodOptions.map((o) => ({
-					value: o.key,
-					label: o.label,
-				}))}
+				current={
+					data.year === null ? ALL_YEARS_LABEL : String(data.year)
+				}
+				value={data.year === null ? ALL : String(data.year)}
+				options={[
+					{ value: ALL, label: ALL_YEARS_LABEL },
+					...data.years.map((y) => ({
+						value: String(y),
+						label: String(y),
+					})),
+				]}
 				// Másik időszakban más programok vannak: a programszűrő törlődik.
 				onChange={(period) => navigate(period, ALL)}
 			/>
@@ -97,7 +104,12 @@ export function DashboardActions({ data }: { data: DashboardData }) {
 						label: p.name,
 					})),
 				]}
-				onChange={(program) => navigate(data.period.key, program)}
+				onChange={(program) =>
+					navigate(
+						data.year === null ? ALL : String(data.year),
+						program,
+					)
+				}
 			/>
 		</>
 	);
