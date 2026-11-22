@@ -9,6 +9,18 @@ export const paginationSchema = {
 
 export const orderSchema = z.enum(["asc", "desc"]);
 
+/**
+ * Tömeges művelet azonosítói (törzsben): 1–`MAX_PAGE_SIZE` egyedi, nem üres
+ * id, hogy a „mind kijelölése az oldalon” mindig beleférjen.
+ */
+export const idListSchema = z
+	.array(z.string().trim().min(1).max(64))
+	.min(1)
+	.max(MAX_PAGE_SIZE)
+	.refine((ids) => new Set(ids).size === ids.length, {
+		message: "ids must be unique",
+	});
+
 /** Vesszővel elválasztott lista (`?a=x,y`) vagy ismételt paraméter (`?a=x&a=y`). */
 export function csvList<T extends z.ZodType>(item: T) {
 	return z.preprocess((value) => {

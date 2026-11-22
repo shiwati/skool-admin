@@ -14,7 +14,7 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { apiFetch, ApiError, isAbortError } from "@/lib/api/client";
+import { ApiError, apiFetch, isAbortError, jsonInit } from "@/lib/api/client";
 import { formatCount, STATUS_LABELS } from "@/lib/applicants/format";
 import type { ApplicationStatus } from "@/lib/applicants/types";
 import {
@@ -213,11 +213,7 @@ export function ApplicationsSection({
 		try {
 			const result = await apiFetch<{ updated: number; skipped: number }>(
 				`/api/events/${eventId}/applicants/status`,
-				{
-					method: "POST",
-					headers: { "content-type": "application/json" },
-					body: JSON.stringify({ ids, status }),
-				},
+				jsonInit("POST", { ids, status }),
 			);
 			toast.success(
 				`${formatCount(result.updated)} jelentkezés státusza: ${STATUS_LABELS[status]}`,

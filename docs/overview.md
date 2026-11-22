@@ -28,7 +28,7 @@ src/
     data-table.tsx  TanStack tábla, kliensoldali rendezés/lapozás
   hooks/            useZodForm
   lib/
-    api/            handler.ts (handleQuery), query.ts (paraméter-segédek)
+    api/            handler.ts (handleQuery, handleBody, handleAdmin), google-errors.ts, client.ts (apiFetch, jsonInit, apiErrorMessage), query.ts (paraméter-segédek)
     auth.ts, access-policy.ts, session.ts, callback-url.ts
     db.ts, env.ts, env-schema.ts, logger.ts, validation.ts, utils.ts
   instrumentation.ts  indításkor env-validáció

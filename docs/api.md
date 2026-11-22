@@ -7,7 +7,7 @@ A jelentkező adatlapjának és szerkesztő űrlapjának (`/applicants/[id]`, `/
 ## Közös válaszformák
 
 - Lapozott lista: `{ items, total, page, pageSize }`
-- Hibák: `401 {error:"Unauthorized"}` · `400 {error:"Invalid query parameters", details}` (Zod `flattenError`) · `404` ha nincs az erőforrás · `500 {error:"Internal Server Error"}` (részletek csak a logban).
+- Hibák: `401 {error:"Unauthorized"}` · `400 {error:"Invalid query parameters", details}` (Zod `flattenError`) · `400 {error:"Invalid request body"}` hibás JSON-törzsre, sémahibánál `details`-szel · `404` ha nincs az erőforrás · `500 {error:"Internal Server Error"}` (részletek csak a logban).
 
 ## Végpontok
 
@@ -63,8 +63,13 @@ Egyéb: `GET /api/health` (nyilvános readiness, 200/503), `/api/auth/*` (NextAu
 
 ## Közös segédek (`src/lib/api/`)
 
-- `handleQuery(request, schema, run)`: session ellenőrzés → **query** validáció → futtatás → egységes hibakezelés. Olvasó (GET) végpontokra készült. Írási végpontokhoz nincs közös segéd: mindegyik maga hívja a `getAdminSession()`-t, Zod-dal validálja a body-t (`formatValidationErrors`), és maga írja a History sorokat (tudatosan így maradt, a minta egyszerű és egységes).
-- `query.ts`: `paginationSchema`, `orderSchema`, `csvList`, `repeatedList` (vesszőt nem vágó lista szabad szöveghez), `booleanParam`, `optionalText`, `searchTokens`, `containsInsensitive`, `ageRangeToBirthYear`, `budapestYearRange`, `pageResult`.
+- `handleQuery(request, schema, run)` (`handler.ts`): session ellenőrzés → **query** validáció → futtatás → egységes hibakezelés. Olvasó (GET) végpontokra.
+- `handleBody(request, schema, run, { event, mapError?, failure?, select? })`: írási végpontokra. Session + felhasználó-azonosító ellenőrzés (`401`, a törzset ilyenkor nem olvassa) → JSON beolvasás (nem JSON → `400 {error:"Invalid request body"}`) → Zod validáció (`400 {error:"Invalid request body", details}`) → `run(data, { userId })`. A dobott hibát előbb a `mapError` válaszolja meg (ismert domain-hibák: 404, 409, Google-hibák); a többi a logba kerül `{ event, path, userId, err }` alakban, a kliens `500 {error:"Internal Server Error"}`-t kap (vagy a `failure` válaszát). A `select` a törzs egy részét adja a sémának (riport: `body.content`).
+- `handleAdmin(request, run, options)`: ugyanez törzs nélkül (pl. `DELETE`, szinkronizálás).
+- Válasz-segédek: `jsonResponse`, `unauthorized`, `notFound`, `internalError`, `invalidBody`, `invalidField(field, message)` (egy mezős `400`, a Zod `details` alakjával).
+- `google-errors.ts`: `googleErrorResponse(error, reauthMessage?)` → `403 REAUTH_REQUIRED` vagy `422 SHEET_NOT_ACCESSIBLE`, más hibára `undefined` (a `mapError`-ba illeszthető).
+- A History sorokat továbbra is a végpont (vagy a `src/lib` függvénye) írja.
+- `query.ts`: `MAX_PAGE_SIZE` (100), `idListSchema` (tömeges műveletek 1–100 egyedi id-je), `paginationSchema`, `orderSchema`, `csvList`, `repeatedList` (vesszőt nem vágó lista szabad szöveghez), `booleanParam`, `optionalText`, `searchTokens`, `containsInsensitive`, `ageRangeToBirthYear`, `budapestYearRange`, `pageResult`.
 - Rendezésnél mindig van másodlagos `id` rendezés (stabil lapozás); nullable mezőknél `nulls: "last"`.
 
 ## Konvenciók új végponthoz
@@ -72,7 +77,8 @@ Egyéb: `GET /api/health` (nyilvános readiness, 200/503), `/api/auth/*` (NextAu
 1. Zod séma a query-re (vagy body-ra), szerveroldali validáció mindig.
 2. Védelem: a layout nem védi a Route Handlert; lásd [auth-and-access.md](auth-and-access.md).
 3. Teszt a végpont mellé (`route.test.ts`, Prisma mockolva); lásd [testing.md](testing.md).
-4. Ne logolj kérés-törzset, felhasználói rekordot, e-mailt.
+4. Ne logolj kérés-törzset, felhasználói rekordot, e-mailt. A logger `err` szerializálója a Prisma-hibákból csak a típust, a kódot és a `meta`-t írja ki (az üzenetük a lekérdezés argumentumait idézheti); más hibák üzenete és stackje megmarad.
+5. Írási végpont: `handleBody` / `handleAdmin`, ne kézzel írt session- és törzsellenőrzés.
 
 ## `POST /api/events/[id]/sync` — Google Form sheet import
 

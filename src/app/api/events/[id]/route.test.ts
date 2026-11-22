@@ -100,7 +100,11 @@ describe("PATCH /api/events/[id]", () => {
 	});
 
 	it("rejects invalid bodies", async () => {
-		expect((await patch("{")).status).toBe(400);
+		const malformed = await patch("{");
+		expect(malformed.status).toBe(400);
+		expect(await malformed.json()).toEqual({
+			error: "Invalid request body",
+		});
 		expect((await patch({})).status).toBe(400);
 		const res = await patch({ name: "" });
 		expect(res.status).toBe(400);

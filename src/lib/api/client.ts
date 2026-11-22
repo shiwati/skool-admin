@@ -15,7 +15,7 @@ export class ApiError extends Error {
 	}
 }
 
-export function redirectToLogin() {
+function redirectToLogin() {
 	const current = `${window.location.pathname}${window.location.search}`;
 	// Deliberately a full navigation, not the client router: this runs outside
 	// React (in fetch helpers) after the session expired, and NextAuth's login
@@ -42,6 +42,27 @@ export async function apiFetch<T>(
 		throw new ApiError(response.status, body);
 	}
 	return (await response.json()) as T;
+}
+
+/** JSON-törzsű kérés beállításai az `apiFetch`-hez. */
+export function jsonInit(method: string, body: unknown): RequestInit {
+	return {
+		method,
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify(body),
+	};
+}
+
+/**
+ * A hibaválasz `error` szövege, ha az a felhasználónak szól; egyébként (nem
+ * API-hiba, nincs szöveg, vagy részletek nélküli `500`) a `fallback`.
+ */
+export function apiErrorMessage(error: unknown, fallback: string): string {
+	if (error instanceof ApiError && error.status !== 500) {
+		const message = (error.body as { error?: unknown } | undefined)?.error;
+		if (typeof message === "string") return message;
+	}
+	return fallback;
 }
 
 export function isAbortError(error: unknown): boolean {

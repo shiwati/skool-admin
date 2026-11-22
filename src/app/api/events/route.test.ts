@@ -148,7 +148,11 @@ describe("POST /api/events", () => {
 	});
 
 	it("rejects invalid bodies", async () => {
-		expect((await post("{")).status).toBe(400);
+		const malformed = await post("{");
+		expect(malformed.status).toBe(400);
+		expect(await malformed.json()).toEqual({
+			error: "Invalid request body",
+		});
 		const res = await post({
 			name: "",
 			from: "2026-05-02",

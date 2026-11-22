@@ -134,8 +134,11 @@ describe("PUT /api/events/[id]/report", () => {
 		expect(body).toEqual({ error: "Internal Server Error" });
 		expect(JSON.stringify(body)).not.toContain("private");
 		expect(logError).toHaveBeenCalledWith(
-			expect.objectContaining({ err: error }),
-			"Report save failed",
+			expect.objectContaining({
+				event: "event_report.save_failed",
+				err: error,
+			}),
+			"API request failed",
 		);
 	});
 });

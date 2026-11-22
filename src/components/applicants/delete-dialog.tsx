@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch, jsonInit } from "@/lib/api/client";
 import { formatCount } from "@/lib/applicants/format";
 
 export type DeleteTarget = {
@@ -50,11 +50,7 @@ export function DeleteDialog({
 		try {
 			const result = await apiFetch<{ deleted: number }>(
 				"/api/applicants/delete",
-				{
-					method: "POST",
-					headers: { "content-type": "application/json" },
-					body: JSON.stringify({ ids: target.ids }),
-				},
+				jsonInit("POST", { ids: target.ids }),
 			);
 			toast.success(`${formatCount(result.deleted)} jelentkező törölve`);
 			onDeleted(result.deleted);

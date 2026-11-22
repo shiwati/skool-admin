@@ -1,8 +1,22 @@
 import pino from "pino";
 
+/**
+ * Az `err` mező szerializálója. A Prisma-hibák üzenete (és így a stack első
+ * sora) a lekérdezés argumentumait is idézheti – neveket, e-mail-címeket –,
+ * ezért ezekből csak a típus, a kód és a meta kerül a logba.
+ */
+export function serializeError(error: unknown) {
+	if (error instanceof Error && error.name.startsWith("PrismaClient")) {
+		const { code, meta } = error as { code?: unknown; meta?: unknown };
+		return { type: error.name, code, meta };
+	}
+	return error instanceof Error ? pino.stdSerializers.err(error) : error;
+}
+
 export const logger = pino({
 	level: process.env.LOG_LEVEL ?? "info",
 	base: { service: "skool-admin" },
+	serializers: { err: serializeError },
 	redact: {
 		paths: [
 			"password",
