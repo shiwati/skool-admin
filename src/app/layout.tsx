@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Azeret_Mono, Poppins } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { noIndexRobots } from "@/lib/no-index";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -20,6 +21,7 @@ const azeretMono = Azeret_Mono({
 export const metadata: Metadata = {
 	title: { default: "SKOOL Menedzsment", template: "%s | SKOOL Menedzsment" },
 	description: "A Skool belső admin felülete",
+	robots: noIndexRobots,
 };
 
 // `viewport-fit=cover` lets the mobile bottom navigation pad itself with

@@ -213,3 +213,17 @@ Every response SHALL carry HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Option
 
 - **WHEN** a page contains an inline script without the request's nonce
 - **THEN** the browser does not execute it
+
+### Requirement: The app is excluded from search engines
+
+Every response SHALL carry `X-Robots-Tag: noindex, nofollow, noarchive`, and every page SHALL include a `<meta name="robots">` with `noindex, nofollow`, in every environment. The app SHALL NOT serve a `robots.txt` that disallows crawling, because a crawler blocked from a page never sees its `noindex`.
+
+#### Scenario: Login page is not indexed
+
+- **WHEN** a search engine crawler fetches `/login` on the production domain
+- **THEN** the response carries `X-Robots-Tag: noindex, nofollow, noarchive` and the HTML has a robots meta tag with `noindex, nofollow`
+
+#### Scenario: API and file responses are not indexed
+
+- **WHEN** a crawler fetches any other URL, such as `/api/health`
+- **THEN** the response carries the same `X-Robots-Tag` header
