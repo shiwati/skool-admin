@@ -78,6 +78,7 @@ describe("dashboardDemoData", () => {
 			"WAITLISTED",
 			"ACCEPTED",
 			"APPLIED",
+			"CANCELLED",
 		])
 			expect(statuses.has(s as never)).toBe(true);
 		for (const e of data.events) {

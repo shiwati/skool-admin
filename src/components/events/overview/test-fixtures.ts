@@ -41,6 +41,7 @@ export function overviewCounts(
 		REJECTED: 0,
 		ATTENDED: 0,
 		WAITLISTED: 18,
+		CANCELLED: 0,
 		...overrides,
 	};
 }

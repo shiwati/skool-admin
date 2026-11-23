@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EventDetailsCard } from "@/components/events/overview/event-details-card";
 import { EventHistoryCard } from "@/components/events/overview/event-history-card";
+import { FoodNeedsCard } from "@/components/events/overview/food-needs-card";
 import { KpiCard } from "@/components/events/overview/kpi-card";
 import { PeopleCard } from "@/components/events/overview/people-card";
 import { SheetSourceCard } from "@/components/events/overview/sheet-source-card";
 import { StatusBreakdown } from "@/components/events/overview/status-breakdown";
 import { RatioBadge } from "@/components/events/ratio-badge";
 import { demandRatio } from "@/lib/events/format";
+import { getFoodNeeds } from "@/lib/events/food-needs-load";
 import { eventHref } from "@/lib/events/links";
 import { getEventOverview } from "@/lib/events/overview";
 import { requireAdmin } from "@/lib/session";
@@ -31,6 +33,7 @@ export default async function EventOverviewPage({ params }: Props) {
 	const overview = await load(id);
 	if (!overview) notFound();
 	const { event, counts, history } = overview;
+	const foodNeeds = await getFoodNeeds(id);
 
 	const ratio = demandRatio(counts.total, event.capacity);
 	const full = event.capacity > 0 && counts.ACCEPTED >= event.capacity;
@@ -75,6 +78,7 @@ export default async function EventOverviewPage({ params }: Props) {
 						instructor={event.instructor}
 						mentors={event.mentors}
 					/>
+					<FoodNeedsCard foodNeeds={foodNeeds} />
 				</div>
 				<aside
 					className="flex min-w-0 flex-col gap-5"

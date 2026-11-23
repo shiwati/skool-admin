@@ -81,20 +81,15 @@ describe("loadDashboard", () => {
 			{ eventId: "a", status: "APPLIED", _count: { _all: 30 } },
 			{ eventId: "a", status: "ACCEPTED", _count: { _all: 20 } },
 		]);
+		// Name and start of the program come from the events query.
 		const fb = (
 			eventId: string,
-			name: string,
-			from: string,
+			_name: string,
+			_from: string,
 			role: "PARTICIPANT" | "MENTOR",
 			overallScore: number | null,
 			recommend: string | null,
-		) => ({
-			eventId,
-			role,
-			overallScore,
-			recommend,
-			event: { name, from: new Date(from) },
-		});
+		) => ({ eventId, role, overallScore, recommend });
 		feedbackFindMany.mockResolvedValue([
 			fb(
 				"a",
@@ -220,8 +215,12 @@ describe("loadDashboard", () => {
 		expect(eventFindMany.mock.calls[1][0].select._count).toEqual({
 			select: { applications: true },
 		});
+		// Same events as the events query, in the same database round.
 		expect(applicationGroupBy.mock.calls[0][0].where).toEqual({
-			eventId: { in: ["a", "b", "c"] },
+			event: { from: eventFindMany.mock.calls[1][0].where.from },
+		});
+		expect(eventFindMany.mock.calls[1][0].where).toEqual({
+			from: { gte: range(2025).gte },
 		});
 	});
 

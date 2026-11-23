@@ -25,71 +25,97 @@ import type { DateRange } from "./period";
 /**
  * Összesítés: programok, diákok, cégek, megoszlások. `range` = egy év
  * (az abban induló programok); `null` = összes év.
+ *
+ * Minden lekérdezés lapos és párhuzamos (egy adatbázis-kör): a jelentkezők,
+ * jelentkezéseik és a programok kezdete külön jön, és itt kapcsolódik össze —
+ * a beágyazott Prisma-select relációnként egy-egy újabb kört jelentene.
  */
 export async function loadOverview(
 	range: DateRange | null = null,
 ): Promise<Overview> {
-	const [applicants, events, feedbackRows, attendedRows, responseRows] =
-		await Promise.all([
-			db.applicant.findMany({
-				where: range
-					? { applications: { some: { event: { from: range } } } }
-					: {},
-				select: {
-					birthYear: true,
-					hometown: true,
-					newsletter: true,
-					applications: {
-						select: {
-							eventId: true,
-							heardFromWhere: true,
-							event: { select: { from: true } },
-						},
+	const scope = range
+		? { applications: { some: { event: { from: range } } } }
+		: {};
+	const [
+		applicants,
+		events,
+		feedbackRows,
+		applications,
+		eventStarts,
+		attendedRows,
+		responseRows,
+	] = await Promise.all([
+		db.applicant.findMany({
+			where: scope,
+			select: {
+				id: true,
+				birthYear: true,
+				hometown: true,
+				newsletter: true,
+			},
+		}),
+		db.event.findMany({
+			where: range ? { from: range } : {},
+			select: {
+				companyName: true,
+				id: true,
+				mentors: true,
+				_count: { select: { applications: true } },
+			},
+		}),
+		db.feedback.findMany({
+			where: range ? { event: { from: range } } : {},
+			select: { role: true, overallScore: true, recommend: true },
+		}),
+		// A hatókör jelentkezőinek összes jelentkezése (a visszatérőkhöz a
+		// korábbi évekéi is kellenek).
+		db.application.findMany({
+			where: range ? { applicant: scope } : {},
+			select: { applicantId: true, eventId: true, heardFromWhere: true },
+		}),
+		db.event.findMany({ select: { id: true, from: true } }),
+		range
+			? db.application.groupBy({
+					by: ["eventId"],
+					where: {
+						status: "ATTENDED",
+						event: { from: range },
 					},
-				},
-			}),
-			db.event.findMany({
-				where: range ? { from: range } : {},
-				select: {
-					companyName: true,
-					id: true,
-					mentors: true,
-					_count: { select: { applications: true } },
-				},
-			}),
-			db.feedback.findMany({
-				where: range ? { event: { from: range } } : {},
-				select: { role: true, overallScore: true, recommend: true },
-			}),
-			range
-				? db.application.groupBy({
-						by: ["eventId"],
-						where: {
-							status: "ATTENDED",
-							event: { from: range },
-						},
-						_count: { _all: true },
-					})
-				: null,
-			range
-				? db.feedback.groupBy({
-						by: ["eventId", "role"],
-						where: { event: { from: range } },
-						_count: { _all: true },
-					})
-				: null,
-		]);
+					_count: { _all: true },
+				})
+			: null,
+		range
+			? db.feedback.groupBy({
+					by: ["eventId", "role"],
+					where: { event: { from: range } },
+					_count: { _all: true },
+				})
+			: null,
+	]);
+
+	const startOf = new Map(eventStarts.map((e) => [e.id, e.from]));
+	const applicationsOf = new Map<
+		string,
+		{ eventId: string; eventFrom: Date; heardFromWhere: string | null }[]
+	>();
+	for (const a of applications) {
+		const eventFrom = startOf.get(a.eventId);
+		if (!eventFrom) continue;
+		const list = applicationsOf.get(a.applicantId) ?? [];
+		list.push({
+			eventId: a.eventId,
+			eventFrom,
+			heardFromWhere: a.heardFromWhere,
+		});
+		applicationsOf.set(a.applicantId, list);
+	}
 
 	const stats = overviewStats(
 		applicants.map((a) => ({
 			birthYear: a.birthYear,
 			hometown: a.hometown,
 			newsletter: a.newsletter,
-			applications: a.applications.map((x) => ({
-				eventId: x.eventId,
-				eventFrom: x.event.from,
-				heardFromWhere: x.heardFromWhere,
-			})),
+			applications: applicationsOf.get(a.id) ?? [],
 		})),
 		range,
 	);
@@ -130,38 +156,34 @@ export async function loadOverview(
 export async function loadCompanyDetail(
 	company: string,
 ): Promise<CompanyDetail> {
-	const events = await db.event.findMany({
-		where: { companyName: company },
-		select: {
-			id: true,
-			name: true,
-			from: true,
-			to: true,
-			capacity: true,
-			mentors: true,
-			_count: { select: { applications: true } },
-		},
-	});
-	const eventIds = events.map((e) => e.id);
-
-	const [students, feedback] = eventIds.length
-		? await Promise.all([
-				db.application.findMany({
-					where: { eventId: { in: eventIds } },
-					select: { applicantId: true },
-					distinct: ["applicantId"],
-				}),
-				db.feedback.findMany({
-					where: { eventId: { in: eventIds } },
-					select: {
-						eventId: true,
-						role: true,
-						overallScore: true,
-						recommend: true,
-					},
-				}),
-			])
-		: [[], []];
+	const [events, students, feedback] = await Promise.all([
+		db.event.findMany({
+			where: { companyName: company },
+			select: {
+				id: true,
+				name: true,
+				from: true,
+				to: true,
+				capacity: true,
+				mentors: true,
+				_count: { select: { applications: true } },
+			},
+		}),
+		db.application.findMany({
+			where: { event: { companyName: company } },
+			select: { applicantId: true },
+			distinct: ["applicantId"],
+		}),
+		db.feedback.findMany({
+			where: { event: { companyName: company } },
+			select: {
+				eventId: true,
+				role: true,
+				overallScore: true,
+				recommend: true,
+			},
+		}),
+	]);
 
 	return companyDetail(
 		company,
@@ -184,21 +206,19 @@ export async function loadProgramDetail(
 	eventId: string,
 	now = new Date(),
 ): Promise<ProgramDetail | null> {
-	const event = await db.event.findUnique({
-		where: { id: eventId },
-		select: {
-			id: true,
-			name: true,
-			from: true,
-			to: true,
-			capacity: true,
-			ageRange: true,
-			mentors: true,
-		},
-	});
-	if (!event) return null;
-
-	const [applications, feedbackRows] = await Promise.all([
+	const [event, applications, feedbackRows] = await Promise.all([
+		db.event.findUnique({
+			where: { id: eventId },
+			select: {
+				id: true,
+				name: true,
+				from: true,
+				to: true,
+				capacity: true,
+				ageRange: true,
+				mentors: true,
+			},
+		}),
 		db.application.findMany({
 			where: { eventId },
 			select: {
@@ -213,6 +233,7 @@ export async function loadProgramDetail(
 			select: { role: true, overallScore: true, recommend: true },
 		}),
 	]);
+	if (!event) return null;
 
 	const applicantIds = [...new Set(applications.map((a) => a.applicantId))];
 	const earlier = applicantIds.length

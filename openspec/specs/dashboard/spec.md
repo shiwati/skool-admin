@@ -31,7 +31,7 @@ The "Időszak" selector SHALL offer calendar years (Budapest time) from the curr
 
 ### Requirement: Program filter
 
-The "Program" selector SHALL list "Összes program" and the programs starting in the selected period, newest first. Selecting a program SHALL restrict every metric to it. A `program` parameter that does not start in the selected period SHALL be ignored (all programs). The header description SHALL show the period label, the program name or "összes program", and the comparison year.
+The "Program" selector SHALL list "Összes program" and the programs starting in the selected period, newest first. Selecting a program SHALL restrict every metric to it. A `program` parameter that does not start in the selected period SHALL be ignored (all programs). The header description SHALL show the period label, the program name or "összes program", and the comparison year. With a program selected, its name in the header SHALL link to the program detail page (`/events/<id>`).
 
 #### Scenario: Program outside the period
 

@@ -165,6 +165,7 @@ enum ApplicationStatus {
   REJECTED   @map("rejected") /// elutasítva
   ATTENDED   @map("attended") /// részt vett
   WAITLISTED @map("waitlisted") /// várólistás
+  CANCELLED  @map("cancelled") /// lemondta
 
   @@map("application_status")
 }

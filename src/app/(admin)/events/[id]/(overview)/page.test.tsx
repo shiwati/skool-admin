@@ -6,15 +6,19 @@ import {
 	overviewEvent,
 } from "@/components/events/overview/test-fixtures";
 
-const { requireAdmin, getEventOverview, notFound } = vi.hoisted(() => ({
-	requireAdmin: vi.fn(),
-	getEventOverview: vi.fn(),
-	notFound: vi.fn(() => {
-		throw new Error("NEXT_NOT_FOUND");
+const { requireAdmin, getEventOverview, getFoodNeeds, notFound } = vi.hoisted(
+	() => ({
+		requireAdmin: vi.fn(),
+		getEventOverview: vi.fn(),
+		getFoodNeeds: vi.fn(),
+		notFound: vi.fn(() => {
+			throw new Error("NEXT_NOT_FOUND");
+		}),
 	}),
-}));
+);
 vi.mock("@/lib/session", () => ({ requireAdmin }));
 vi.mock("@/lib/events/overview", () => ({ getEventOverview }));
+vi.mock("@/lib/events/food-needs-load", () => ({ getFoodNeeds }));
 vi.mock("next/navigation", () => ({
 	notFound,
 	useRouter: () => ({ replace: vi.fn(), refresh: vi.fn(), push: vi.fn() }),
@@ -35,6 +39,11 @@ describe("event overview page", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		requireAdmin.mockResolvedValue({ user: { id: "u1" } });
+		getFoodNeeds.mockResolvedValue({
+			covered: 0,
+			unrestricted: 0,
+			groups: [],
+		});
 	});
 
 	it("checks the session before reading data and never reads without one", async () => {
@@ -104,6 +113,32 @@ describe("event overview page", () => {
 		expect(
 			screen.getByText("Még nincs rögzített változás"),
 		).toBeInTheDocument();
+	});
+
+	it("shows the food needs card of the program", async () => {
+		getEventOverview.mockResolvedValue(eventOverview());
+		getFoodNeeds.mockResolvedValue({
+			covered: 3,
+			unrestricted: 2,
+			groups: [
+				{
+					status: "ACCEPTED",
+					rows: [
+						{
+							applicantId: "p1",
+							name: "Kiss Anna",
+							answer: "laktózmentes",
+						},
+					],
+				},
+			],
+		});
+		render(await EventOverviewPage(props()));
+		expect(getFoodNeeds).toHaveBeenCalledWith("e1");
+		expect(
+			screen.getByRole("heading", { name: "Étkezési igény" }),
+		).toBeInTheDocument();
+		expect(screen.getByText("laktózmentes")).toBeInTheDocument();
 	});
 
 	it("shows the latest change with who, field and old → new value", async () => {

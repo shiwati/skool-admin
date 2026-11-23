@@ -469,6 +469,13 @@ export function dashboardDemoData(now = new Date()): DemoData {
 				} else {
 					status = rng.next() < 0.6 ? "WAITLISTED" : "APPLIED";
 				}
+				// Lemondták: a sorrendből számolva (nem húz a véletlenből, így a
+				// többi demóadat ugyanaz marad).
+				if (
+					(status === "ACCEPTED" || status === "WAITLISTED") &&
+					rank % 7 === 3
+				)
+					status = "CANCELLED";
 				if (status === "ATTENDED") attended += 1;
 				const returning = rng.next() < 0.25;
 				applications.push({

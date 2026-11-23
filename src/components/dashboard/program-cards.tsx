@@ -28,7 +28,7 @@ export function ProgramFunnelCard({
 		{
 			label: "Elfogadva",
 			count: funnel.accepted,
-			className: "bg-lavender",
+			className: STATUS_BADGE_CLASSES.ACCEPTED,
 		},
 		...(finished
 			? [
@@ -43,6 +43,7 @@ export function ProgramFunnelCard({
 	const side = [
 		{ label: STATUS_LABELS.REJECTED, count: funnel.rejected },
 		{ label: STATUS_LABELS.WAITLISTED, count: funnel.waitlisted },
+		{ label: STATUS_LABELS.CANCELLED, count: funnel.cancelled },
 		{ label: "Feldolgozásra vár", count: funnel.pending },
 	];
 
@@ -100,9 +101,9 @@ export function ProgramFunnelCard({
 					</div>
 					{finished && funnel.accepted > 0 && (
 						<p className="text-xs text-text-tertiary">
-							Az elfogadottak{" "}
+							Az elfogadott jelentkezők{" "}
 							{share(funnel.attended, funnel.accepted)}%-a részt
-							vett.
+							is vett.
 						</p>
 					)}
 				</div>
