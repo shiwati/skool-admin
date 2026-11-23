@@ -34,6 +34,7 @@ describe("getEventOverview", () => {
 			{ status: "ACCEPTED", _count: { _all: 20 } },
 			{ status: "WAITLISTED", _count: { _all: 18 } },
 			{ status: "APPLIED", _count: { _all: 24 } },
+			{ status: "CANCELLED", _count: { _all: 0 } },
 		]);
 		const overview = await getEventOverview("e1");
 		expect(overview?.counts).toEqual({
@@ -43,6 +44,7 @@ describe("getEventOverview", () => {
 			REJECTED: 0,
 			ATTENDED: 0,
 			WAITLISTED: 18,
+			CANCELLED: 0,
 		});
 		expect(db.application.groupBy).toHaveBeenCalledWith(
 			expect.objectContaining({ where: { eventId: "e1" } }),

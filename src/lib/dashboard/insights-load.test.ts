@@ -294,6 +294,7 @@ describe("loadProgramDetail", () => {
 			attended: 1,
 			rejected: 1,
 			waitlisted: 0,
+			cancelled: 0,
 			pending: 1,
 		});
 		expect(detail?.oversubscription).toBe(1);

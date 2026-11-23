@@ -69,6 +69,7 @@ export type Funnel = {
 	attended: number;
 	rejected: number;
 	waitlisted: number;
+	cancelled: number;
 	/** Még nem feldolgozott („jelentkezett”). */
 	pending: number;
 };
@@ -82,11 +83,13 @@ export function funnel(byStatus: StatusBreakdown): Funnel {
 			n("ACCEPTED") +
 			n("REJECTED") +
 			n("ATTENDED") +
-			n("WAITLISTED"),
+			n("WAITLISTED") +
+			n("CANCELLED"),
 		accepted: n("ACCEPTED") + attended,
 		attended,
 		rejected: n("REJECTED"),
 		waitlisted: n("WAITLISTED"),
+		cancelled: n("CANCELLED"),
 		pending: n("APPLIED"),
 	};
 }

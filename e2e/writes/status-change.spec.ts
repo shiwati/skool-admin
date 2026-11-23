@@ -195,3 +195,37 @@ test("accepting beyond the capacity asks first", async ({
 	).toBeVisible();
 	expect(await statuses()).toEqual(["ACCEPTED", "ACCEPTED"]);
 });
+
+test("an application can be cancelled and filtered as Lemondta", async ({
+	page,
+	factory,
+	db,
+}) => {
+	const { event, rows } = await programWith(factory, [
+		"ACCEPTED",
+		"ACCEPTED",
+	]);
+	const [target] = rows;
+	await tab(page, event);
+
+	await table(page)
+		.getByRole("button", {
+			name: `${nameOf(target.applicant)} státusza: Elfogadva. Módosítás`,
+		})
+		.click();
+	await page.getByRole("menuitem", { name: "Lemondta" }).click();
+
+	await expect(
+		page.getByText("1 jelentkezés státusza: Lemondta"),
+	).toBeVisible();
+	expect(
+		await db.application.findUniqueOrThrow({ where: { id: target.id } }),
+	).toMatchObject({ status: "CANCELLED" });
+
+	await chip(page, "Lemondta").click();
+	await expect(
+		table(page).getByRole("button", {
+			name: `${nameOf(target.applicant)} státusza: Lemondta. Módosítás`,
+		}),
+	).toBeVisible();
+});

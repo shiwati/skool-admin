@@ -12,6 +12,7 @@ const ORDER: ApplicationStatus[] = [
 	"WAITLISTED",
 	"ATTENDED",
 	"REJECTED",
+	"CANCELLED",
 ];
 
 const chip =

@@ -89,15 +89,17 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
 	WAITLISTED: "Várólista",
 	ATTENDED: "Részt vett",
 	REJECTED: "Elutasítva",
+	CANCELLED: "Lemondta",
 };
 
 /** Státusz → háttérszín (DS.1 tokenek); a szöveg mindig sötét. */
 export const STATUS_BADGE_CLASSES: Record<ApplicationStatus, string> = {
 	APPLIED: "bg-sky",
-	ACCEPTED: "bg-lavender",
-	WAITLISTED: "bg-peach",
-	ATTENDED: "bg-lemon",
+	ACCEPTED: "bg-mint",
+	WAITLISTED: "bg-lemon",
+	ATTENDED: "bg-lavender",
 	REJECTED: "bg-surface-subtle",
+	CANCELLED: "bg-peach",
 };
 
 const PROGRAM_COLORS = [

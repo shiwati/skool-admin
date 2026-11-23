@@ -38,6 +38,7 @@ Event vagy Applicant törlésekor az Application-jeik **kaszkádolva törlődnek
 | REJECTED   | rejected   | elutasítva               |
 | ATTENDED   | attended   | részt vett               |
 | WAITLISTED | waitlisted | várólistás               |
+| CANCELLED  | cancelled  | lemondta                 |
 
 ## Származtatott szabályok a kódban
 

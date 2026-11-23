@@ -78,7 +78,9 @@ describe("status mapping", () => {
 			WAITLISTED: "Várólista",
 			ATTENDED: "Részt vett",
 			REJECTED: "Elutasítva",
+			CANCELLED: "Lemondta",
 		});
+		expect(STATUS_BADGE_CLASSES.CANCELLED).toBe("bg-peach");
 		expect(Object.keys(STATUS_BADGE_CLASSES).sort()).toEqual(
 			Object.keys(STATUS_LABELS).sort(),
 		);

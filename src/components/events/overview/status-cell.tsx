@@ -15,6 +15,7 @@ export const STATUS_OPTIONS: ApplicationStatus[] = [
 	"ACCEPTED",
 	"WAITLISTED",
 	"REJECTED",
+	"CANCELLED",
 	"ATTENDED",
 	"APPLIED",
 ];

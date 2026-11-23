@@ -46,13 +46,15 @@ describe("funnel", () => {
 				ATTENDED: 3,
 				REJECTED: 2,
 				WAITLISTED: 1,
+				CANCELLED: 2,
 			}),
 		).toEqual({
-			total: 16,
+			total: 18,
 			accepted: 9,
 			attended: 3,
 			rejected: 2,
 			waitlisted: 1,
+			cancelled: 2,
 			pending: 4,
 		});
 	});

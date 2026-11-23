@@ -14,6 +14,7 @@ describe("StatusBreakdown", () => {
 			"Várólista18",
 			"Részt vett0",
 			"Elutasítva0",
+			"Lemondta0",
 		]);
 		expect(
 			screen.getByRole("img", {
@@ -56,5 +57,23 @@ describe("StatusBreakdown", () => {
 			screen.getByText("Még nincs jelentkező ehhez a programhoz."),
 		).toBeInTheDocument();
 		expect(screen.queryByRole("img")).not.toBeInTheDocument();
+	});
+});
+
+describe("StatusBreakdown cancelled", () => {
+	it("shows the cancelled applications as a status", () => {
+		render(
+			<StatusBreakdown
+				eventId="e1"
+				counts={overviewCounts({ total: 64, CANCELLED: 2 })}
+			/>,
+		);
+		expect(screen.getByRole("link", { name: /Lemondta/ })).toHaveAttribute(
+			"href",
+			"/events/e1/applicants?status=CANCELLED",
+		);
+		expect(
+			screen.getByRole("img", { name: /Lemondta: 2/ }),
+		).toBeInTheDocument();
 	});
 });

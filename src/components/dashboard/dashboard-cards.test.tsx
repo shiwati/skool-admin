@@ -144,6 +144,7 @@ describe("ProgramFunnelCard", () => {
 		attended: 8,
 		rejected: 5,
 		waitlisted: 2,
+		cancelled: 1,
 		pending: 3,
 	};
 
@@ -154,7 +155,7 @@ describe("ProgramFunnelCard", () => {
 		expect(screen.getByText("10 · 50%")).toBeInTheDocument();
 		expect(screen.getByText("8 · 40%")).toBeInTheDocument();
 		expect(
-			screen.getByText("Az elfogadottak 80%-a részt vett."),
+			screen.getByText("Az elfogadott jelentkezők 80%-a részt is vett."),
 		).toBeInTheDocument();
 	});
 

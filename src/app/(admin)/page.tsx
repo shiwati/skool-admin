@@ -1,11 +1,16 @@
 import { Star } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { ComponentProps } from "react";
 import { PageHeader } from "@/components/admin-shell/page-header";
 import { PageShell } from "@/components/admin-shell/page-shell";
 import { CapacityChart } from "@/components/dashboard/capacity-chart";
 import { CompanyProgramsCard } from "@/components/dashboard/company-cards";
 import { DashboardActions } from "@/components/dashboard/dashboard-actions";
+import {
+	DashboardPendingProvider,
+	PendingContent,
+} from "@/components/dashboard/pending";
 import { DemographicsCard } from "@/components/dashboard/demographics-card";
 import {
 	KpiCard,
@@ -434,78 +439,91 @@ export default async function DashboardPage({ searchParams }: Props) {
 		data.year === null ? ALL_YEARS_LABEL : String(data.year);
 
 	return (
-		<PageShell>
-			<PageHeader
-				eyebrow="Áttekintés"
-				title={`${greeting(now)}, ${name}!`}
-				description={
-					programDetail
-						? programDetail.name
-						: companyDetail
-							? companyDetail.name
-							: comparison
-								? `${periodLabel} · összevetés: ${comparison.previousLabel}`
-								: periodLabel
-				}
-				actions={
-					// Mobile: one horizontally scrollable row below the title.
-					<div className="relative -mx-4 flex w-[calc(100%+2rem)] gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:w-auto md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
-						<DashboardActions data={data} />
-					</div>
-				}
-			/>
-
-			{programDetail && <ProgramSection detail={programDetail} />}
-
-			{companyDetail && <CompanySection detail={companyDetail} />}
-
-			{overview && (
-				<OverviewSection
-					overview={overview}
-					periodLabel={periodLabel}
-					allYears={data.range === null}
+		<DashboardPendingProvider>
+			<PageShell>
+				<PageHeader
+					eyebrow="Áttekintés"
+					title={`${greeting(now)}, ${name}!`}
+					description={
+						programDetail ? (
+							<Link
+								href={`/events/${programDetail.id}`}
+								className="underline-offset-4 hover:underline"
+							>
+								{programDetail.name}
+							</Link>
+						) : companyDetail ? (
+							companyDetail.name
+						) : comparison ? (
+							`${periodLabel} · összevetés: ${comparison.previousLabel}`
+						) : (
+							periodLabel
+						)
+					}
+					actions={
+						// Mobile: one horizontally scrollable row below the title.
+						<div className="relative -mx-4 flex w-[calc(100%+2rem)] gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:w-auto md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
+							<DashboardActions data={data} />
+						</div>
+					}
 				/>
-			)}
 
-			{overview && comparison && (
-				<>
-					<SectionHeader
-						title="Összevetés az előző évvel"
-						subtitle={`${periodLabel} vs. ${comparison.previousLabel}`}
-					/>
+				<PendingContent>
+					{programDetail && <ProgramSection detail={programDetail} />}
 
-					<KpiGrid>
-						<KpiCard
-							label="Összes jelentkező"
-							{...applicationsKpi(comparison)}
+					{companyDetail && <CompanySection detail={companyDetail} />}
+
+					{overview && (
+						<OverviewSection
+							overview={overview}
+							periodLabel={periodLabel}
+							allYears={data.range === null}
 						/>
-						<KpiCard
-							label="Átlagos túljelentkezés"
-							{...oversubscriptionKpi(comparison)}
-						/>
-						<RatingKpiCard
-							label="Átlagos elégedettség"
-							{...satisfactionKpi(comparison)}
-							wide
-						/>
-					</KpiGrid>
+					)}
 
-					<SectionHeader
-						title="Programok"
-						subtitle={`A(z) ${periodLabel}. évben induló programok`}
-					/>
+					{overview && comparison && (
+						<>
+							<SectionHeader
+								title="Összevetés az előző évvel"
+								subtitle={`${periodLabel} vs. ${comparison.previousLabel}`}
+							/>
 
-					<div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-						<CapacityChart rows={comparison.capacity} />
-						<OversubscriptionTrend points={comparison.trend} />
-					</div>
+							<KpiGrid>
+								<KpiCard
+									label="Összes jelentkező"
+									{...applicationsKpi(comparison)}
+								/>
+								<KpiCard
+									label="Átlagos túljelentkezés"
+									{...oversubscriptionKpi(comparison)}
+								/>
+								<RatingKpiCard
+									label="Átlagos elégedettség"
+									{...satisfactionKpi(comparison)}
+									wide
+								/>
+							</KpiGrid>
 
-					<SatisfactionCard
-						programs={comparison.satisfactionByProgram}
-						satisfaction={comparison.satisfaction.current}
-					/>
-				</>
-			)}
-		</PageShell>
+							<SectionHeader
+								title="Programok"
+								subtitle={`A(z) ${periodLabel}. évben induló programok`}
+							/>
+
+							<div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+								<CapacityChart rows={comparison.capacity} />
+								<OversubscriptionTrend
+									points={comparison.trend}
+								/>
+							</div>
+
+							<SatisfactionCard
+								programs={comparison.satisfactionByProgram}
+								satisfaction={comparison.satisfaction.current}
+							/>
+						</>
+					)}
+				</PendingContent>
+			</PageShell>
+		</DashboardPendingProvider>
 	);
 }

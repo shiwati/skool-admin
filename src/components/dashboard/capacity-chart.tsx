@@ -17,6 +17,7 @@ const STATUS_ORDER: ApplicationStatus[] = [
 	"WAITLISTED",
 	"ATTENDED",
 	"REJECTED",
+	"CANCELLED",
 ];
 
 type Filter = "upcoming" | "past" | "all";

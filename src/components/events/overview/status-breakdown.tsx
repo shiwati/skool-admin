@@ -13,6 +13,7 @@ const ORDER: ApplicationStatus[] = [
 	"WAITLISTED",
 	"ATTENDED",
 	"REJECTED",
+	"CANCELLED",
 ];
 
 export function StatusBreakdown({

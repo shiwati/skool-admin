@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { DashboardData, DashboardMode } from "@/lib/dashboard/load";
 import { ALL_YEARS_LABEL } from "@/lib/dashboard/period";
+import { useDashboardPending, PendingSpinner } from "./pending";
 import { Segmented } from "./segmented";
 
 const ALL = "";
@@ -71,10 +71,10 @@ function FilterMenu({
  * törlődik, program- és cégbontásnál az első elem van kiválasztva.
  */
 export function DashboardActions({ data }: { data: DashboardData }) {
-	const router = useRouter();
+	const { navigate: go } = useDashboardPending();
 
 	function navigate(key: "period" | "program" | "company", value: string) {
-		router.push(value ? `/?${new URLSearchParams({ [key]: value })}` : "/");
+		go(value ? `/?${new URLSearchParams({ [key]: value })}` : "/");
 	}
 
 	function changeMode(mode: DashboardMode) {
@@ -96,6 +96,7 @@ export function DashboardActions({ data }: { data: DashboardData }) {
 
 	return (
 		<>
+			<PendingSpinner />
 			<Segmented
 				label="Bontás"
 				options={modes}
